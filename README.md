@@ -1,15 +1,22 @@
-Environment variables
-
-`TEST=true` - running in test mode
+Environment variables:
 
 `DEBUG=gologin*` - running in debug mode
 
-`ORBITA_BROWSER=/usr/bin/orbita-browser/chrome` - path to orbita browser
-
-
 class GoLogin - class for working with API
 
-constructor - `options` - token and profile id
+
+Constructor available options: 
+
+`token` - token
+
+`profile_id` - profile id
+
+`vnc_port` - vnc port for launching Orbita browser
+
+`executablePath` - vnc port for launching Orbita browser
+
+
+Methods:
 
 `startBrowser`  - starting browser with profile id, returning wsUrl for puppeteer
 

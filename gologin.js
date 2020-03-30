@@ -19,43 +19,34 @@ const API_URL = 'https://api.gologin.app';
 
 class GoLogin {
   constructor(options) {
-    this.username = options.username;
-    this.password = options.password;
+    this.access_token = options.token;
     this.profile_id = options.profile_id;
-    this.access_token = '';
+    this.password = options.password;
+    this.executablePath = options.executablePath;
+    this.vnc_port = options.vnc_port;
     this.is_active = false;
     this.is_stopping = false;
-
     debug('INIT GOLOGIN', this.profile_id);
   }
 
-  async login() {
+  async getToken(username, password) {
   	let data = await requests.post(`${API_URL}/user/login`, {
   		json: {
-  			username: this.username,
-  			password: this.password
+  			username: username,
+  			password: password
   		}
   	});
-
-
-    debug('AUTH GOLOGIN', `${API_URL}/user/login`, JSON.stringify({
-        username: this.username,
-        password: this.password
-      }))
 
   	if (!_.has(data, 'body.access_token')) {
   		throw new Error(`gologin auth failed with status code, ${data.statusCode} DATA  ${JSON.stringify(data)}`);
   	}
 
-  	this.access_token = _.get(data, 'body.access_token');
-  	this.refresh_token = _.get(data, 'body.refresh_token');
-  	debug('gologin auth SUCCESS');
+  	console.log('access_token=', data.body.access_token);
   }
 
   async getNewFingerPrint() {
     debug('GETTING FINGERPRINT');
 
-    await this.login();
     const fpResponse = await requests.get(`${API_URL}/browser/fingerprint?os=lin`, {
       json: true,
       headers: {
@@ -67,7 +58,6 @@ class GoLogin {
   }
 
   async profiles() {
-  	await this.login();
   	const profilesResponse = await requests.get(`${API_URL}/browser/`, {
   		headers: {
   			'Authorization': `Bearer ${this.access_token}`
@@ -85,7 +75,6 @@ class GoLogin {
 
 
   async getProfile() {
-  	await this.login();
     debug('getProfile', this.access_token, this.profile_id);
   	const profileResponse = await requests.get(`${API_URL}/browser/${this.profile_id}`, {
   		headers: {
@@ -107,7 +96,6 @@ class GoLogin {
 
 
   async getProfileS3(s3path) {
-      await this.login();
       const token = this.access_token;
       debug('getProfileS3 token=', token, 'profile=', this.profile_id, 's3path=', s3path);
       if (s3path) { //загрузка профиля из публичного бакета s3 быстрее
@@ -332,7 +320,6 @@ class GoLogin {
 
   async commitProfile() {
       const data = await this.getProfileDataToUpdate();
-      await this.login();
       debug('begin updating', data.length);
       if (data.length == 0) {
           debug('WARN: profile zip data empty - SKIPPING PROFILE COMMIT');
@@ -412,7 +399,7 @@ class GoLogin {
 
     this.port = remote_debugging_port;
     
-    const ORBITA_BROWSER = process.env.ORBITA_BROWSER || '/usr/bin/orbita-browser/chrome';
+    const ORBITA_BROWSER = this.executablePath || '/usr/bin/orbita-browser/chrome';
 
     debug('TEST=', process.env.TEST);
 
@@ -423,20 +410,17 @@ class GoLogin {
     const tz = await this.getTimeZone(this.proxy);
     env['TZ'] = tz;
 
-    if (process.env.TEST=='true') {
+    if (this.vnc_port) {
+      const script_path = path.resolve(__dirname, './run.sh');
+      debug('RUNNING', script_path, ORBITA_BROWSER, remote_debugging_port, proxy, profile_path, this.vnc_port);
+      var child = require('child_process').execFile(script_path, [ORBITA_BROWSER, remote_debugging_port, proxy, profile_path, this.vnc_port, tz, profile_name, this.orbitaExtensionPath()], {env});
+    } else {
       const params = [`--remote-debugging-port=${remote_debugging_port}`,`--proxy-server=${proxy}`, `--user-data-dir=${profile_path}`, `--password-store=basic`, `--tz=${tz}`, `--gologin-profile=${profile_name}`, `--lang=en`, `--load-extension=${this.orbitaExtensionPath()}`]    
-      // const ls = await spawn(ORBITA_BROWSER, params);
       var child = require('child_process').execFile(ORBITA_BROWSER, params, {env}); 
-      // use event hooks to provide a callback to execute when data are available: 
       child.stdout.on('data', function(data) {
           debug(data.toString()); 
       });      
-      
       debug('SPAWN CMD', ORBITA_BROWSER, params.join(" "));      
-    } else {
-      const script_path = path.resolve(__dirname, './run.sh');
-      debug('RUNNING', script_path, ORBITA_BROWSER, remote_debugging_port, proxy, profile_path, process.env.VNC_PORT);
-      var child = require('child_process').execFile(script_path, [ORBITA_BROWSER, remote_debugging_port, proxy, profile_path, process.env.VNC_PORT, tz, profile_name, this.orbitaExtensionPath()], {env});
     }
 
     debug('GETTING WS URL FROM BROWSER');
@@ -554,7 +538,6 @@ class GoLogin {
 
 
   async profileExists() {
-  	await this.login();
   	const profileResponse = await requests.post(`${API_URL}/browser`, {
   		headers: {
   			'Authorization': `Bearer ${this.access_token}`
@@ -588,8 +571,6 @@ class GoLogin {
     })));    
 
     debug('JSON created');
-    await this.login();
-    debug('LOGGED IN');
     const profileResponse = await requests.post(`${API_URL}/browser`, {
         headers: {
             'Authorization': `Bearer ${this.access_token}`

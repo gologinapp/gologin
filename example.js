@@ -3,9 +3,9 @@ const GoLogin = require('./gologin');
 
 async function makeScreenshot() {
 	const options = {
-		username: 'username@gologin.app',
-		password: 'passw0rd',
+		token: 'yU0token',
 		profile_id: 'yU0Pr0f1leiD',
+		executablePath: '/usr/bin/orbita-browser/chrome',
 	}
 
 	const GL = new GoLogin(options);
