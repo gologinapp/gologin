@@ -612,7 +612,7 @@ class GoLogin {
   }
 
 
-  async startBrowser() {
+  async start() {
     await this.createStartup();
     await this.createBrowserExtension();
     const url = await this.spawnBrowser();
@@ -621,7 +621,7 @@ class GoLogin {
   }
 
 
-  async stopBrowser() {
+  async stop() {
     await this.stopAndCommit();
   }
 }
