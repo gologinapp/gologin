@@ -18,9 +18,9 @@ Constructor available options:
 
 Methods:
 
-`startBrowser`  - starting browser with profile id, returning wsUrl for puppeteer
+`start`  - starting browser with profile id, returning wsUrl for puppeteer
 
-`stopBrowser`  - stoppin browser with profile id
+`stop`  - stoppin browser with profile id
 
 *** example.js ***
 
