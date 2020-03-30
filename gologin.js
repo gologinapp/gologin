@@ -454,7 +454,7 @@ class GoLogin {
     }
 
     this.is_stopping = true;
-    await this.stopBrowser();
+    // await this.stopBrowser();
     await this.sanitizeProfile();
     await this.commitProfile();
     this.is_stopping = false;
