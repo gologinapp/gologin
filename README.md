@@ -22,6 +22,13 @@ Methods:
 
 `stop`  - stoppin browser with profile id
 
+`create`  - create new profile
+
+`update`  - update profile data
+
+`delete`  - delete profile
+
+
 *** example.js ***
 
 ```js
@@ -45,7 +52,7 @@ const GoLogin = require('./gologin');
   await page.goto('https://myip.gologin.app/mini');	
 	console.log(await page.content());
 	await browser.close();
-	await GL.stopBrowser();
+	await GL.stop();
 })();
 ```
 
