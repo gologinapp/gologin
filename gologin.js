@@ -1,0 +1,649 @@
+const debug = require('debug')('gologin');
+const _ = require('lodash');
+const requests = require('requestretry').defaults({timeout: 60000});
+const fs = require('fs');
+const child_process = require("child_process");
+const util = require('util');
+const rimraf = util.promisify(require("rimraf"));
+const exec = util.promisify(require('child_process').exec);
+const { spawn, execFile } = require('child_process');
+const FormData = require("form-data");
+
+const archiver = require('archiver');
+const extract = require('extract-zip');
+const path = require('path');
+
+const API_URL = 'https://api.gologin.app';
+
+// process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
+
+class GoLogin {
+  constructor(options) {
+    this.username = options.username;
+    this.password = options.password;
+    this.profile_id = options.profile_id;
+    this.access_token = '';
+    this.is_active = false;
+    this.is_stopping = false;
+
+    debug('INIT GOLOGIN', this.profile_id);
+  }
+
+  async login() {
+  	let data = await requests.post(`${API_URL}/user/login`, {
+  		json: {
+  			username: this.username,
+  			password: this.password
+  		}
+  	});
+
+
+    debug('AUTH GOLOGIN', `${API_URL}/user/login`, JSON.stringify({
+        username: this.username,
+        password: this.password
+      }))
+
+  	if (!_.has(data, 'body.access_token')) {
+  		throw new Error(`gologin auth failed with status code, ${data.statusCode} DATA  ${JSON.stringify(data)}`);
+  	}
+
+  	this.access_token = _.get(data, 'body.access_token');
+  	this.refresh_token = _.get(data, 'body.refresh_token');
+  	debug('gologin auth SUCCESS');
+  }
+
+  async getNewFingerPrint() {
+    debug('GETTING FINGERPRINT');
+
+    await this.login();
+    const fpResponse = await requests.get(`${API_URL}/browser/fingerprint?os=lin`, {
+      json: true,
+      headers: {
+        'Authorization': `Bearer ${this.access_token}`
+      }
+    })
+
+    return _.get(fpResponse, 'body', {});
+  }
+
+  async profiles() {
+  	await this.login();
+  	const profilesResponse = await requests.get(`${API_URL}/browser/`, {
+  		headers: {
+  			'Authorization': `Bearer ${this.access_token}`
+  		}
+  	})
+
+  	if (profilesResponse.statusCode !== 200) {
+  		throw new Error(`Gologin /browser response error`);
+  	}
+
+  	const profiles = JSON.parse(profilesResponse.body);
+
+    return profiles;
+  }
+
+
+  async getProfile() {
+  	await this.login();
+    debug('getProfile', this.access_token, this.profile_id);
+  	const profileResponse = await requests.get(`${API_URL}/browser/${this.profile_id}`, {
+  		headers: {
+  			'Authorization': `Bearer ${this.access_token}`
+  		}
+  	})
+    debug(profileResponse.body);
+  	if (profileResponse.statusCode !== 200) {
+  		throw new Error(`Gologin /browser/${this.profile_id} response error ${profileResponse.statusCode}`);
+  	}
+  	return JSON.parse(profileResponse.body);
+  }
+
+
+  async emptyProfile() {
+  	let b64 = fs.readFileSync('./gologin_zeroprofile.b64').toString();
+  	return b64;
+  }
+
+
+  async getProfileS3(s3path) {
+      await this.login();
+      const token = this.access_token;
+      debug('getProfileS3 token=', token, 'profile=', this.profile_id, 's3path=', s3path);
+      if (s3path) { //загрузка профиля из публичного бакета s3 быстрее
+        const s3url = `https://s3.eu-central-1.amazonaws.com/gprofiles.gologin/${s3path}`.replace(/\s+/mg, '+');
+        debug('loading profile from public s3 bucket, url=', s3url);
+        const profileResponse = await requests.get(s3url, {
+          encoding: null
+        });
+        if (profileResponse.statusCode !== 200) {
+          debug(`Gologin S3 BUCKET ${s3url} response error ${profileResponse.statusCode}  - use empty`);
+          return '';
+        }
+        return Buffer.from(profileResponse.body);
+      }
+
+
+      debug('old-way loading profile');
+      const profileResponse = await requests.get(`${API_URL}/browser/${this.profile_id}/profile-s3`, {
+          headers: {
+              'Authorization': `Bearer ${token}`,
+          },
+          encoding: null
+      });
+      if (profileResponse.statusCode !== 200) {
+          debug(`Gologin /browser/${this.profile_id} response error ${profileResponse.statusCode}  - use empty`);
+          return '';
+      }
+      return Buffer.from(profileResponse.body);
+  }
+
+
+  async postFile(fileName, fileBody) {
+      debug('POSTING FILE', fileBody.length);
+      const fd = new FormData();
+      const boundary = fd.getBoundary();
+      const body = Buffer.concat([
+          Buffer.from('--'),
+          Buffer.from(boundary),
+          Buffer.from('\r\n'),
+          Buffer.from(`Content-Disposition: form-data; name="profile"; filename="${fileName}"`),
+          Buffer.from('\r\n'),
+          Buffer.from('\r\n'),
+          Buffer.from(fileBody),
+          Buffer.from('\r\n'),
+          Buffer.from('--'),
+          Buffer.from(boundary),
+          Buffer.from('--'),
+          Buffer.from('\r\n')
+      ]);
+      await new Promise((resolve) => {
+          let options = {
+              method: 'PATCH',
+              headers: {
+                  'Authorization': `Bearer ${this.access_token}`,
+                  'Content-Type': 'multipart/form-data; boundary=' + boundary,
+                  'Content-Length': body.length
+              },
+              body: body,
+              url: `${API_URL}/browser/${this.profile_id}/profile-s3`,
+          };
+          requests(_.merge(options, {}), () => {
+              resolve();
+          });
+      });
+  }
+
+
+  async emptyProfileFolder() {
+    debug('emptyProfileFolder')
+    const zipname = path.resolve(__dirname, './gologin_zeroprofile.zip');
+    const outdir = `/tmp/gologin_profile_${this.profile_id}`;
+    await new Promise((resolve, reject) => {
+        extract(zipname, { dir: outdir }, function (err) {
+            if (err) {
+                debug('GOLOGIN CREATE STARTUP ERROR', err);
+                reject(`GoLogin create startup error`);
+            }
+            
+            require('child_process').execFile('/bin/chmod', ['777', '-R', outdir]); 
+            
+            try {
+            }
+            finally {
+                debug('extraction done');
+            }
+            resolve();
+        });
+    })
+
+    debug('get emptyProfileFolder');
+    let profile = fs.readFileSync(path.resolve(__dirname, './gologin_zeroprofile.zip'));
+    debug('emptyProfileFolder LENGTH ::', profile.length);
+    return profile;
+  }
+
+
+  convertPreferences(preferences) {
+    if(_.get(preferences, 'navigator.userAgent')){
+      preferences.userAgent = _.get(preferences, 'navigator.userAgent');
+    }
+
+    if(_.get(preferences, 'navigator.doNotTrack')){
+      preferences.doNotTrack = _.get(preferences, 'navigator.doNotTrack');
+    }
+
+    if(_.get(preferences, 'navigator.hardwareConcurrency')){
+      preferences.hardwareConcurrency = _.get(preferences, 'navigator.hardwareConcurrency');
+    }
+
+    if(_.get(preferences, 'navigator.language')){
+      preferences.language = _.get(preferences, 'navigator.language');
+    }
+
+    if(_.get(preferences, 'navigator.language')){
+      preferences.language = _.get(preferences, 'navigator.language');
+    }
+
+    return preferences;
+  }
+
+
+  async createBrowserExtension() {
+    const that = this;
+    debug('start createBrowserExtension')
+    await rimraf(this.orbitaExtensionPath());
+    debug('extension folder sanitized');
+    const extension_source = path.resolve(__dirname, `gologin-browser-ext.zip`);
+    const extension_path = await new Promise((resolve, reject) => {
+        extract(extension_source, { dir: that.orbitaExtensionPath() }, function (err) {
+            if (err) {
+                debug('CREATE ORBITA EXTENSION ERROR', err);
+                reject(`GoLogin create orbita extension error`);
+            }
+            try {
+            }
+            finally {
+                debug('extraction done');
+            }
+            resolve(that.orbitaExtensionPath());
+        });
+    })
+        .then((path) => {
+          debug('create uid.json');
+          fs.writeFileSync(`${path}/uid.json`, JSON.stringify({uid: that.profile_id}, null, 2))
+          debug('uid.json created', fs.readFileSync(`${path}/uid.json`).toString())
+        return path;
+    })
+        .catch(async (e) => {
+        debug('orbita extension error', e);
+    });    
+    debug('createBrowserExtension done');
+  } 
+
+
+  async createStartup() {
+      let profile;
+      let profile_folder;
+      await rimraf(`/tmp/gologin_profile_${this.profile_id}`);
+      debug('-', `/tmp/gologin_profile_${this.profile_id}`, 'dropped');
+      profile = await this.getProfile();
+      try {
+          profile_folder = await this.getProfileS3(_.get(profile, 's3Path', ''));
+      }
+      catch (e) {
+          debug('Cannot get profile - using empty');
+      }
+      if (profile_folder.length == 0) {
+          profile_folder = await this.emptyProfileFolder();
+      }
+      debug('PROFILE LENGTH', profile_folder.length);
+      debug('Cleaning up..', `/tmp/gologin_profile_${this.profile_id}`);
+      fs.writeFileSync(`/tmp/gologin_${this.profile_id}.zip`, profile_folder);
+      debug('FILE READY', `/tmp/gologin_${this.profile_id}.zip`);
+      const that = this;
+      const profile_path = await new Promise((resolve, reject) => {
+          extract(`/tmp/gologin_${that.profile_id}.zip`, { dir: `/tmp/gologin_profile_${that.profile_id}` }, function (err) {
+              if (err) {
+                  debug('GOLOGIN CREATE STARTUP ERROR', err);
+                  reject(`GoLogin create startup error`);
+              }
+              try {
+              }
+              finally {
+                  debug('extraction done');
+              }
+              resolve(`/tmp/gologin_profile_${that.profile_id}`);
+          });
+      }).then((path) => {
+          const preferences_raw = fs.readFileSync(`/tmp/gologin_profile_${that.profile_id}/Default/Preferences`);
+          let preferences = JSON.parse(preferences_raw.toString());
+          let proxy = _.get(profile, 'proxy');
+          let name = _.get(profile, 'name');
+          that.proxy = proxy;
+          that.profile_name = name;
+          
+          let gologin = this.convertPreferences(profile); 
+
+          fs.writeFileSync(`/tmp/gologin_profile_${that.profile_id}/Default/Preferences`, JSON.stringify(_.merge(preferences, {
+              gologin
+          })));              
+
+          if(!_.get(preferences, 'gologin.screenWidth') && _.get(profile, 'navigator.resolution', '').split('x').length>1){
+            debug(`Writing profile for screenWidth /tmp/gologin_profile_${that.profile_id}`, JSON.stringify(profile));
+            profile.screenWidth = _.get(profile, 'navigator.resolution').split('x')[0];
+            profile.screenHeight = _.get(profile, 'navigator.resolution').split('x')[1];
+            fs.writeFileSync(`/tmp/gologin_profile_${that.profile_id}/Default/Preferences`, JSON.stringify(_.merge(preferences, {
+                gologin
+            })));              
+          }
+          debug('Profile ready. Path: ', path, 'PROXY', JSON.stringify(_.get(preferences, 'gologin.proxy')));
+          return path;
+      }).catch(async (e) => {
+          debug('gologin error', e);
+
+          await that.createProfile(profile);
+
+          return `/tmp/gologin_profile_${that.profile_id}`;
+      });
+      return profile_path;
+  }
+
+
+  async commitProfile() {
+      const data = await this.getProfileDataToUpdate();
+      await this.login();
+      debug('begin updating', data.length);
+      if (data.length == 0) {
+          debug('WARN: profile zip data empty - SKIPPING PROFILE COMMIT');
+          return;
+      }
+      try {
+          debug('Patching profile');
+          await this.postFile('profile', data);
+      }
+      catch (e) {
+          debug('CANNOT COMMIT PROFILE', e);
+      }
+      debug('COMMIT COMPLETED');
+  }
+
+
+  profilePath() {
+    return `/tmp/gologin_profile_${this.profile_id}`;
+  }
+
+
+  orbitaExtensionPath() {
+    return `/tmp/orbita_extension_${this.profile_id}`;
+  }
+
+
+  getRandomInt(min, max) {
+      min = Math.ceil(min);
+      max = Math.floor(max);
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+
+
+  async checkPortAvailable(port) {
+    debug('CHECKING PORT AVAILABLE', port);
+    try {
+      const { stdout, stderr } = await exec(`lsof -i:${port}`);
+      if (
+        stdout && stdout.match(/LISTEN/gmi)
+      ) {
+        debug(`PORT ${port} IS BUSY`)
+        return false;
+      }
+    } catch (e) { }
+    debug(`PORT ${port} IS OPEN`);
+    return true;
+  }
+
+
+  async getRandomPort() {
+    let port = this.getRandomInt(20000, 40000);
+    let port_available = this.checkPortAvailable(port);
+    while (!port_available) {
+      port = this.getRandomInt(20000, 40000);
+      port_available = await this.checkPortAvailable(port);
+    }
+    return port;
+  }
+
+
+  async getTimeZone(proxy){
+    const proxyUrl = `${proxy.mode}://${proxy.username}:${proxy.password}@${proxy.host}:${proxy.port}`;
+    debug('getTimeZone start https://time.gologin.app', proxyUrl);
+    const data = await requests.get('https://time.gologin.app', {proxy: proxyUrl});
+    debug('getTimeZone finish', data.body);
+    return JSON.parse(data.body).timezone;
+  }
+
+
+  async spawnBrowser() {
+    const remote_debugging_port = await this.getRandomPort();
+    const profile_path = this.profilePath();
+    
+    let proxy = this.proxy;
+    let profile_name = this.profile_name;
+    proxy = `${proxy.mode}://${proxy.host}:${proxy.port}`;
+
+    this.port = remote_debugging_port;
+    
+    const ORBITA_BROWSER = process.env.ORBITA_BROWSER || '/usr/bin/orbita-browser/chrome';
+
+    debug('TEST=', process.env.TEST);
+
+    const env = {};
+    Object.keys(process.env).forEach((key) => {
+      env[key] = process.env[key];
+    });
+    const tz = await this.getTimeZone(this.proxy);
+    env['TZ'] = tz;
+
+    if (process.env.TEST=='true') {
+      const params = [`--remote-debugging-port=${remote_debugging_port}`,`--proxy-server=${proxy}`, `--user-data-dir=${profile_path}`, `--password-store=basic`, `--tz=${tz}`, `--gologin-profile=${profile_name}`, `--lang=en`, `--load-extension=${this.orbitaExtensionPath()}`]    
+      // const ls = await spawn(ORBITA_BROWSER, params);
+      var child = require('child_process').execFile(ORBITA_BROWSER, params, {env}); 
+      // use event hooks to provide a callback to execute when data are available: 
+      child.stdout.on('data', function(data) {
+          debug(data.toString()); 
+      });      
+      
+      debug('SPAWN CMD', ORBITA_BROWSER, params.join(" "));      
+    } else {
+      const script_path = path.resolve(__dirname, './run.sh');
+      debug('RUNNING', script_path, ORBITA_BROWSER, remote_debugging_port, proxy, profile_path, process.env.VNC_PORT);
+      var child = require('child_process').execFile(script_path, [ORBITA_BROWSER, remote_debugging_port, proxy, profile_path, process.env.VNC_PORT, tz, profile_name, this.orbitaExtensionPath()], {env});
+    }
+
+    debug('GETTING WS URL FROM BROWSER');
+
+    let data = await requests.get(`http://127.0.0.1:${remote_debugging_port}/json/version`, {json: true});
+    
+    debug('WS IS', _.get(data, 'body.webSocketDebuggerUrl', ''))
+    this.is_active = true;
+
+    return _.get(data, 'body.webSocketDebuggerUrl', '');
+  }
+
+
+  async createStartupAndSpawnBrowser() {
+    await this.createStartup();
+    const ws = await this.spawnBrowser();
+    return ws;
+  }
+
+
+  async clearProfileFiles(){
+    await rimraf(`/tmp/gologin_profile_${this.profile_id}`);
+    await rimraf(`/tmp/gologin_${this.profile_id}.zip`);
+    await rimraf(`/tmp/gologin_${this.profile_id}_upload.zip`);
+  }
+
+
+  async stopAndCommit() {    
+    if(this.is_stopping==true){
+      return true;
+    }
+
+    this.is_stopping = true;
+    await this.stopBrowser();
+    await this.sanitizeProfile();
+    await this.commitProfile();
+    this.is_stopping = false;
+    this.is_active = false;
+    await this.clearProfileFiles();
+    debug(`PROFILE ${this.profile_id} STOPPED AND CLEAR`);
+    return false;
+  }
+
+
+  async stopBrowser() {
+    if (!this.port) throw new Error('Empty GoLogin port');
+    const ls = await spawn('fuser', 
+      [
+        '-k TERM',
+        `-n tcp ${this.port}`
+      ],
+      {
+          shell: true
+      }
+    );
+    debug('browser killed');
+  }
+
+
+  async sanitizeProfile() {
+    const remove_dirs = [
+        '/Default/Cache',
+        '/biahpgbdmdkfgndcmfiipgcebobojjkp',
+        '/afalakplffnnnlkncjhbmahjfjhmlkal',
+        '/cffkpbalmllkdoenhmdmpbkajipdjfam',
+        '/Dictionaries',
+        '/enkheaiicpeffbfgjiklngbpkilnbkoi',
+        '/oofiananboodjbbmdelgdommihjbkfag',
+        '/SafetyTips'
+      ];
+    const that = this;
+
+    await Promise.all(remove_dirs.map(d => {
+      const path_to_remove = `${that.profilePath()}${d}`
+      return new Promise(resolve => {
+        debug('DROPPING', path_to_remove);        
+        rimraf.sync(path_to_remove);
+        resolve();
+      });
+    }))
+  }
+
+
+  async getProfileDataToUpdate() {
+      const zipPath = `/tmp/gologin_${this.profile_id}_upload.zip`;
+      try {
+          fs.unlinkSync(zipPath);
+      }
+      catch (e) {
+      }
+      await this.sanitizeProfile();
+      debug('profile sanitized');
+      await new Promise(resolve => {
+          debug('begin zipping');
+          child_process.execFile(`cd ${this.profilePath()}; /usr/bin/zip`, [
+              `-r ${zipPath}`,
+              '*'
+          ], {
+              shell: true
+          }, () => {
+              debug('zipping done');
+              resolve();
+          });
+      });
+      debug('PROFILE ZIP CREATED', this.profilePath(), zipPath);
+      try {
+          const data = fs.readFileSync(zipPath);
+          return data;
+      }
+      catch (e) {
+          debug('saveprofile error', e);
+          return '';
+      }
+  }
+
+
+  async profileExists() {
+  	await this.login();
+  	const profileResponse = await requests.post(`${API_URL}/browser`, {
+  		headers: {
+  			'Authorization': `Bearer ${this.access_token}`
+  		},
+  		json: {
+
+  		}
+  	})
+
+  	if (profileResponse.statusCode !== 200) {
+  		return false;
+  	}
+    debug('profile is', profileResponse.body);
+  	return true;  	
+  }
+
+  async createProfile(options) {
+    debug('createProfile', options);
+
+    const empty_profile = await this.emptyProfileFolder();
+    const json = options;
+    this.proxy = options.proxy;
+    json.profile = empty_profile;
+    debug('patching profile', `/tmp/gologin_profile_${this.profile_id}/Default/Preferences`);
+    const preferences_raw = fs.readFileSync(`/tmp/gologin_profile_${this.profile_id}/Default/Preferences`);
+    let preferences = JSON.parse(preferences_raw.toString());
+
+
+    fs.writeFileSync(`/tmp/gologin_profile_${this.profile_id}/Default/Preferences`, JSON.stringify(_.merge(preferences, {
+        gologin: options
+    })));    
+
+    debug('JSON created');
+    await this.login();
+    debug('LOGGED IN');
+    const profileResponse = await requests.post(`${API_URL}/browser`, {
+        headers: {
+            'Authorization': `Bearer ${this.access_token}`
+        },
+        json
+    });
+    debug('POST complete', profileResponse.statusCode);
+  }
+
+
+  setActive(is_active){
+    this.is_active = is_active;
+  }
+
+
+  async postCookies(profile_id, json) {
+    const response = await requests.post(`${API_URL}/browser/${profile_id}/cookies`, {
+        headers: {
+            'Authorization': `Bearer ${this.access_token}`
+        },
+        json
+    });    
+
+    if(response.statusCode==200){
+      return response.body;
+    }
+
+    return {"status": "failure", "status_code": response.statusCode, "body": response.body};
+  }
+
+
+  async getCookies(profile_id) {
+    const response = await requests.get(`${API_URL}/browser/${profile_id}/cookies`, {
+        headers: {
+            'Authorization': `Bearer ${this.access_token}`
+        }
+    });    
+    return response.body;
+  }
+
+
+  async startBrowser() {
+    await this.createStartup();
+    await this.createBrowserExtension();
+    const url = await this.spawnBrowser();
+    this.setActive(true);
+    return url;
+  }
+
+
+  async stopBrowser() {
+    await this.stopAndCommit();
+  }
+}
+
+
+module.exports = GoLogin;
