@@ -4,12 +4,13 @@
 
 ### Installation
 
+`npm install https://github.com/gologinapp/gologin.git`
 
+for running example.js install puppeteer-core
 
+`npm install puppeteer-core`
 
-Requirements
-
-Constructor available options: 
+### Constructor available options: 
 
 `token` - token
 
@@ -20,7 +21,7 @@ Constructor available options:
 `executablePath` - vnc port for launching Orbita browser
 
 
-Methods:
+### Methods:
 
 `start`  - starting browser with profile id, returning wsUrl for puppeteer
 
@@ -33,7 +34,7 @@ Methods:
 `delete`  - delete profile
 
 
-*** example.js ***
+### example.js 
 
 ```js
 const puppeteer = require('puppeteer-core');
@@ -47,7 +48,7 @@ const GoLogin = require('./gologin');
     });
 
     const wsUrl = await GL.start(); 
-    
+
     const browser = await puppeteer.connect({
         browserWSEndpoint: wsUrl.toString(), 
         ignoreHTTPSErrors: true,
