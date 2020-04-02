@@ -9,7 +9,6 @@ const exec = util.promisify(require('child_process').exec);
 const { spawn, execFile } = require('child_process');
 const FormData = require("form-data");
 
-const archiver = require('archiver');
 const extract = require('extract-zip');
 const path = require('path');
 
@@ -400,8 +399,6 @@ class GoLogin {
     this.port = remote_debugging_port;
     
     const ORBITA_BROWSER = this.executablePath || '/usr/bin/orbita-browser/chrome';
-
-    debug('TEST=', process.env.TEST);
 
     const env = {};
     Object.keys(process.env).forEach((key) => {

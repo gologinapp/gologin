@@ -1,9 +1,13 @@
-Environment variables:
+# class GoLogin - class for working with gologin.app API
 
-`DEBUG=gologin*` - running in debug mode
+## Getting Started
 
-class GoLogin - class for working with API
+### Installation
 
+
+
+
+Requirements
 
 Constructor available options: 
 
@@ -32,7 +36,7 @@ Methods:
 *** example.js ***
 
 ```js
-const puppeteer = require('puppeteer');
+const puppeteer = require('puppeteer-core');
 const GoLogin = require('./gologin');
 
 (async () =>{
@@ -43,7 +47,7 @@ const GoLogin = require('./gologin');
     });
 
     const wsUrl = await GL.start(); 
-
+    
     const browser = await puppeteer.connect({
         browserWSEndpoint: wsUrl.toString(), 
         ignoreHTTPSErrors: true,
