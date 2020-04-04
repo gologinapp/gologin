@@ -10,18 +10,7 @@ for running example.js install puppeteer-core
 
 `npm install puppeteer-core`
 
-### Constructor available options: 
-
-`token` - token
-
-`profile_id` - profile id
-
-`vnc_port` - vnc port for launching Orbita browser
-
-`executablePath` - vnc port for launching Orbita browser
-
-
-### Methods:
+### Methods
 
 #### constructor
 
@@ -31,31 +20,45 @@ for running example.js install puppeteer-core
 	- `executablePath` <[string]> path to Orbita browser
 	- `vncPort` <[integer]> port of VNC server if you using it
 
-#### start  
+
+![Token API in Settings](https://user-images.githubusercontent.com/62306291/78453427-53220100-769a-11ea-9465-0aae3ae602b7.jpg)
+
+```js
+const GoLogin = require('./gologin');
+const GL = new GoLogin({
+    token: 'yU0token',
+    profile_id: 'yU0Pr0f1leiD',
+    executablePath: '/usr/bin/orbita-browser/chrome',
+});
+```
+
+
+
+#### start()  
 
 - returns: string 
 
 starting browser with profile id, returning WebSocket url for puppeteer
 
-#### stop  
+#### stop()  
 
 stoppin browser with profile id
 
-#### create  
+#### create(options)  
 
 - `options` <[Object]> Options for profile
 	- `name` <[string]> name of new profile
 
 create new profile
 
-#### update  
+#### update(options)  
 
 - `options` <[Object]> Options for profile
 	- `name` <[string]> profile name
 
 update profile data
 
-#### delete  
+#### delete()  
 
 delete profile
 
