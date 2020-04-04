@@ -23,15 +23,41 @@ for running example.js install puppeteer-core
 
 ### Methods:
 
-`start`  - starting browser with profile id, returning wsUrl for puppeteer
+#### constructor
 
-`stop`  - stoppin browser with profile id
+- `options` <[Object]> Options for profile
+	- `token` <[string]> your API token
+	- `profile_id` <[string]> profile ID
+	- `executablePath` <[string]> path to Orbita browser
+	- `vncPort` <[integer]> port of VNC server if you using it
 
-`create`  - create new profile
+#### start  
 
-`update`  - update profile data
+- returns: string 
 
-`delete`  - delete profile
+starting browser with profile id, returning WebSocket url for puppeteer
+
+#### stop  
+
+stoppin browser with profile id
+
+#### create  
+
+- `options` <[Object]> Options for profile
+	- `name` <[string]> name of new profile
+
+create new profile
+
+#### update  
+
+- `options` <[Object]> Options for profile
+	- `name` <[string]> profile name
+
+update profile data
+
+#### delete  
+
+delete profile
 
 
 ### example.js 

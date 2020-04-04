@@ -22,7 +22,7 @@ class GoLogin {
     this.profile_id = options.profile_id;
     this.password = options.password;
     this.executablePath = options.executablePath;
-    this.vnc_port = options.vnc_port;
+    this.vnc_port = options.vncPort;
     this.is_active = false;
     this.is_stopping = false;
     debug('INIT GOLOGIN', this.profile_id);
