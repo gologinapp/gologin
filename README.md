@@ -55,7 +55,105 @@ create new profile
 
 - `options` <[Object]> Options for profile
 	- `name` <[string]> profile name
-
+{
+  "name": "string",
+  "notes": "string",
+  "browserType": "chrome",
+  "os": "lin",
+  "startUrl": "string",
+  "googleServicesEnabled": false,
+  "lockEnabled": false,
+  "navigator": {
+    "userAgent": "string",
+    "resolution": "string",
+    "language": "string",
+    "platform": "string",
+    "doNotTrack": false,
+    "hardwareConcurrency": 0
+  },
+  "storage": {
+    "local": true,
+    "extensions": true,
+    "bookmarks": true,
+    "history": true,
+    "passwords": true
+  },
+  "proxyEnabled": false,
+  "proxy": {
+    "mode": "gologin",
+    "host": "string",
+    "port": 0,
+    "username": "string",
+    "password": "string",
+    "autoProxyRegion": "string"
+  },
+  "dns": "string",
+  "plugins": {
+    "enableVulnerable": true,
+    "enableFlash": true
+  },
+  "timezone": {
+    "enabled": true,
+    "fillBasedOnIp": true,
+    "timezone": "string"
+  },
+  "geolocation": {
+    "mode": "prompt",
+    "enabled": true,
+    "customize": true,
+    "fillBasedOnIp": true
+  },
+  "audioContext": {
+    "mode": "off",
+    "noise": 0
+  },
+  "canvas": {
+    "mode": "off",
+    "noise": 0
+  },
+  "fonts": {
+    "families": [
+      "string"
+    ],
+    "enableMasking": true,
+    "enableDomRect": true
+  },
+  "mediaDevices": {
+    "videoInputs": 0,
+    "audioInputs": 0,
+    "audioOutputs": 0,
+    "enableMasking": false
+  },
+  "webRTC": {
+    "mode": "alerted",
+    "enabled": true,
+    "customize": true,
+    "fillBasedOnIp": true,
+    "publicIp": "string",
+    "localIps": [
+      "string"
+    ]
+  },
+  "webGL": {
+    "mode": "noise",
+    "getClientRectsNoise": 0,
+    "noise": 0
+  },
+  "webGLMetadata": {
+    "mode": "mask",
+    "vendor": "string",
+    "renderer": "string"
+  },
+  "extensions": {
+    "enabled": true,
+    "preloadCustom": true,
+    "names": [
+      "string"
+    ]
+  },
+  "profile": "string",
+  "googleClientId": "string"
+}
 update profile data
 
 #### delete()  
