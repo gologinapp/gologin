@@ -20,6 +20,7 @@ for running example.js install puppeteer-core
 	- `executablePath` <[string]> path to Orbita browser
 	- `vncPort` <[integer]> port of VNC server if you using it
 
+<a  href="https://gologin.app" target="_blank">Where is token? token is here</a>
 
 ![Token API in Settings](https://user-images.githubusercontent.com/62306291/78453427-53220100-769a-11ea-9465-0aae3ae602b7.jpg)
 
