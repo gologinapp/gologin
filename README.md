@@ -1,4 +1,4 @@
-# class GoLogin - class for working with <a href="https://gologin.app">gologin.app</a> API
+# class GoLogin - class for working with <a href="https://gologin.app" target="_blank">gologin.app</a> API
 
 ## Getting Started
 
@@ -15,7 +15,7 @@ for running example.js install puppeteer-core
 #### constructor
 
 - `options` <[Object]> Options for profile
-	- `token` <[string]> your API <a href="https://gologin.app/#/personalArea/TokenApi">token</a>
+	- `token` <[string]> your API <a href="https://gologin.app/#/personalArea/TokenApi" target="_blank">token</a>
 	- `profile_id` <[string]> profile ID
 	- `executablePath` <[string]> path to Orbita browser
 	- `vncPort` <[integer]> port of VNC server if you using it
