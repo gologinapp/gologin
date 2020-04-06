@@ -55,105 +55,83 @@ create new profile
 
 - `options` <[Object]> Options for profile
 	- `name` <[string]> profile name
-{
-  "name": "string",
-  "notes": "string",
-  "browserType": "chrome",
-  "os": "lin",
-  "startUrl": "string",
-  "googleServicesEnabled": false,
-  "lockEnabled": false,
-  "navigator": {
-    "userAgent": "string",
-    "resolution": "string",
-    "language": "string",
-    "platform": "string",
-    "doNotTrack": false,
-    "hardwareConcurrency": 0
-  },
-  "storage": {
-    "local": true,
-    "extensions": true,
-    "bookmarks": true,
-    "history": true,
-    "passwords": true
-  },
-  "proxyEnabled": false,
-  "proxy": {
-    "mode": "gologin",
-    "host": "string",
-    "port": 0,
-    "username": "string",
-    "password": "string",
-    "autoProxyRegion": "string"
-  },
-  "dns": "string",
-  "plugins": {
-    "enableVulnerable": true,
-    "enableFlash": true
-  },
-  "timezone": {
-    "enabled": true,
-    "fillBasedOnIp": true,
-    "timezone": "string"
-  },
-  "geolocation": {
-    "mode": "prompt",
-    "enabled": true,
-    "customize": true,
-    "fillBasedOnIp": true
-  },
-  "audioContext": {
-    "mode": "off",
-    "noise": 0
-  },
-  "canvas": {
-    "mode": "off",
-    "noise": 0
-  },
-  "fonts": {
-    "families": [
-      "string"
-    ],
-    "enableMasking": true,
-    "enableDomRect": true
-  },
-  "mediaDevices": {
-    "videoInputs": 0,
-    "audioInputs": 0,
-    "audioOutputs": 0,
-    "enableMasking": false
-  },
-  "webRTC": {
-    "mode": "alerted",
-    "enabled": true,
-    "customize": true,
-    "fillBasedOnIp": true,
-    "publicIp": "string",
-    "localIps": [
-      "string"
-    ]
-  },
-  "webGL": {
-    "mode": "noise",
-    "getClientRectsNoise": 0,
-    "noise": 0
-  },
-  "webGLMetadata": {
-    "mode": "mask",
-    "vendor": "string",
-    "renderer": "string"
-  },
-  "extensions": {
-    "enabled": true,
-    "preloadCustom": true,
-    "names": [
-      "string"
-    ]
-  },
-  "profile": "string",
-  "googleClientId": "string"
-}
+  - `notes` <[String]> notes for profile
+  - `browserType` <[String]> "chrome"
+  - `os` <[String]> lin, mac or win
+  - `startUrl`: <[String]>
+  - `googleServicesEnabled` <[true, false]>
+  - `lockEnabled` <[true, false]>
+  - `navigator` <[Object]> navigator options
+    - `userAgent` <[String]>
+    - `resolution` <[String]>
+    - `language` <[String]>
+    - `platform` <[String]>
+    - `doNotTrack` <[true, false]>
+    - `hardwareConcurrency` <[Integer]>
+  - `storage` <[Object]>
+    - `local` <[true, false]>
+    - `extensions` <[true, false]>
+    - `bookmarks` <[true, false]>
+    - `history` <[true, false]>
+    - `passwords` <[true, false]>
+  - `proxyEnabled` <[true, false]> 
+  - `proxy` <[Object]>
+    - `mode` <[String]> proxy type "http"
+    - `host` <[String]>
+    - `port` <[Integer]>
+    - `username`: <[String]>
+    - `password`: <[String]>
+    - `autoProxyRegion`: <[String]>
+  - `dns` <[String]>
+  - `plugins` <[Object]>
+    - `enableVulnerable`  <[true, false]>
+    - `enableFlash`  <[true, false]>
+  - `timezone` <[Object]>
+    - `enabled`   <[true, false]>
+    - `fillBasedOnIp`   <[true, false]>
+    - `timezone`: <[String]>
+  - `geolocation` <[Object]>
+    - `mode` <[String]> "prompt"
+    - `enabled` <[true, false]>
+    - `customize` <[true, false]>
+    - `fillBasedOnIp`  <[true, false]>
+  - `audioContext`
+    - `mode`   <["on", "off"]>
+    - `noise` <[Integer]>
+  - `canvas`
+    - `mode` <["on"], ["off"]>
+    - `noise` <[Integer]>
+  - `fonts`
+    - `families` <[Array]>
+    - `enableMasking` <[true, false]>
+    - `enableDomRect` <[true, false]>
+  - `mediaDevices`
+    - `videoInputs` <[Integer]>
+    - `audioInputs` <[Integer]>
+    - `audioOutputs` <[Integer]>
+    - `enableMasking` <[true, false]>
+  - `webRTC` <[Object]>
+     - `mode` <[String]>
+     - `enabled` <[true, false]>
+     - `customize` <[true, false]>
+     - `fillBasedOnIp` <[true, false]>
+     - `publicIp` <[String]>
+     - `localIps` <[Array]>
+  - `webGL` <[Object]>
+     - `mode` <[String]> "noise"
+     - `getClientRectsNoise` <[Integer]>
+     - `noise` <[Integer]>
+  - `webGLMetadata` <[Object]>
+    - `mode` <String> mask
+    - `vendor`: <[String]>
+    - `renderer`: <[String]>
+  - `extensions` <[Object]>
+    - `enabled` <[true, false]>
+    - `preloadCustom` <[true, false]>
+    - `names` <[Array]>
+  - `profile`: <[String]>,
+  - `googleClientId`: <[String]>
+
 update profile data
 
 #### delete()  
