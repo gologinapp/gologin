@@ -33,8 +33,6 @@ const GL = new GoLogin({
 });
 ```
 
-
-
 #### start()  
 
 - returns: string 
@@ -47,10 +45,88 @@ stoppin browser with profile id
 
 #### create(options)  
 
-- `options` <[Object]> Options for profile
-	- `name` <[string]> name of new profile
+- returns: string - profile_id
 
-create new profile
+- `options` <[Object]> Options for profile
+  - `name` <[string]> profile name
+  - `notes` <[String]> notes for profile
+  - `browserType` <[String]> "chrome"
+  - `os` <[String]> lin, mac or win
+  - `startUrl`: <[String]>
+  - `googleServicesEnabled` <[true, false]>
+  - `lockEnabled` <[true, false]>
+  - `navigator` <[Object]> navigator options
+    - `userAgent` <[String]>
+    - `resolution` <[String]>
+    - `language` <[String]>
+    - `platform` <[String]>
+    - `doNotTrack` <[true, false]>
+    - `hardwareConcurrency` <[Integer]>
+  - `storage` <[Object]>
+    - `local` <[true, false]>
+    - `extensions` <[true, false]>
+    - `bookmarks` <[true, false]>
+    - `history` <[true, false]>
+    - `passwords` <[true, false]>
+  - `proxyEnabled` <[true, false]> 
+  - `proxy` <[Object]>
+    - `mode` <[String]> proxy type "http"
+    - `host` <[String]>
+    - `port` <[Integer]>
+    - `username`: <[String]>
+    - `password`: <[String]>
+    - `autoProxyRegion`: <[String]>
+  - `dns` <[String]>
+  - `plugins` <[Object]>
+    - `enableVulnerable`  <[true, false]>
+    - `enableFlash`  <[true, false]>
+  - `timezone` <[Object]>
+    - `enabled`   <[true, false]>
+    - `fillBasedOnIp`   <[true, false]>
+    - `timezone`: <[String]>
+  - `geolocation` <[Object]>
+    - `mode` <[String]> "prompt"
+    - `enabled` <[true, false]>
+    - `customize` <[true, false]>
+    - `fillBasedOnIp`  <[true, false]>
+  - `audioContext`
+    - `mode`   <["on", "off"]>
+    - `noise` <[Integer]>
+  - `canvas`
+    - `mode` <["on"], ["off"]>
+    - `noise` <[Integer]>
+  - `fonts`
+    - `families` <[Array]>
+    - `enableMasking` <[true, false]>
+    - `enableDomRect` <[true, false]>
+  - `mediaDevices`
+    - `videoInputs` <[Integer]>
+    - `audioInputs` <[Integer]>
+    - `audioOutputs` <[Integer]>
+    - `enableMasking` <[true, false]>
+  - `webRTC` <[Object]>
+     - `mode` <[String]>
+     - `enabled` <[true, false]>
+     - `customize` <[true, false]>
+     - `fillBasedOnIp` <[true, false]>
+     - `publicIp` <[String]>
+     - `localIps` <[Array]>
+  - `webGL` <[Object]>
+     - `mode` <[String]> "noise"
+     - `getClientRectsNoise` <[Integer]>
+     - `noise` <[Integer]>
+  - `webGLMetadata` <[Object]>
+    - `mode` <String> mask
+    - `vendor`: <[String]>
+    - `renderer`: <[String]>
+  - `extensions` <[Object]>
+    - `enabled` <[true, false]>
+    - `preloadCustom` <[true, false]>
+    - `names` <[Array]>
+  - `profile`: <[String]>,
+  - `googleClientId`: <[String]>
+
+create new profile and returns profile_id
 
 #### update(options)  
 
@@ -133,7 +209,7 @@ create new profile
   - `profile`: <[String]>,
   - `googleClientId`: <[String]>
 
-update profile data
+update profile metadata
 
 #### delete()  
 
