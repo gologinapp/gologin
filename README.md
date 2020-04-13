@@ -2,6 +2,8 @@
 
 ## Getting Started
 
+GoLogin supported Linux platform, under MacOS and Windows in work
+
 ### Installation
 
 `npm install https://github.com/gologinapp/gologin.git`
