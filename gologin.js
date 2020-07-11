@@ -248,72 +248,121 @@ class GoLogin {
     debug('createBrowserExtension done');
   } 
 
+  extractProfile(path, zipfile) {
+    debug(`extactProfile ${path}`);
+    const promise = new Promise(function(resolve, reject) {
+        // resolve(path);
+          extract(zipfile, { dir: path }, function (err) {
+              if (err) {
+                  debug('GOLOGIN CREATE STARTUP ERROR', err);
+                  reject(`GoLogin create startup error`);
+              }
+              debug('extraction done');
+              resolve(path);
+          });
+      });
+    return promise;  
+  }
 
   async createStartup() {
       let profile;
       let profile_folder;
       await rimraf(`/tmp/gologin_profile_${this.profile_id}`);
       debug('-', `/tmp/gologin_profile_${this.profile_id}`, 'dropped');
+
       profile = await this.getProfile();
       try {
           profile_folder = await this.getProfileS3(_.get(profile, 's3Path', ''));
       }
       catch (e) {
-          debug('Cannot get profile - using empty');
+          debug('Cannot get profile - using empty', e);
       }
+
       if (profile_folder.length == 0) {
           profile_folder = await this.emptyProfileFolder();
       }
+
       debug('PROFILE LENGTH', profile_folder.length);
       debug('Cleaning up..', `/tmp/gologin_profile_${this.profile_id}`);
+
       fs.writeFileSync(`/tmp/gologin_${this.profile_id}.zip`, profile_folder);
       debug('FILE READY', `/tmp/gologin_${this.profile_id}.zip`);
-      const that = this;
-      const profile_path = await new Promise((resolve, reject) => {
-          extract(`/tmp/gologin_${that.profile_id}.zip`, { dir: `/tmp/gologin_profile_${that.profile_id}` }, function (err) {
-              if (err) {
-                  debug('GOLOGIN CREATE STARTUP ERROR', err);
-                  reject(`GoLogin create startup error`);
-              }
-              try {
-              }
-              finally {
-                  debug('extraction done');
-              }
-              resolve(`/tmp/gologin_profile_${that.profile_id}`);
-          });
-      }).then((path) => {
-          const preferences_raw = fs.readFileSync(`/tmp/gologin_profile_${that.profile_id}/Default/Preferences`);
+
+      const path = `/tmp/gologin_profile_${this.profile_id}`;
+      // const that = this;
+      await this.extractProfile(path, `/tmp/gologin_${this.profile_id}.zip`);
+      debug('extraction done');
+      // .then(async(path) => 
+      // {
+          const pref_file_name = `${path}/Default/Preferences`;
+          debug('reading', pref_file_name);
+
+          if(!fs.existsSync(pref_file_name)) {
+            debug('Preferences file not exists waiting', pref_file_name);
+          }
+
+          const preferences_raw = fs.readFileSync(pref_file_name);
           let preferences = JSON.parse(preferences_raw.toString());
           let proxy = _.get(profile, 'proxy');
           let name = _.get(profile, 'name');
-          that.proxy = proxy;
-          that.profile_name = name;
+
+          if(proxy.mode=='gologin'){
+            const autoProxyServer = _.get(profile, 'autoProxyServer');
+            const splittedAutoProxyServer = autoProxyServer.split('://');
+            const splittedProxyAddress = splittedAutoProxyServer[1].split(':');
+            const port = splittedProxyAddress[1];
+
+            proxy = {
+              'mode': 'gologin',
+              'host': splittedProxyAddress[0],
+              port,
+              'username': _.get(profile, 'autoProxyUsername'),
+              'password': _.get(profile, 'autoProxyPassword'),
+              'timezone': _.get(profile, 'autoProxyTimezone', 'us'),
+            }
+            
+            profile.proxy.username = _.get(profile, 'autoProxyUsername');
+            profile.proxy.password = _.get(profile, 'autoProxyPassword');
+          }
+
+          this.proxy = proxy;
+          this.profile_name = name;
+
+          await this.getTimeZone(proxy)
+
+          if (_.get(profile, 'webRTC.enabled') && _.get(profile, 'webRTC.enabled')) {
+            debug('using tz ip for webRTC');
+            profile.webRTC.publicIP = this._tz.ip;
+          }
           
           let gologin = this.convertPreferences(profile); 
-
-          fs.writeFileSync(`/tmp/gologin_profile_${that.profile_id}/Default/Preferences`, JSON.stringify(_.merge(preferences, {
+          console.log('gologin=', JSON.stringify(gologin))
+          fs.writeFileSync(`/tmp/gologin_profile_${this.profile_id}/Default/Preferences`, JSON.stringify(_.merge(preferences, {
               gologin
-          })));              
+          })));
 
           if(!_.get(preferences, 'gologin.screenWidth') && _.get(profile, 'navigator.resolution', '').split('x').length>1){
-            debug(`Writing profile for screenWidth /tmp/gologin_profile_${that.profile_id}`, JSON.stringify(profile));
-            profile.screenWidth = _.get(profile, 'navigator.resolution').split('x')[0];
-            profile.screenHeight = _.get(profile, 'navigator.resolution').split('x')[1];
-            fs.writeFileSync(`/tmp/gologin_profile_${that.profile_id}/Default/Preferences`, JSON.stringify(_.merge(preferences, {
+            debug(`Writing profile for screenWidth ${path}`, JSON.stringify(profile));
+            gologin.screenWidth = _.get(profile, 'navigator.resolution').split('x')[0];
+            gologin.screenHeight = _.get(profile, 'navigator.resolution').split('x')[1];
+            
+            fs.writeFileSync(`${path}/Default/Preferences`, JSON.stringify(_.merge(preferences, {
                 gologin
-            })));              
+            })));
           }
+
+          // fs.writeFileSync(`/tmp/gologin_profile_${that.profile_id}/Default/Preferences`, fs.readFileSync('/opt/profiles/Preferences'));
+
           debug('Profile ready. Path: ', path, 'PROXY', JSON.stringify(_.get(preferences, 'gologin.proxy')));
           return path;
-      }).catch(async (e) => {
+      /*}).catch(async (e) => {
           debug('gologin error', e);
 
           await that.createProfile(profile);
 
           return `/tmp/gologin_profile_${that.profile_id}`;
-      });
-      return profile_path;
+      });*/
+      // return profile_path;
   }
 
 
@@ -387,6 +436,23 @@ class GoLogin {
     return JSON.parse(data.body).timezone;
   }
 
+  async spawnArguments() {
+    const profile_path = this.profilePath();
+    
+    let proxy = this.proxy;
+    let profile_name = this.profile_name;
+    proxy = `${proxy.mode}://${proxy.host}:${proxy.port}`;
+
+    const env = {};
+    Object.keys(process.env).forEach((key) => {
+      env[key] = process.env[key];
+    });
+    const tz = await this.getTimeZone(this.proxy);
+    env['TZ'] = tz;
+
+    const params = [`--remote-debugging-port=${remote_debugging_port}`,`--proxy-server=${proxy}`, `--user-data-dir=${profile_path}`, `--password-store=basic`, `--tz=${tz}`, `--gologin-profile=${profile_name}`, `--lang=en`, `--load-extension=${this.orbitaExtensionPath()}`]    
+    return params;
+  }
 
   async spawnBrowser() {
     const remote_debugging_port = await this.getRandomPort();
