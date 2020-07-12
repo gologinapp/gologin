@@ -10,6 +10,7 @@ const { spawn, execFile } = require('child_process');
 const FormData = require("form-data");
 
 const extract = require('extract-zip');
+const unzipper = require('unzipper');
 const path = require('path');
 
 const API_URL = 'https://api.gologin.app';
@@ -250,6 +251,8 @@ class GoLogin {
 
   extractProfile(path, zipfile) {
     debug(`extactProfile ${path}`);
+    return fs.createReadStream(zipfile).pipe(unzipper.Extract({ path })).on('entry', entry => entry.autodrain()).promise();
+    /*
     const promise = new Promise(function(resolve, reject) {
         // resolve(path);
           extract(zipfile, { dir: path }, function (err) {
@@ -261,7 +264,8 @@ class GoLogin {
               resolve(path);
           });
       });
-    return promise;  
+    return promise;
+    */  
   }
 
   async createStartup() {
@@ -433,7 +437,8 @@ class GoLogin {
     debug('getTimeZone start https://time.gologin.app', proxyUrl);
     const data = await requests.get('https://time.gologin.app', {proxy: proxyUrl});
     debug('getTimeZone finish', data.body);
-    return JSON.parse(data.body).timezone;
+    this._tz = JSON.parse(data.body);
+    return this._tz.timezone;
   }
 
   async spawnArguments() {
@@ -450,12 +455,16 @@ class GoLogin {
     const tz = await this.getTimeZone(this.proxy);
     env['TZ'] = tz;
 
-    const params = [`--remote-debugging-port=${remote_debugging_port}`,`--proxy-server=${proxy}`, `--user-data-dir=${profile_path}`, `--password-store=basic`, `--tz=${tz}`, `--gologin-profile=${profile_name}`, `--lang=en`, `--load-extension=${this.orbitaExtensionPath()}`]    
+    const params = [`--proxy-server=${proxy}`, `--user-data-dir=${profile_path}`, `--password-store=basic`, `--tz=${tz}`, `--gologin-profile=${profile_name}`, `--lang=en`]    
+    if(this.remote_debugging_port){
+      params.push(`--remote-debugging-port=${remote_debugging_port}`);
+    }
     return params;
   }
 
   async spawnBrowser() {
     const remote_debugging_port = await this.getRandomPort();
+    this.remote_debugging_port = remote_debugging_port;
     const profile_path = this.profilePath();
     
     let proxy = this.proxy;

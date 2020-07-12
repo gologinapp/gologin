@@ -6,8 +6,8 @@ chrome.setDefaultService(new chrome.ServiceBuilder('./chromedriver').build());
 
 (async () =>{
     const GL = new GoLogin({
-        token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI1ZTFjOWIwZTc5MmEyMDQ5MjhhZDU3ZDAiLCJ0eXBlIjoiZGV2Iiwiand0aWQiOiI1ZTkwZDViYTZiNmE5YTRjZGI2ODc1YTgifQ.jbQ-iuojv6Vijt82i7LrOBy46b4Kpxir5-E9sXntrqY',
-        profile_id: '5eef762508f527445e8f0f5f',
+        token: 'yU0token',
+        profile_id: 'yU0Pr0f1leiD',
         executablePath: '/usr/bin/orbita-browser/chrome',
     });
     console.log('creating startup')

@@ -12,6 +12,10 @@ for running example.js install puppeteer-core
 
 `npm install puppeteer-core`
 
+### Selenium
+
+To use GoLogin with Selenium see  `selenium/example.js`
+
 ### Methods
 
 #### constructor

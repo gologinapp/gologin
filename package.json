@@ -20,6 +20,7 @@
     "request": "^2.88.2",
     "requestretry": "^4.1.0",
     "rimraf": "^3.0.2",
-    "selenium-webdriver": "^4.0.0-alpha.7"
+    "selenium-webdriver": "^4.0.0-alpha.7",
+    "unzipper": "^0.10.11"
   }
 }
