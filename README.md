@@ -16,6 +16,10 @@ for running example.js install puppeteer-core
 
 To use GoLogin with Selenium see  `selenium/example.js`
 
+### DEBUG
+
+For debugging use `DEBUG=* node example.js` command
+
 ### Methods
 
 #### constructor
