@@ -21,7 +21,7 @@ chrome.setDefaultService(new chrome.ServiceBuilder('./chromedriver').build());
       chromeOptions.addArguments(e)
     });
 
-    chromeOptions.setChromeBinaryPath('/home/mixolap/.gologin/browser/orbita-browser/chrome');
+    chromeOptions.setChromeBinaryPath('/usr/bin/orbita-browser/chrome');
 
     driver = new webdriver.Builder()
                  .forBrowser("chrome")
