@@ -41,7 +41,6 @@ class GoLogin {
   		throw new Error(`gologin auth failed with status code, ${data.statusCode} DATA  ${JSON.stringify(data)}`);
   	}
 
-  	console.log('access_token=', data.body.access_token);
   }
 
   async getNewFingerPrint() {
@@ -252,20 +251,6 @@ class GoLogin {
   extractProfile(path, zipfile) {
     debug(`extactProfile ${path}`);
     return fs.createReadStream(zipfile).pipe(unzipper.Extract({ path })).on('entry', entry => entry.autodrain()).promise();
-    /*
-    const promise = new Promise(function(resolve, reject) {
-        // resolve(path);
-          extract(zipfile, { dir: path }, function (err) {
-              if (err) {
-                  debug('GOLOGIN CREATE STARTUP ERROR', err);
-                  reject(`GoLogin create startup error`);
-              }
-              debug('extraction done');
-              resolve(path);
-          });
-      });
-    return promise;
-    */  
   }
 
   async createStartup() {
@@ -340,7 +325,7 @@ class GoLogin {
           }
           
           let gologin = this.convertPreferences(profile); 
-          console.log('gologin=', JSON.stringify(gologin))
+          // console.log('gologin=', JSON.stringify(gologin))
           fs.writeFileSync(`/tmp/gologin_profile_${this.profile_id}/Default/Preferences`, JSON.stringify(_.merge(preferences, {
               gologin
           })));
@@ -485,9 +470,9 @@ class GoLogin {
     if (this.vnc_port) {
       const script_path = path.resolve(__dirname, './run.sh');
       debug('RUNNING', script_path, ORBITA_BROWSER, remote_debugging_port, proxy, profile_path, this.vnc_port);
-      var child = require('child_process').execFile(script_path, [ORBITA_BROWSER, remote_debugging_port, proxy, profile_path, this.vnc_port, tz, profile_name, this.orbitaExtensionPath()], {env});
+      var child = require('child_process').execFile(script_path, [ORBITA_BROWSER, remote_debugging_port, proxy, profile_path, this.vnc_port, tz, profile_name], {env});
     } else {
-      const params = [`--remote-debugging-port=${remote_debugging_port}`,`--proxy-server=${proxy}`, `--user-data-dir=${profile_path}`, `--password-store=basic`, `--tz=${tz}`, `--gologin-profile=${profile_name}`, `--lang=en`, `--load-extension=${this.orbitaExtensionPath()}`]    
+      const params = [`--remote-debugging-port=${remote_debugging_port}`,`--proxy-server=${proxy}`, `--user-data-dir=${profile_path}`, `--password-store=basic`, `--tz=${tz}`, `--gologin-profile=${profile_name}`, `--lang=en`, ]    
       var child = require('child_process').execFile(ORBITA_BROWSER, params, {env}); 
       child.stdout.on('data', function(data) {
           debug(data.toString()); 
@@ -569,8 +554,10 @@ class GoLogin {
       const path_to_remove = `${that.profilePath()}${d}`
       return new Promise(resolve => {
         debug('DROPPING', path_to_remove);        
-        rimraf.sync(path_to_remove);
-        resolve();
+        rimraf(path_to_remove, {maxBusyTries: 100}, function(e){
+          debug('DROPPING RESULT', e);
+          resolve();
+        });
       });
     }))
   }
@@ -686,7 +673,7 @@ class GoLogin {
 
   async start() {
     await this.createStartup();
-    await this.createBrowserExtension();
+    // await this.createBrowserExtension();
     const url = await this.spawnBrowser();
     this.setActive(true);
     return url;
@@ -695,6 +682,10 @@ class GoLogin {
 
   async stop() {
     await this.stopAndCommit();
+  }
+
+  async createProfile(options) {
+
   }
 }
 
