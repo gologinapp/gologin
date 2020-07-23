@@ -17,6 +17,13 @@ const API_URL = 'https://api.gologin.app';
 
 // process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
 
+function delay(time) {
+  return new Promise(function(resolve) { 
+    setTimeout(resolve, time)
+  });
+}  
+
+
 class GoLogin {
   constructor(options) {
     this.access_token = options.token;
@@ -688,19 +695,24 @@ class GoLogin {
 
   }
 
-  async startRemote() {
+  async startRemote(delay_ms=10000) {
     const profileResponse = await requests.post(`https://api.gologin.app/browser/${this.profile_id}/web`, {
       headers: {
         'Authorization': `Bearer ${this.access_token}`
       }
     });
 
-    if (profileResponse.statusCode !== 200) {
-      console.log('error status code=', profileResponse.statusCode);
-      return;
+    if (profileResponse.statusCode !== 202) {
+      return {'status': 'failure', 'code':  profileResponse.statusCode};
     }
-    console.log(profileResponse.body);
-    return JSON.parse(profileResponse.body);
+    
+    if(profileResponse.body=='ok'){
+      await delay(delay_ms);
+      const wsUrl = `wss://${this.profile_id}.orbita.gologin.app`
+      return {'status': 'success', wsUrl}
+    }
+
+    return {'status': 'failure', 'message': profileResponse.body};
   }
 
   async stopRemote() {
@@ -709,13 +721,6 @@ class GoLogin {
         'Authorization': `Bearer ${this.access_token}`
       }
     });
-
-    if (profileResponse.statusCode !== 200) {
-      console.log('error status code=', profileResponse.statusCode);
-      return;
-    }
-    console.log(profileResponse.body);
-    return JSON.parse(profileResponse.body);
   }
 }
 

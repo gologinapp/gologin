@@ -5,12 +5,10 @@ const GoLogin = require('../gologin');
     const GL = new GoLogin({
         token: 'yU0token',
         profile_id: 'yU0Pr0f1leiD',
-        executablePath: '/usr/bin/orbita-browser/chrome',
     });
-    const wsUrl = await GL.startRemote(); 
-    /*
+    const {status, wsUrl} = await GL.startRemote(); 
     const browser = await puppeteer.connect({
-        browserWSEndpoint: wsUrl.toString(), 
+        browserWSEndpoint: wsUrl, 
         ignoreHTTPSErrors: true,
     });
 
@@ -25,7 +23,5 @@ const GoLogin = require('../gologin');
         const images = data.map( e => e.hiRes);
         console.log('images=', images);
     }
-    await browser.close();
-    */
     await GL.stopRemote();
 })();
