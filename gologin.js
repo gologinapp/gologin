@@ -687,6 +687,36 @@ class GoLogin {
   async createProfile(options) {
 
   }
+
+  async startRemote() {
+    const profileResponse = await requests.post(`https://api.gologin.app/browser/${this.profile_id}/web`, {
+      headers: {
+        'Authorization': `Bearer ${this.access_token}`
+      }
+    });
+
+    if (profileResponse.statusCode !== 200) {
+      console.log('error status code=', profileResponse.statusCode);
+      return;
+    }
+    console.log(profileResponse.body);
+    return JSON.parse(profileResponse.body);
+  }
+
+  async stopRemote() {
+    const profileResponse = await requests.delete(`https://api.gologin.app/browser/${this.profile_id}/web`, {
+      headers: {
+        'Authorization': `Bearer ${this.access_token}`
+      }
+    });
+
+    if (profileResponse.statusCode !== 200) {
+      console.log('error status code=', profileResponse.statusCode);
+      return;
+    }
+    console.log(profileResponse.body);
+    return JSON.parse(profileResponse.body);
+  }
 }
 
 
