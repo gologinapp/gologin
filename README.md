@@ -29,6 +29,7 @@ For debugging use `DEBUG=* node example.js` command
 	- `profile_id` <[string]> profile ID
 	- `executablePath` <[string]> path to Orbita browser
 	- `vncPort` <[integer]> port of VNC server if you using it
+  - `tmpdir` <[string]> path to temporary directore for saving profiles
 
 <a  href="https://gologin.app" target="_blank">Where is token? token is here</a>
 
@@ -254,7 +255,22 @@ const GoLogin = require('./gologin');
 })();
 ```
 
+
 Running example:
 
 `DEBUG=gologin* node example.js`
+
+## For local profiles
+
+#### startLocal()  
+
+- returns: string 
+
+starting browser with profile id, returning WebSocket url for puppeteer. Before downloading profile on s3, it's check if exists profile in temp directory.
+
+#### stopLocal()  
+
+stoppin current browser without removing archived profile 
+
+
 

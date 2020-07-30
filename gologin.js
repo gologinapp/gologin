@@ -2,6 +2,7 @@ const debug = require('debug')('gologin');
 const _ = require('lodash');
 const requests = require('requestretry').defaults({timeout: 60000});
 const fs = require('fs');
+const os = require('os');
 const child_process = require("child_process");
 const util = require('util');
 const rimraf = util.promisify(require("rimraf"));
@@ -12,6 +13,7 @@ const FormData = require("form-data");
 const extract = require('extract-zip');
 const unzipper = require('unzipper');
 const path = require('path');
+var shell = require('shelljs');
 
 const API_URL = 'https://api.gologin.app';
 
@@ -33,6 +35,15 @@ class GoLogin {
     this.vnc_port = options.vncPort;
     this.is_active = false;
     this.is_stopping = false;
+    this.tmpdir = os.tmpdir();
+    if(options.tmpdir){
+      this.tmpdir = options.tmpdir;
+      if(!fs.existsSync(this.tmpdir)){
+        debug('making tmpdir', this.tmpdir);
+        shell.mkdir('-p', this.tmpdir);
+      }
+    }
+    this.profile_zip_path = `${this.tmpdir}/gologin_${this.profile_id}.zip`;    
     debug('INIT GOLOGIN', this.profile_id);
   }
 
@@ -93,7 +104,6 @@ class GoLogin {
   	}
   	return JSON.parse(profileResponse.body);
   }
-
 
   async emptyProfile() {
   	let b64 = fs.readFileSync('./gologin_zeroprofile.b64').toString();
@@ -172,7 +182,7 @@ class GoLogin {
   async emptyProfileFolder() {
     debug('emptyProfileFolder')
     const zipname = path.resolve(__dirname, './gologin_zeroprofile.zip');
-    const outdir = `/tmp/gologin_profile_${this.profile_id}`;
+    const outdir = `${this.tmpdir}/gologin_profile_${this.profile_id}`;
     await new Promise((resolve, reject) => {
         extract(zipname, { dir: outdir }, function (err) {
             if (err) {
@@ -209,10 +219,6 @@ class GoLogin {
 
     if(_.get(preferences, 'navigator.hardwareConcurrency')){
       preferences.hardwareConcurrency = _.get(preferences, 'navigator.hardwareConcurrency');
-    }
-
-    if(_.get(preferences, 'navigator.language')){
-      preferences.language = _.get(preferences, 'navigator.language');
     }
 
     if(_.get(preferences, 'navigator.language')){
@@ -260,105 +266,101 @@ class GoLogin {
     return fs.createReadStream(zipfile).pipe(unzipper.Extract({ path })).on('entry', entry => entry.autodrain()).promise();
   }
 
-  async createStartup() {
+  async checkLocalProfile(){
+
+  }
+
+  async createStartup(local=false) {
       let profile;
       let profile_folder;
-      await rimraf(`/tmp/gologin_profile_${this.profile_id}`);
-      debug('-', `/tmp/gologin_profile_${this.profile_id}`, 'dropped');
-
+      await rimraf(`${this.tmpdir}/gologin_profile_${this.profile_id}`);
+      debug('-', `${this.tmpdir}/gologin_profile_${this.profile_id}`, 'dropped');
       profile = await this.getProfile();
-      try {
-          profile_folder = await this.getProfileS3(_.get(profile, 's3Path', ''));
+
+      if(local==false || !fs.existsSync(this.profile_zip_path)) {
+        try {
+            profile_folder = await this.getProfileS3(_.get(profile, 's3Path', ''));
+        }
+        catch (e) {
+            debug('Cannot get profile - using empty', e);
+        }
+        fs.writeFileSync(this.profile_zip_path, profile_folder);
+        debug('FILE READY', this.profile_zip_path);
+        if (profile_folder.length == 0) {
+            profile_folder = await this.emptyProfileFolder();
+        }
+        debug('PROFILE LENGTH', profile_folder.length);
+      } else {
+        debug('PROFILE LOCAL HAVING', this.profile_zip_path);
       }
-      catch (e) {
-          debug('Cannot get profile - using empty', e);
-      }
 
-      if (profile_folder.length == 0) {
-          profile_folder = await this.emptyProfileFolder();
-      }
 
-      debug('PROFILE LENGTH', profile_folder.length);
-      debug('Cleaning up..', `/tmp/gologin_profile_${this.profile_id}`);
+      debug('Cleaning up..', `${this.tmpdir}/gologin_profile_${this.profile_id}`);
 
-      fs.writeFileSync(`/tmp/gologin_${this.profile_id}.zip`, profile_folder);
-      debug('FILE READY', `/tmp/gologin_${this.profile_id}.zip`);
+      const path = `${this.tmpdir}/gologin_profile_${this.profile_id}`;
 
-      const path = `/tmp/gologin_profile_${this.profile_id}`;
-      // const that = this;
-      await this.extractProfile(path, `/tmp/gologin_${this.profile_id}.zip`);
+      await this.extractProfile(path, this.profile_zip_path);
       debug('extraction done');
-      // .then(async(path) => 
-      // {
-          const pref_file_name = `${path}/Default/Preferences`;
-          debug('reading', pref_file_name);
 
-          if(!fs.existsSync(pref_file_name)) {
-            debug('Preferences file not exists waiting', pref_file_name);
-          }
+      const pref_file_name = `${path}/Default/Preferences`;
+      debug('reading', pref_file_name);
 
-          const preferences_raw = fs.readFileSync(pref_file_name);
-          let preferences = JSON.parse(preferences_raw.toString());
-          let proxy = _.get(profile, 'proxy');
-          let name = _.get(profile, 'name');
+      if(!fs.existsSync(pref_file_name)) {
+        debug('Preferences file not exists waiting', pref_file_name);
+      }
 
-          if(proxy.mode=='gologin'){
-            const autoProxyServer = _.get(profile, 'autoProxyServer');
-            const splittedAutoProxyServer = autoProxyServer.split('://');
-            const splittedProxyAddress = splittedAutoProxyServer[1].split(':');
-            const port = splittedProxyAddress[1];
+      const preferences_raw = fs.readFileSync(pref_file_name);
+      let preferences = JSON.parse(preferences_raw.toString());
+      let proxy = _.get(profile, 'proxy');
+      let name = _.get(profile, 'name');
 
-            proxy = {
-              'mode': 'gologin',
-              'host': splittedProxyAddress[0],
-              port,
-              'username': _.get(profile, 'autoProxyUsername'),
-              'password': _.get(profile, 'autoProxyPassword'),
-              'timezone': _.get(profile, 'autoProxyTimezone', 'us'),
-            }
-            
-            profile.proxy.username = _.get(profile, 'autoProxyUsername');
-            profile.proxy.password = _.get(profile, 'autoProxyPassword');
-          }
+      if(proxy.mode=='gologin'){
+        const autoProxyServer = _.get(profile, 'autoProxyServer');
+        const splittedAutoProxyServer = autoProxyServer.split('://');
+        const splittedProxyAddress = splittedAutoProxyServer[1].split(':');
+        const port = splittedProxyAddress[1];
 
-          this.proxy = proxy;
-          this.profile_name = name;
+        proxy = {
+          'mode': 'gologin',
+          'host': splittedProxyAddress[0],
+          port,
+          'username': _.get(profile, 'autoProxyUsername'),
+          'password': _.get(profile, 'autoProxyPassword'),
+          'timezone': _.get(profile, 'autoProxyTimezone', 'us'),
+        }
+        
+        profile.proxy.username = _.get(profile, 'autoProxyUsername');
+        profile.proxy.password = _.get(profile, 'autoProxyPassword');
+      }
 
-          await this.getTimeZone(proxy)
+      this.proxy = proxy;
+      this.profile_name = name;
 
-          if (_.get(profile, 'webRTC.enabled') && _.get(profile, 'webRTC.enabled')) {
-            debug('using tz ip for webRTC');
-            profile.webRTC.publicIP = this._tz.ip;
-          }
-          
-          let gologin = this.convertPreferences(profile); 
-          // console.log('gologin=', JSON.stringify(gologin))
-          fs.writeFileSync(`/tmp/gologin_profile_${this.profile_id}/Default/Preferences`, JSON.stringify(_.merge(preferences, {
-              gologin
-          })));
+      await this.getTimeZone(proxy)
 
-          if(!_.get(preferences, 'gologin.screenWidth') && _.get(profile, 'navigator.resolution', '').split('x').length>1){
-            debug(`Writing profile for screenWidth ${path}`, JSON.stringify(profile));
-            gologin.screenWidth = _.get(profile, 'navigator.resolution').split('x')[0];
-            gologin.screenHeight = _.get(profile, 'navigator.resolution').split('x')[1];
-            
-            fs.writeFileSync(`${path}/Default/Preferences`, JSON.stringify(_.merge(preferences, {
-                gologin
-            })));
-          }
+      if (_.get(profile, 'webRTC.enabled') && _.get(profile, 'webRTC.enabled')) {
+        debug('using tz ip for webRTC');
+        profile.webRTC.publicIP = this._tz.ip;
+      }
+      
+      let gologin = this.convertPreferences(profile); 
+      // console.log('gologin=', JSON.stringify(gologin))
+      fs.writeFileSync(`${this.tmpdir}/gologin_profile_${this.profile_id}/Default/Preferences`, JSON.stringify(_.merge(preferences, {
+          gologin
+      })));
 
-          // fs.writeFileSync(`/tmp/gologin_profile_${that.profile_id}/Default/Preferences`, fs.readFileSync('/opt/profiles/Preferences'));
+      if(!_.get(preferences, 'gologin.screenWidth') && _.get(profile, 'navigator.resolution', '').split('x').length>1){
+        debug(`Writing profile for screenWidth ${path}`, JSON.stringify(profile));
+        gologin.screenWidth = _.get(profile, 'navigator.resolution').split('x')[0];
+        gologin.screenHeight = _.get(profile, 'navigator.resolution').split('x')[1];
+        
+        fs.writeFileSync(`${path}/Default/Preferences`, JSON.stringify(_.merge(preferences, {
+            gologin
+        })));
+      }
 
-          debug('Profile ready. Path: ', path, 'PROXY', JSON.stringify(_.get(preferences, 'gologin.proxy')));
-          return path;
-      /*}).catch(async (e) => {
-          debug('gologin error', e);
-
-          await that.createProfile(profile);
-
-          return `/tmp/gologin_profile_${that.profile_id}`;
-      });*/
-      // return profile_path;
+      debug('Profile ready. Path: ', path, 'PROXY', JSON.stringify(_.get(preferences, 'gologin.proxy')));
+      return path;
   }
 
 
@@ -381,12 +383,12 @@ class GoLogin {
 
 
   profilePath() {
-    return `/tmp/gologin_profile_${this.profile_id}`;
+    return `${this.tmpdir}/gologin_profile_${this.profile_id}`;
   }
 
 
   orbitaExtensionPath() {
-    return `/tmp/orbita_extension_${this.profile_id}`;
+    return `${this.tmpdir}/orbita_extension_${this.profile_id}`;
   }
 
 
@@ -506,24 +508,28 @@ class GoLogin {
 
 
   async clearProfileFiles(){
-    await rimraf(`/tmp/gologin_profile_${this.profile_id}`);
-    await rimraf(`/tmp/gologin_${this.profile_id}.zip`);
-    await rimraf(`/tmp/gologin_${this.profile_id}_upload.zip`);
+    await rimraf(`${this.tmpdir}/gologin_profile_${this.profile_id}`);
+    await rimraf(`${this.tmpdir}/gologin_${this.profile_id}_upload.zip`);
   }
 
 
-  async stopAndCommit() {    
+  async stopAndCommit(local=false, options) {    
     if(this.is_stopping==true){
       return true;
     }
+    const is_posting = options.postings || false;
 
     this.is_stopping = true;
-    // await this.stopBrowser();
     await this.sanitizeProfile();
-    await this.commitProfile();
+    if(is_posting){
+      await this.commitProfile();
+    }
     this.is_stopping = false;
     this.is_active = false;
     await this.clearProfileFiles();
+    if(local==false){
+          await rimraf(`${this.tmpdir}/gologin_${this.profile_id}.zip`);
+    }    
     debug(`PROFILE ${this.profile_id} STOPPED AND CLEAR`);
     return false;
   }
@@ -562,7 +568,7 @@ class GoLogin {
       return new Promise(resolve => {
         debug('DROPPING', path_to_remove);        
         rimraf(path_to_remove, {maxBusyTries: 100}, function(e){
-          debug('DROPPING RESULT', e);
+          // debug('DROPPING RESULT', e);
           resolve();
         });
       });
@@ -571,7 +577,7 @@ class GoLogin {
 
 
   async getProfileDataToUpdate() {
-      const zipPath = `/tmp/gologin_${this.profile_id}_upload.zip`;
+      const zipPath = `${this.tmpdir}/gologin_${this.profile_id}_upload.zip`;
       try {
           fs.unlinkSync(zipPath);
       }
@@ -627,12 +633,12 @@ class GoLogin {
     const json = options;
     this.proxy = options.proxy;
     json.profile = empty_profile;
-    debug('patching profile', `/tmp/gologin_profile_${this.profile_id}/Default/Preferences`);
-    const preferences_raw = fs.readFileSync(`/tmp/gologin_profile_${this.profile_id}/Default/Preferences`);
+    debug('patching profile', `${this.tmpdir}/gologin_profile_${this.profile_id}/Default/Preferences`);
+    const preferences_raw = fs.readFileSync(`${this.tmpdir}/gologin_profile_${this.profile_id}/Default/Preferences`);
     let preferences = JSON.parse(preferences_raw.toString());
 
 
-    fs.writeFileSync(`/tmp/gologin_profile_${this.profile_id}/Default/Preferences`, JSON.stringify(_.merge(preferences, {
+    fs.writeFileSync(`${this.tmpdir}/gologin_profile_${this.profile_id}/Default/Preferences`, JSON.stringify(_.merge(preferences, {
         gologin: options
     })));    
 
@@ -686,13 +692,21 @@ class GoLogin {
     return url;
   }
 
+  async startLocal() {
+    await this.createStartup(true);
+    // await this.createBrowserExtension();
+    const url = await this.spawnBrowser();
+    this.setActive(true);
+    return url;
+  }
+
 
   async stop() {
     await this.stopAndCommit();
   }
 
-  async createProfile(options) {
-
+  async stopLocal(options) {
+    await this.stopAndCommit(true, options.posting);
   }
 
   async startRemote(delay_ms=10000) {
