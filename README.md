@@ -142,6 +142,7 @@ create new profile and returns profile_id
 #### update(options)  
 
 - `options` <[Object]> Options for profile
+  - `id` <[string]> profile id (required)
 	- `name` <[string]> profile name
   - `notes` <[String]> notes for profile
   - `browserType` <[String]> "chrome"
@@ -222,7 +223,7 @@ create new profile and returns profile_id
 
 update profile metadata
 
-#### delete()  
+#### delete(profile_id)  
 
 delete profile
 

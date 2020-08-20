@@ -91,16 +91,17 @@ class GoLogin {
   }
 
 
-  async getProfile() {
-    debug('getProfile', this.access_token, this.profile_id);
-  	const profileResponse = await requests.get(`${API_URL}/browser/${this.profile_id}`, {
+  async getProfile(profile_id) {
+    const id = profile_id || this.profile_id;
+    debug('getProfile', this.access_token, id);
+  	const profileResponse = await requests.get(`${API_URL}/browser/${id}`, {
   		headers: {
   			'Authorization': `Bearer ${this.access_token}`
   		}
   	})
     debug(profileResponse.body);
   	if (profileResponse.statusCode !== 200) {
-  		throw new Error(`Gologin /browser/${this.profile_id} response error ${profileResponse.statusCode}`);
+  		throw new Error(`Gologin /browser/${id} response error ${profileResponse.statusCode}`);
   	}
   	return JSON.parse(profileResponse.body);
   }
@@ -626,32 +627,94 @@ class GoLogin {
   	return true;  	
   }
 
-  async createProfile(options) {
+
+  async getRandomFingerprint(options){
+    let os = 'lin';
+
+    if(options.os){
+      os = options.os;
+    } 
+
+    let fingerprint = await requests.get(`https://api.gologin.app/browser/fingerprint?os=${os}`,{
+          headers: {
+              'Authorization': `Bearer ${this.access_token}`
+          }
+    });    
+
+    return JSON.parse(fingerprint.body);    
+  }
+
+  async create(options) {
+
     debug('createProfile', options);
+    
+    const profile_options = await this.getRandomFingerprint(options);
+    
+    const json = {
+      "name": "default_name",
+      "notes": "auto generated",
+      "browserType": "chrome",
+      "os": "lin",
+      "startUrl": "google.com",
+      "googleServicesEnabled": false,
+      "lockEnabled": false,
+      "audioContext": {
+        "mode": "noise"
+      },
+      "canvas": {
+        "mode": "noise"
+      },
+      "webRTC": {
+        "mode": "alerted",
+        "enabled": true,
+        "customize": true,
+        "fillBasedOnIp": true
+      },
+      "navigator": {
+        "userAgent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:71.0) Gecko/20100101 Firefox/71.0",
+        "resolution": "1200x800",
+        "language": "EN",
+        "platform": "Linux x86_64"
+      },
+      "proxyEnabled": true,
+      "screenHeight": 800,
+      "screenWidth": 1200,
+      "profile": JSON.stringify(profile_options),
+    };
+    
+    Object.keys(options).map((e)=>{json[e]=options[e]})
 
-    const empty_profile = await this.emptyProfileFolder();
-    const json = options;
-    this.proxy = options.proxy;
-    json.profile = empty_profile;
-    debug('patching profile', `${this.tmpdir}/gologin_profile_${this.profile_id}/Default/Preferences`);
-    const preferences_raw = fs.readFileSync(`${this.tmpdir}/gologin_profile_${this.profile_id}/Default/Preferences`);
-    let preferences = JSON.parse(preferences_raw.toString());
-
-
-    fs.writeFileSync(`${this.tmpdir}/gologin_profile_${this.profile_id}/Default/Preferences`, JSON.stringify(_.merge(preferences, {
-        gologin: options
-    })));    
-
-    debug('JSON created');
-    const profileResponse = await requests.post(`${API_URL}/browser`, {
+    debug('profileOptions', options);
+    
+    const response = await requests.post(`${API_URL}/browser/`, {
         headers: {
             'Authorization': `Bearer ${this.access_token}`
         },
-        json
-    });
-    debug('POST complete', profileResponse.statusCode);
+        json,
+    });   
+
+    return response.body.id;
   }
 
+  async delete(profile_id){
+    const response = await requests.delete(`${API_URL}/browser/${profile_id}`, {
+        headers: {
+            'Authorization': `Bearer ${this.access_token}`
+        },
+    });
+  }
+
+  async update(options){
+    this.profile_id = options.id;
+    const profile = await this.getProfile();
+    Object.keys(options).map((e)=>{profile[e]=options[e]})
+    return await requests.put(`https://api.gologin.app/browser/${options.id}`,{
+          json: profile,
+          headers: {
+              'Authorization': `Bearer ${this.access_token}`
+          }
+    });    
+  }
 
   setActive(is_active){
     this.is_active = is_active;
