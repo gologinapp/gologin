@@ -43,7 +43,10 @@ class GoLogin {
         shell.mkdir('-p', this.tmpdir);
       }
     }
-    this.profile_zip_path = `${this.tmpdir}/gologin_${this.profile_id}.zip`;    
+    this.profile_zip_path = path.normalize(`${this.tmpdir}/gologin_${this.profile_id}.zip`);    
+    this.profiledir = path.normalize(`${this.tmpdir}/gologin_profile_${this.profile_id}`)
+    console.log(this.profile_zip_path);
+    console.log(this.profiledir);
     debug('INIT GOLOGIN', this.profile_id);
   }
 
@@ -183,7 +186,7 @@ class GoLogin {
   async emptyProfileFolder() {
     debug('emptyProfileFolder')
     const zipname = path.resolve(__dirname, './gologin_zeroprofile.zip');
-    const outdir = `${this.tmpdir}/gologin_profile_${this.profile_id}`;
+    const outdir = this.profiledir;
     await new Promise((resolve, reject) => {
         extract(zipname, { dir: outdir }, function (err) {
             if (err) {
@@ -274,8 +277,8 @@ class GoLogin {
   async createStartup(local=false) {
       let profile;
       let profile_folder;
-      await rimraf(`${this.tmpdir}/gologin_profile_${this.profile_id}`);
-      debug('-', `${this.tmpdir}/gologin_profile_${this.profile_id}`, 'dropped');
+      await rimraf(this.profiledir);
+      debug('-', this.profiledir, 'dropped');
       profile = await this.getProfile();
 
       if(local==false || !fs.existsSync(this.profile_zip_path)) {
@@ -296,9 +299,9 @@ class GoLogin {
       }
 
 
-      debug('Cleaning up..', `${this.tmpdir}/gologin_profile_${this.profile_id}`);
+      debug('Cleaning up..', this.profiledir);
 
-      const path = `${this.tmpdir}/gologin_profile_${this.profile_id}`;
+      const path = this.profiledir;
 
       await this.extractProfile(path, this.profile_zip_path);
       debug('extraction done');
@@ -346,7 +349,7 @@ class GoLogin {
       
       let gologin = this.convertPreferences(profile); 
       // console.log('gologin=', JSON.stringify(gologin))
-      fs.writeFileSync(`${this.tmpdir}/gologin_profile_${this.profile_id}/Default/Preferences`, JSON.stringify(_.merge(preferences, {
+      fs.writeFileSync(path.normalize(`${this.profiledir}/Default/Preferences`), JSON.stringify(_.merge(preferences, {
           gologin
       })));
 
@@ -384,12 +387,12 @@ class GoLogin {
 
 
   profilePath() {
-    return `${this.tmpdir}/gologin_profile_${this.profile_id}`;
+    return this.profiledir;
   }
 
 
   orbitaExtensionPath() {
-    return `${this.tmpdir}/orbita_extension_${this.profile_id}`;
+    return this.normalize(`${this.tmpdir}/orbita_extension_${this.profile_id}`);
   }
 
 
@@ -509,8 +512,8 @@ class GoLogin {
 
 
   async clearProfileFiles(){
-    await rimraf(`${this.tmpdir}/gologin_profile_${this.profile_id}`);
-    await rimraf(`${this.tmpdir}/gologin_${this.profile_id}_upload.zip`);
+    await rimraf(this.profiledir);
+    await rimraf(this.profile_zip_path);
   }
 
 
@@ -529,7 +532,7 @@ class GoLogin {
     this.is_active = false;
     await this.clearProfileFiles();
     if(local==false){
-          await rimraf(`${this.tmpdir}/gologin_${this.profile_id}.zip`);
+          await rimraf(this.profile_zip_path);
     }    
     debug(`PROFILE ${this.profile_id} STOPPED AND CLEAR`);
     return false;
@@ -578,7 +581,7 @@ class GoLogin {
 
 
   async getProfileDataToUpdate() {
-      const zipPath = `${this.tmpdir}/gologin_${this.profile_id}_upload.zip`;
+      const zipPath = this.normalize(`${this.tmpdir}/gologin_${this.profile_id}_upload.zip`);
       try {
           fs.unlinkSync(zipPath);
       }
