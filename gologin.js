@@ -362,7 +362,7 @@ class GoLogin {
             gologin
         })));
       }
-
+      await this.sanitizeProfile();
       debug('Profile ready. Path: ', path, 'PROXY', JSON.stringify(_.get(preferences, 'gologin.proxy')));
       return path;
   }
