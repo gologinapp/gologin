@@ -315,7 +315,10 @@ class GoLogin {
         profile.proxy.username = _.get(profile, 'autoProxyUsername');
         profile.proxy.password = _.get(profile, 'autoProxyPassword');        
       }
-
+      console.log('proxy=', proxy);
+      if(proxy.mode=='none'){
+        proxy = null;
+      }
       this.proxy = proxy;
       this.profile_name = name;
 
@@ -410,9 +413,14 @@ class GoLogin {
 
 
   async getTimeZone(proxy){
-    const proxyUrl = `${proxy.mode}://${proxy.username}:${proxy.password}@${proxy.host}:${proxy.port}`;
-    debug('getTimeZone start https://time.gologin.app', proxyUrl);
-    const data = await requests.get('https://time.gologin.app', {proxy: proxyUrl});
+    let data = null;
+    if(proxy){
+      const proxyUrl = `${proxy.mode}://${proxy.username}:${proxy.password}@${proxy.host}:${proxy.port}`;
+      debug('getTimeZone start https://time.gologin.app', proxyUrl);
+      data = await requests.get('https://time.gologin.app', {proxy: proxyUrl});
+    } else {
+      data = await requests.get('https://time.gologin.app');
+    }
     debug('getTimeZone finish', data.body);
     this._tz = JSON.parse(data.body);
     return this._tz.timezone;
@@ -446,7 +454,9 @@ class GoLogin {
     
     let proxy = this.proxy;
     let profile_name = this.profile_name;
-    proxy = `${proxy.mode}://${proxy.host}:${proxy.port}`;
+    if(proxy){
+      proxy = `${proxy.mode}://${proxy.host}:${proxy.port}`;
+    }
 
     this.port = remote_debugging_port;
     
@@ -521,6 +531,7 @@ class GoLogin {
     }
     this.is_stopping = false;
     this.is_active = false;
+    await delay(3000);
     await this.clearProfileFiles();
     if(local==false){
           await rimraf(`${this.tmpdir}/gologin_${this.profile_id}.zip`);
