@@ -315,7 +315,7 @@ class GoLogin {
         profile.proxy.username = _.get(profile, 'autoProxyUsername');
         profile.proxy.password = _.get(profile, 'autoProxyPassword');        
       }
-      console.log('proxy=', proxy);
+      // console.log('proxy=', proxy);
       if(proxy.mode=='none'){
         proxy = null;
       }
