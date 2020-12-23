@@ -28,6 +28,7 @@ function delay(time) {
 
 class GoLogin {
   constructor(options) {
+    this.is_remote = options.remote || false;
     this.access_token = options.token;
     this.profile_id = options.profile_id;
     this.password = options.password;
@@ -43,11 +44,12 @@ class GoLogin {
         shell.mkdir('-p', this.tmpdir);
       }
     }
-    this.profile_zip_path = path.normalize(`${this.tmpdir}/gologin_${this.profile_id}.zip`);    
-    this.profiledir = path.normalize(`${this.tmpdir}/gologin_profile_${this.profile_id}`)
-    console.log(this.profile_zip_path);
-    console.log(this.profiledir);
+    this.profile_zip_path = `${this.tmpdir}/gologin_${this.profile_id}.zip`;    
     debug('INIT GOLOGIN', this.profile_id);
+  }
+  async setProfileId(profile_id){
+    this.profile_id = profile_id;
+    this.profile_zip_path = `${this.tmpdir}/gologin_${this.profile_id}.zip`;    
   }
 
   async getToken(username, password) {
@@ -184,27 +186,6 @@ class GoLogin {
 
 
   async emptyProfileFolder() {
-    debug('emptyProfileFolder')
-    const zipname = path.resolve(__dirname, './gologin_zeroprofile.zip');
-    const outdir = this.profiledir;
-    await new Promise((resolve, reject) => {
-        extract(zipname, { dir: outdir }, function (err) {
-            if (err) {
-                debug('GOLOGIN CREATE STARTUP ERROR', err);
-                reject(`GoLogin create startup error`);
-            }
-            
-            require('child_process').execFile('/bin/chmod', ['777', '-R', outdir]); 
-            
-            try {
-            }
-            finally {
-                debug('extraction done');
-            }
-            resolve();
-        });
-    })
-
     debug('get emptyProfileFolder');
     let profile = fs.readFileSync(path.resolve(__dirname, './gologin_zeroprofile.zip'));
     debug('emptyProfileFolder LENGTH ::', profile.length);
@@ -245,11 +226,7 @@ class GoLogin {
                 debug('CREATE ORBITA EXTENSION ERROR', err);
                 reject(`GoLogin create orbita extension error`);
             }
-            try {
-            }
-            finally {
-                debug('extraction done');
-            }
+            debug('extraction done');
             resolve(that.orbitaExtensionPath());
         });
     })
@@ -266,7 +243,7 @@ class GoLogin {
   } 
 
   extractProfile(path, zipfile) {
-    debug(`extactProfile ${path}`);
+    debug(`extactProfile ${zipfile} , ${path}`);
     return fs.createReadStream(zipfile).pipe(unzipper.Extract({ path })).on('entry', entry => entry.autodrain()).promise();
   }
 
@@ -277,8 +254,8 @@ class GoLogin {
   async createStartup(local=false) {
       let profile;
       let profile_folder;
-      await rimraf(this.profiledir);
-      debug('-', this.profiledir, 'dropped');
+      await rimraf(`${this.tmpdir}/gologin_profile_${this.profile_id}`);
+      debug('-', `${this.tmpdir}/gologin_profile_${this.profile_id}`, 'dropped');
       profile = await this.getProfile();
 
       if(local==false || !fs.existsSync(this.profile_zip_path)) {
@@ -288,20 +265,22 @@ class GoLogin {
         catch (e) {
             debug('Cannot get profile - using empty', e);
         }
-        fs.writeFileSync(this.profile_zip_path, profile_folder);
         debug('FILE READY', this.profile_zip_path);
         if (profile_folder.length == 0) {
             profile_folder = await this.emptyProfileFolder();
         }
+        
+        fs.writeFileSync(this.profile_zip_path, profile_folder);
+
         debug('PROFILE LENGTH', profile_folder.length);
       } else {
         debug('PROFILE LOCAL HAVING', this.profile_zip_path);
       }
 
 
-      debug('Cleaning up..', this.profiledir);
+      debug('Cleaning up..', `${this.tmpdir}/gologin_profile_${this.profile_id}`);
 
-      const path = this.profiledir;
+      const path = `${this.tmpdir}/gologin_profile_${this.profile_id}`;
 
       await this.extractProfile(path, this.profile_zip_path);
       debug('extraction done');
@@ -325,7 +304,7 @@ class GoLogin {
         const port = splittedProxyAddress[1];
 
         proxy = {
-          'mode': 'gologin',
+          'mode': 'http',
           'host': splittedProxyAddress[0],
           port,
           'username': _.get(profile, 'autoProxyUsername'),
@@ -334,7 +313,7 @@ class GoLogin {
         }
         
         profile.proxy.username = _.get(profile, 'autoProxyUsername');
-        profile.proxy.password = _.get(profile, 'autoProxyPassword');
+        profile.proxy.password = _.get(profile, 'autoProxyPassword');        
       }
 
       this.proxy = proxy;
@@ -349,7 +328,7 @@ class GoLogin {
       
       let gologin = this.convertPreferences(profile); 
       // console.log('gologin=', JSON.stringify(gologin))
-      fs.writeFileSync(path.normalize(`${this.profiledir}/Default/Preferences`), JSON.stringify(_.merge(preferences, {
+      fs.writeFileSync(`${this.tmpdir}/gologin_profile_${this.profile_id}/Default/Preferences`, JSON.stringify(_.merge(preferences, {
           gologin
       })));
 
@@ -362,7 +341,7 @@ class GoLogin {
             gologin
         })));
       }
-      await this.sanitizeProfile();
+
       debug('Profile ready. Path: ', path, 'PROXY', JSON.stringify(_.get(preferences, 'gologin.proxy')));
       return path;
   }
@@ -387,12 +366,12 @@ class GoLogin {
 
 
   profilePath() {
-    return this.profiledir;
+    return `${this.tmpdir}/gologin_profile_${this.profile_id}`;
   }
 
 
   orbitaExtensionPath() {
-    return this.normalize(`${this.tmpdir}/orbita_extension_${this.profile_id}`);
+    return `${this.tmpdir}/orbita_extension_${this.profile_id}`;
   }
 
 
@@ -485,7 +464,19 @@ class GoLogin {
       debug('RUNNING', script_path, ORBITA_BROWSER, remote_debugging_port, proxy, profile_path, this.vnc_port);
       var child = require('child_process').execFile(script_path, [ORBITA_BROWSER, remote_debugging_port, proxy, profile_path, this.vnc_port, tz, profile_name], {env});
     } else {
-      const params = [`--remote-debugging-port=${remote_debugging_port}`,`--proxy-server=${proxy}`, `--user-data-dir=${profile_path}`, `--password-store=basic`, `--tz=${tz}`, `--gologin-profile=${profile_name}`, `--lang=en`, ]    
+      const params = [
+        `--remote-debugging-port=${remote_debugging_port}`,
+        `--user-data-dir=${profile_path}`, 
+        `--password-store=basic`, 
+        `--tz=${tz}`, 
+        `--gologin-profile=${profile_name}`, 
+        `--lang=en`, 
+        ]    
+      if(proxy){
+        const hr_rules = `"MAP * 0.0.0.0 , EXCLUDE ${proxy.host}"`;
+        params.push(`--proxy-server=${proxy}`);
+        params.push(`--host-resolver-rules=${hr_rules}`);
+      }
       var child = require('child_process').execFile(ORBITA_BROWSER, params, {env}); 
       child.stdout.on('data', function(data) {
           debug(data.toString()); 
@@ -512,12 +503,12 @@ class GoLogin {
 
 
   async clearProfileFiles(){
-    await rimraf(this.profiledir);
-    await rimraf(this.profile_zip_path);
+    await rimraf(`${this.tmpdir}/gologin_profile_${this.profile_id}`);
+    await rimraf(`${this.tmpdir}/gologin_${this.profile_id}_upload.zip`);
   }
 
 
-  async stopAndCommit(local=false, options) {    
+  async stopAndCommit(options, local=false) {    
     if(this.is_stopping==true){
       return true;
     }
@@ -532,7 +523,7 @@ class GoLogin {
     this.is_active = false;
     await this.clearProfileFiles();
     if(local==false){
-          await rimraf(this.profile_zip_path);
+          await rimraf(`${this.tmpdir}/gologin_${this.profile_id}.zip`);
     }    
     debug(`PROFILE ${this.profile_id} STOPPED AND CLEAR`);
     return false;
@@ -581,7 +572,7 @@ class GoLogin {
 
 
   async getProfileDataToUpdate() {
-      const zipPath = this.normalize(`${this.tmpdir}/gologin_${this.profile_id}_upload.zip`);
+      const zipPath = `${this.tmpdir}/gologin_${this.profile_id}_upload.zip`;
       try {
           fs.unlinkSync(zipPath);
       }
@@ -659,7 +650,7 @@ class GoLogin {
       "browserType": "chrome",
       "os": "lin",
       "startUrl": "google.com",
-      "googleServicesEnabled": false,
+      "googleServicesEnabled": true,
       "lockEnabled": false,
       "audioContext": {
         "mode": "noise"
@@ -668,26 +659,23 @@ class GoLogin {
         "mode": "noise"
       },
       "webRTC": {
-        "mode": "alerted",
-        "enabled": true,
+        "mode": "disabled",
+        "enabled": false,
         "customize": true,
         "fillBasedOnIp": true
       },
-      "navigator": {
-        "userAgent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:71.0) Gecko/20100101 Firefox/71.0",
-        "resolution": "1200x800",
-        "language": "EN",
-        "platform": "Linux x86_64"
-      },
+      "navigator": profile_options.navigator,
+      "screenHeight": 768,
+      "screenWidth": 1024,
       "proxyEnabled": true,
-      "screenHeight": 800,
-      "screenWidth": 1200,
       "profile": JSON.stringify(profile_options),
     };
     
-    Object.keys(options).map((e)=>{json[e]=options[e]})
+    // Object.keys(profile_options).map((e)=>{json.profile[e]=profile_options[e]});
+    json.navigator.resolution = "1024x768";
+    Object.keys(options).map((e)=>{json[e]=options[e]});
 
-    debug('profileOptions', options);
+    console.log('profileOptions', json);
     
     const response = await requests.post(`${API_URL}/browser/`, {
         headers: {
@@ -695,11 +683,12 @@ class GoLogin {
         },
         json,
     });   
-
+    console.log(response.body);
     return response.body.id;
   }
 
-  async delete(profile_id){
+  async delete(pid){
+    const profile_id = pid || this.profile_id;
     const response = await requests.delete(`${API_URL}/browser/${profile_id}`, {
         headers: {
             'Authorization': `Bearer ${this.access_token}`
@@ -751,11 +740,15 @@ class GoLogin {
 
 
   async start() {
+    if(this.is_remote){
+      return this.startRemote()
+    }
+
     await this.createStartup();
     // await this.createBrowserExtension();
-    const url = await this.spawnBrowser();
+    const wsUrl = await this.spawnBrowser();
     this.setActive(true);
-    return url;
+    return {status: 'success', wsUrl};
   }
 
   async startLocal() {
@@ -768,27 +761,56 @@ class GoLogin {
 
 
   async stop() {
-    await this.stopAndCommit();
+    if(this.is_remote){
+      return this.stopRemote()
+    }
+
+    await this.stopAndCommit(false, {});
   }
 
   async stopLocal(options) {
     await this.stopAndCommit(true, options.posting);
   }
 
+
+  async waitDebuggingUrl(delay_ms, try_count=0){
+    await delay(delay_ms);
+    const url = `https://${this.profile_id}.orbita.goless.dev/json/version`;
+    console.log('try_count=', try_count, 'url=', url);
+    const response = await requests.get(url)
+    let wsUrl = '';
+    console.log('response', response.body);
+
+    if(response.body){
+      try{
+        wsUrl = JSON.parse(response.body).webSocketDebuggerUrl;
+      } catch (e){
+        if(try_count<3){
+          return this.waitDebuggingUrl(delay_ms, try_count+1);
+        }
+        return {'status': 'failure', wsUrl}
+      }
+      wsUrl = wsUrl.replace('ws://', `wss://`).replace('127.0.0.1', `${this.profile_id}.orbita.goless.dev`)
+    }
+    return wsUrl;
+  }
+
   async startRemote(delay_ms=10000) {
+    debug(`startRemote ${this.profile_id}`);
     const profileResponse = await requests.post(`https://api.gologin.app/browser/${this.profile_id}/web`, {
       headers: {
         'Authorization': `Bearer ${this.access_token}`
       }
     });
-
+    debug('profileResponse', profileResponse.statusCode, profileResponse.body);
     if (profileResponse.statusCode !== 202) {
       return {'status': 'failure', 'code':  profileResponse.statusCode};
     }
     
     if(profileResponse.body=='ok'){
-      await delay(delay_ms);
-      const wsUrl = `wss://${this.profile_id}.orbita.gologin.app`
+      let wsUrl = await this.waitDebuggingUrl(delay_ms);
+      // const wsUrl = `wss://${this.profile_id}.orbita.gologin.app`
+      // const wsUrl = `wss://${this.profile_id}.orbita.goless.dev`
       return {'status': 'success', wsUrl}
     }
 
@@ -796,11 +818,16 @@ class GoLogin {
   }
 
   async stopRemote() {
+    debug(`stopRemote ${this.profile_id}`);
     const profileResponse = await requests.delete(`https://api.gologin.app/browser/${this.profile_id}/web`, {
       headers: {
         'Authorization': `Bearer ${this.access_token}`
       }
     });
+    console.log(`stopRemote ${profileResponse.body}`);
+    if(profileResponse.body){
+      return JSON.parse(profileResponse.body);
+    }
   }
 }
 
