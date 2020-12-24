@@ -780,7 +780,8 @@ class GoLogin {
   }
 
   async stopLocal(options) {
-    await this.stopAndCommit(true, options.posting);
+    const opts = options || {posting: false};
+    await this.stopAndCommit(true, opts.posting);
   }
 
 
