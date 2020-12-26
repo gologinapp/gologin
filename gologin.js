@@ -454,7 +454,9 @@ class GoLogin {
     
     let proxy = this.proxy;
     let profile_name = this.profile_name;
+    let proxy_host = '';
     if(proxy){
+      proxy_host = this.proxy.host;
       proxy = `${proxy.mode}://${proxy.host}:${proxy.port}`;
     }
 
@@ -483,7 +485,7 @@ class GoLogin {
         `--lang=en`, 
         ]    
       if(proxy){
-        const hr_rules = `"MAP * 0.0.0.0 , EXCLUDE ${proxy.host}"`;
+        const hr_rules = `"MAP * 0.0.0.0 , EXCLUDE ${proxy_host}"`;
         params.push(`--proxy-server=${proxy}`);
         params.push(`--host-resolver-rules=${hr_rules}`);
       }
