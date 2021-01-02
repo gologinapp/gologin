@@ -1,6 +1,7 @@
 import json
 import time
 import os
+import sys
 import shutil
 import requests
 import zipfile
@@ -47,7 +48,11 @@ class GoLogin(object):
             params.append('--proxy-server='+proxy);
             params.append('--host-resolver-rules='+hr_rules);
 
-        subprocess.Popen(params, start_new_session=True)
+        if sys.platform == "darwin":
+        	subprocess.Popen(params)
+        else:
+        	subprocess.Popen(params, start_new_session=True)
+
         try_count = 1
         url = str(self.address) + ':' + str(self.port)
         while try_count<100:
@@ -67,7 +72,8 @@ class GoLogin(object):
     def zipdir(self, path, ziph):
         for root, dirs, files in os.walk(path):
             for file in files:
-                ziph.write(os.path.join(root, file), os.path.join(root, file).replace(self.profile_path, ''))
+                if os.path.exists(os.path.join(root, file)):
+                	ziph.write(os.path.join(root, file), os.path.join(root, file).replace(self.profile_path, ''))
 
     def stop(self):
         self.sanitizeProfile()
