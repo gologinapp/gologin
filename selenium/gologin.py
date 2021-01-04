@@ -32,7 +32,7 @@ class GoLogin(object):
         proxy_host = ''
         if proxy:
             proxy_host = proxy.get('host')
-            proxy = proxy['mode']+'://'+proxy['host']+':'+proxy['port']
+            proxy = proxy['mode']+'://'+proxy['host']+':'+str(proxy['port'])
         tz = self.getTimeZone()
         params = [
         self.executablePath,
@@ -130,7 +130,7 @@ class GoLogin(object):
     def getTimeZone(self):
         proxy = self.proxy
         if proxy:
-            proxies = {proxy.get('mode'): proxy['mode']+'://'+proxy['host']+':'+proxy['port']}
+            proxies = {proxy.get('mode'): proxy['mode']+'://'+proxy['host']+':'+str(proxy['port'])}
             data = requests.get('https://time.gologin.app', proxies=proxies)
         else:
             data = requests.get('https://time.gologin.app')
