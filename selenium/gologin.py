@@ -74,9 +74,11 @@ class GoLogin(object):
         for root, dirs, files in os.walk(path):
             for file in files:
                 path = os.path.join(root, file)
-                is_socket = stat.S_ISSOCK(os.stat(path).st_mode)
-                if os.path.exists(path) and not is_socket:
-                	ziph.write(path, path.replace(self.profile_path, ''))
+                if not os.path.exists(path):
+                    continue
+                if stat.S_ISSOCK(os.stat(path).st_mode):
+                    continue
+                ziph.write(path, path.replace(self.profile_path, ''))
 
     def stop(self):
         self.sanitizeProfile()
