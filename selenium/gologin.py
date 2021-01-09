@@ -1,6 +1,7 @@
 import json
 import time
 import os
+import stat
 import sys
 import shutil
 import requests
@@ -72,8 +73,10 @@ class GoLogin(object):
     def zipdir(self, path, ziph):
         for root, dirs, files in os.walk(path):
             for file in files:
-                if os.path.exists(os.path.join(root, file)):
-                	ziph.write(os.path.join(root, file), os.path.join(root, file).replace(self.profile_path, ''))
+                path = os.path.join(root, file)
+                is_socket = stat.S_ISSOCK(os.stat(path).st_mode)
+                if os.path.exists(path) and not is_socket:
+                	ziph.write(path, path.replace(self.profile_path, ''))
 
     def stop(self):
         self.sanitizeProfile()
