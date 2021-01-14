@@ -789,7 +789,7 @@ class GoLogin {
 
   async waitDebuggingUrl(delay_ms, try_count=0){
     await delay(delay_ms);
-    const url = `https://${this.profile_id}.orbita.goless.dev/json/version`;
+    const url = `https://${this.profile_id}.orbita.gologin.com/json/version`;
     console.log('try_count=', try_count, 'url=', url);
     const response = await requests.get(url)
     let wsUrl = '';
@@ -804,7 +804,7 @@ class GoLogin {
         }
         return {'status': 'failure', wsUrl}
       }
-      wsUrl = wsUrl.replace('ws://', `wss://`).replace('127.0.0.1', `${this.profile_id}.orbita.goless.dev`)
+      wsUrl = wsUrl.replace('ws://', `wss://`).replace('127.0.0.1', `${this.profile_id}.orbita.gologin.com`)
     }
     return wsUrl;
   }
@@ -824,7 +824,7 @@ class GoLogin {
     if(profileResponse.body=='ok'){
       let wsUrl = await this.waitDebuggingUrl(delay_ms);
       // const wsUrl = `wss://${this.profile_id}.orbita.gologin.app`
-      // const wsUrl = `wss://${this.profile_id}.orbita.goless.dev`
+      // const wsUrl = `wss://${this.profile_id}.orbita.gologin.com`
       return {'status': 'success', wsUrl}
     }
 

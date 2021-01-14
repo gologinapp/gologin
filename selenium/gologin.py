@@ -95,14 +95,17 @@ class GoLogin(object):
             'Authorization': 'Bearer ' + self.access_token,
             'User-Agent': 'Selenium-API'
         }
+        print('profile size=', os.stat(self.profile_zip_path_upload).st_size)
+
+        signedUrl = requests.get(API_URL + '/browser/' + self.profile_id + '/storage-signature', headers=headers).content.decode('utf-8')
 
         files = {
             'profile': open(self.profile_zip_path_upload, 'rb'),
         }
 
-        url = API_URL + '/browser/' + self.profile_id + '/profile-s3'
-        requests.patch(url, files=files, headers=headers).content
-        # print('commit result=', data)
+        requests.put(signedUrl, files=files).content
+
+        print('commit profile complete')
 
 
 
