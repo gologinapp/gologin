@@ -99,11 +99,11 @@ class GoLogin(object):
 
         signedUrl = requests.get(API_URL + '/browser/' + self.profile_id + '/storage-signature', headers=headers).content.decode('utf-8')
 
-        files = {
-            'profile': open(self.profile_zip_path_upload, 'rb'),
-        }
+        # files = {
+        #     'profile': open(self.profile_zip_path_upload, 'rb'),
+        # }
 
-        requests.put(signedUrl, files=files).content
+        requests.put(signedUrl, data=open(self.profile_zip_path_upload, 'rb'))
 
         print('commit profile complete')
 
