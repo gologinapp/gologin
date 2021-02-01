@@ -285,6 +285,12 @@ class GoLogin {
       await this.extractProfile(path, this.profile_zip_path);
       debug('extraction done');
 
+      if (fs.existsSync(`${path}/SingletonLock`)) {
+        debug('removing SingletonLock');
+        fs.unlinkSync(`${path}/SingletonLock`);
+        debug('SingletonLock removed');
+      }
+
       const pref_file_name = `${path}/Default/Preferences`;
       debug('reading', pref_file_name);
 
@@ -322,28 +328,44 @@ class GoLogin {
       this.proxy = proxy;
       this.profile_name = name;
 
-      await this.getTimeZone(proxy)
+      await this.getTimeZone(proxy);
 
-      if (_.get(profile, 'webRTC.enabled') && _.get(profile, 'webRTC.enabled')) {
-        debug('using tz ip for webRTC');
-        profile.webRTC.publicIP = this._tz.ip;
-      }
-      
-      let gologin = this.convertPreferences(profile); 
-      // console.log('gologin=', JSON.stringify(gologin))
-      fs.writeFileSync(`${this.tmpdir}/gologin_profile_${this.profile_id}/Default/Preferences`, JSON.stringify(_.merge(preferences, {
-          gologin
-      })));
+      profile.webRtc = {
+        mode: _.get(profile, 'webRTC.mode') === 'alerted' ? 'public' : _.get(profile, 'webRTC.mode'),
+        publicIP: _.get(profile, 'webRTC.fillBasedOnIp') ? this._tz.ip : _.get(profile, 'webRTC.publicIp'),
+        localIps: _.get(profile, 'webRTC.localIps', []),
+      };
 
-      if(!_.get(preferences, 'gologin.screenWidth') && _.get(profile, 'navigator.resolution', '').split('x').length>1){
+      profile.timezone = { id: this._tz.timezone };
+      profile.webgl_noise_value = profile.webGL.noise;
+      profile.get_client_rects_noise = profile.webGL.getClientRectsNoise;
+      profile.canvasMode = profile.canvas.mode;
+      profile.canvasNoise = profile.canvas.noise;
+      profile.webgl = {
+        metadata: {
+          vendor: _.get(profile, 'webGLMetadata.vendor'),
+          renderer: _.get(profile, 'webGLMetadata.renderer'),
+          enabled: _.get(profile, 'webGLMetadata.mode') === 'mask',
+        }
+      };
+
+      const gologin = this.convertPreferences(profile);      
+
+      if (!_.get(preferences, 'gologin.screenWidth') &&
+        _.get(profile, 'navigator.resolution', '').split('x').length > 1
+      ) {
         debug(`Writing profile for screenWidth ${path}`, JSON.stringify(profile));
         gologin.screenWidth = _.get(profile, 'navigator.resolution').split('x')[0];
         gologin.screenHeight = _.get(profile, 'navigator.resolution').split('x')[1];
-        
-        fs.writeFileSync(`${path}/Default/Preferences`, JSON.stringify(_.merge(preferences, {
-            gologin
-        })));
       }
+
+      fs.writeFileSync(`${path}/Default/Preferences`, JSON.stringify(_.merge(preferences, {
+        gologin
+      })));
+
+      // console.log('gologin=', _.merge(preferences, {
+      //   gologin
+      // }));
 
       debug('Profile ready. Path: ', path, 'PROXY', JSON.stringify(_.get(preferences, 'gologin.proxy')));
       return path;
