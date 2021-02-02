@@ -263,6 +263,11 @@ class GoLogin {
         language = 'en-US,en;q=0.9',
       } = navigator;
       this.language = language;
+      const [screenWidth, screenHeight] = resolution.split('x');
+      this.resolution = {
+        width: parseInt(screenWidth, 10),
+        height: parseInt(screenHeight, 10),
+      };
 
       if(local==false || !fs.existsSync(this.profile_zip_path)) {
         try {
@@ -372,12 +377,9 @@ class GoLogin {
 
       const gologin = this.convertPreferences(profile);      
 
-      if (resolution.split('x').length === 2) {
-        debug(`Writing profile for screenWidth ${path}`, JSON.stringify(profile));
-        const [screenWidth, screenHeight] = resolution.split('x');
-        gologin.screenWidth = parseInt(screenWidth, 10);
-        gologin.screenHeight = parseInt(screenHeight, 10);
-      }
+      debug(`Writing profile for screenWidth ${path}`, JSON.stringify(profile));
+      gologin.screenWidth = this.resolution.width;
+      gologin.screenHeight = this.resolution.height;
 
       fs.writeFileSync(`${path}/Default/Preferences`, JSON.stringify(_.merge(preferences, {
         gologin
@@ -786,6 +788,10 @@ class GoLogin {
       longitude: profileGeolocationParams.longitude,
       accuracy: profileGeolocationParams.accuracy,
     }
+  };
+  
+  getViewPort() {
+    return { ...this.resolution };
   };
 
   async postCookies(profile_id, json) {
