@@ -257,6 +257,12 @@ class GoLogin {
       await rimraf(`${this.tmpdir}/gologin_profile_${this.profile_id}`);
       debug('-', `${this.tmpdir}/gologin_profile_${this.profile_id}`, 'dropped');
       profile = await this.getProfile();
+      const { navigator = {} } = profile;
+      const {
+        resolution = '1920x1080',
+        language = 'en-US,en;q=0.9',
+      } = navigator;
+      this.language = language;
 
       if(local==false || !fs.existsSync(this.profile_zip_path)) {
         try {
@@ -276,7 +282,6 @@ class GoLogin {
       } else {
         debug('PROFILE LOCAL HAVING', this.profile_zip_path);
       }
-
 
       debug('Cleaning up..', `${this.tmpdir}/gologin_profile_${this.profile_id}`);
 
@@ -310,12 +315,11 @@ class GoLogin {
         const port = splittedProxyAddress[1];
 
         proxy = {
-          'mode': 'http',
+          'mode': splittedAutoProxyServer[0],
           'host': splittedProxyAddress[0],
           port,
           'username': _.get(profile, 'autoProxyUsername'),
           'password': _.get(profile, 'autoProxyPassword'),
-          'timezone': _.get(profile, 'autoProxyTimezone', 'us'),
         }
         
         profile.proxy.username = _.get(profile, 'autoProxyUsername');
@@ -330,17 +334,34 @@ class GoLogin {
 
       await this.getTimeZone(proxy);
 
+      const [latitude, longitude] = this._tz.ll;
+      const accuracy = this._tz.accuracy;
+
+      const profileGeolocation = profile.geolocation;
+      const tzGeoLocation = {
+        latitude,
+        longitude,
+        accuracy
+      };
+      profile.geoLocation = this.getGeolocationParams(profileGeolocation, tzGeoLocation);
+
       profile.webRtc = {
         mode: _.get(profile, 'webRTC.mode') === 'alerted' ? 'public' : _.get(profile, 'webRTC.mode'),
         publicIP: _.get(profile, 'webRTC.fillBasedOnIp') ? this._tz.ip : _.get(profile, 'webRTC.publicIp'),
         localIps: _.get(profile, 'webRTC.localIps', []),
       };
 
+      const audioContext = profile.audioContext || {};
+      const { mode: audioCtxMode = 'off', noise: audioCtxNoise } = audioContext;
       profile.timezone = { id: this._tz.timezone };
       profile.webgl_noise_value = profile.webGL.noise;
       profile.get_client_rects_noise = profile.webGL.getClientRectsNoise;
       profile.canvasMode = profile.canvas.mode;
       profile.canvasNoise = profile.canvas.noise;
+      profile.audioContext = {
+        enable: audioCtxMode !== 'off',
+        noiseValue: audioCtxNoise,
+      };
       profile.webgl = {
         metadata: {
           vendor: _.get(profile, 'webGLMetadata.vendor'),
@@ -351,12 +372,11 @@ class GoLogin {
 
       const gologin = this.convertPreferences(profile);      
 
-      if (!_.get(preferences, 'gologin.screenWidth') &&
-        _.get(profile, 'navigator.resolution', '').split('x').length > 1
-      ) {
+      if (resolution.split('x').length === 2) {
         debug(`Writing profile for screenWidth ${path}`, JSON.stringify(profile));
-        gologin.screenWidth = _.get(profile, 'navigator.resolution').split('x')[0];
-        gologin.screenHeight = _.get(profile, 'navigator.resolution').split('x')[1];
+        const [screenWidth, screenHeight] = resolution.split('x');
+        gologin.screenWidth = parseInt(screenWidth, 10);
+        gologin.screenHeight = parseInt(screenHeight, 10);
       }
 
       fs.writeFileSync(`${path}/Default/Preferences`, JSON.stringify(_.merge(preferences, {
@@ -498,20 +518,24 @@ class GoLogin {
       debug('RUNNING', script_path, ORBITA_BROWSER, remote_debugging_port, proxy, profile_path, this.vnc_port);
       var child = require('child_process').execFile(script_path, [ORBITA_BROWSER, remote_debugging_port, proxy, profile_path, this.vnc_port, tz, profile_name], {env});
     } else {
+      const [splittedLangs] = this.language.split(';');
+      const browserLangs = splittedLangs.split(',');
+      const browserLang = browserLangs[browserLangs.length - 1];
       const params = [
         `--remote-debugging-port=${remote_debugging_port}`,
         `--user-data-dir=${profile_path}`, 
         `--password-store=basic`, 
         `--tz=${tz}`, 
         `--gologin-profile=${profile_name}`, 
-        `--lang=en`, 
+        `--lang=${browserLang || 'en'}`,
         ]    
       if(proxy){
         const hr_rules = `"MAP * 0.0.0.0 , EXCLUDE ${proxy_host}"`;
         params.push(`--proxy-server=${proxy}`);
         params.push(`--host-resolver-rules=${hr_rules}`);
       }
-      var child = require('child_process').execFile(ORBITA_BROWSER, params, {env}); 
+      var child = require('child_process').execFile(ORBITA_BROWSER, params, {env});
+      // var child = require('child_process').spawn(ORBITA_BROWSER, params, { env, shell: true });
       child.stdout.on('data', function(data) {
           debug(data.toString()); 
       });      
@@ -747,6 +771,22 @@ class GoLogin {
     this.is_active = is_active;
   }
 
+  getGeolocationParams(profileGeolocationParams, tzGeolocationParams) {
+    if (profileGeolocationParams.fillBasedOnIp) {
+      return {
+        mode: profileGeolocationParams.mode,
+        latitude: Number(tzGeolocationParams.latitude),
+        longitude: Number(tzGeolocationParams.longitude),
+        accuracy: Number(tzGeolocationParams.accuracy),
+      };
+    }
+    return {
+      mode: profileGeolocationParams.mode,
+      latitude: profileGeolocationParams.latitude,
+      longitude: profileGeolocationParams.longitude,
+      accuracy: profileGeolocationParams.accuracy,
+    }
+  };
 
   async postCookies(profile_id, json) {
     const response = await requests.post(`${API_URL}/browser/${profile_id}/cookies`, {
