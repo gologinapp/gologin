@@ -5,10 +5,10 @@ const fs = require('fs');
 const os = require('os');
 const child_process = require("child_process");
 const util = require('util');
-const rimraf = util.promisify(require("rimraf"));
+const rimraf = util.promisify(require('rimraf'));
 const exec = util.promisify(require('child_process').exec);
 const { spawn, execFile } = require('child_process');
-const FormData = require("form-data");
+const FormData = require('form-data');
 
 const extract = require('extract-zip');
 const unzipper = require('unzipper');
@@ -72,7 +72,8 @@ class GoLogin {
     const fpResponse = await requests.get(`${API_URL}/browser/fingerprint?os=lin`, {
       json: true,
       headers: {
-        'Authorization': `Bearer ${this.access_token}`
+        'Authorization': `Bearer ${this.access_token}`,
+        'User-Agent': 'gologin-api',
       }
     })
 
@@ -82,7 +83,9 @@ class GoLogin {
   async profiles() {
   	const profilesResponse = await requests.get(`${API_URL}/browser/`, {
   		headers: {
-  			'Authorization': `Bearer ${this.access_token}`
+  			'Authorization': `Bearer ${this.access_token}`,
+        'User-Agent': 'gologin-api',
+
   		}
   	})
 
@@ -692,7 +695,8 @@ class GoLogin {
 
     let fingerprint = await requests.get(`https://api.gologin.app/browser/fingerprint?os=${os}`,{
           headers: {
-              'Authorization': `Bearer ${this.access_token}`
+              'Authorization': `Bearer ${this.access_token}`,
+              'User-Agent': 'gologin-api',
           }
     });    
 
@@ -733,10 +737,14 @@ class GoLogin {
     };
     
     // Object.keys(profile_options).map((e)=>{json.profile[e]=profile_options[e]});
-    json.navigator.resolution = "1024x768";
+    if(json.navigator){
+      json.navigator.resolution = "1024x768";
+    } else {
+      json.navigator = {resolution: "1024x768"};
+    }
     Object.keys(options).map((e)=>{json[e]=options[e]});
 
-    console.log('profileOptions', json);
+    // console.log('profileOptions', json);
     
     const response = await requests.post(`${API_URL}/browser/`, {
         headers: {
@@ -744,7 +752,7 @@ class GoLogin {
         },
         json,
     });   
-    console.log(response.body);
+    // console.log(JSON.stringify(response.body));
     return response.body.id;
   }
 
