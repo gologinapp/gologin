@@ -32,6 +32,7 @@ class GoLogin {
     this.access_token = options.token;
     this.profile_id = options.profile_id;
     this.password = options.password;
+    this.extra_params = options.extra_params;
     this.executablePath = options.executablePath;
     this.vnc_port = options.vncPort;
     this.is_active = false;
@@ -488,6 +489,11 @@ class GoLogin {
     env['TZ'] = tz;
 
     const params = [`--proxy-server=${proxy}`, `--user-data-dir=${profile_path}`, `--password-store=basic`, `--tz=${tz}`, `--gologin-profile=${profile_name}`, `--lang=en`]    
+    
+    if(this.extra_params){
+      params.concat(this.extra_params);
+    }
+
     if(this.remote_debugging_port){
       params.push(`--remote-debugging-port=${remote_debugging_port}`);
     }

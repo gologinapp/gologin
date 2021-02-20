@@ -30,6 +30,7 @@ For debugging use `DEBUG=* node example.js` command
 	- `executablePath` <[string]> path to Orbita browser
 	- `vncPort` <[integer]> port of VNC server if you using it
   - `tmpdir` <[string]> path to temporary directore for saving profiles
+  - `extra_params` arrayof <[string]> extra params for browser orbita (ex. extentions etc.)
 
 <a  href="https://gologin.app" target="_blank">Where is token? token is here</a>
 

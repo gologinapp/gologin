@@ -16,10 +16,13 @@ class GoLogin(object):
         self.access_token = options.get('token')
         self.tmpdir = options.get('tmpdir', '/tmp')
         self.address = options.get('address', '127.0.0.1')
+        self.extra_params = options.get('extra_params', [])
         self.port = options.get('port', 3500)
         home = str(pathlib.Path.home())
         self.executablePath = options.get('executablePath', os.path.join(home, '.gologin/browser/orbita-browser/chrome'))
         print('executablePath', self.executablePath)
+        if self.extra_params:
+            print('extra_params', self.extra_params)
         self.setProfileId(options.get('profile_id')) 
 
     def setProfileId(self, profile_id):
@@ -48,6 +51,9 @@ class GoLogin(object):
             hr_rules = '"MAP * 0.0.0.0 , EXCLUDE %s"'%(proxy_host);
             params.append('--proxy-server='+proxy);
             params.append('--host-resolver-rules='+hr_rules);
+
+        for param in self.extra_params:
+            params.append(param)
 
         if sys.platform == "darwin":
         	subprocess.Popen(params)
