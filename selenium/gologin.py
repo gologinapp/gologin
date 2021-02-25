@@ -27,6 +27,8 @@ class GoLogin(object):
 
     def setProfileId(self, profile_id):
         self.profile_id = profile_id
+        if self.profile_id==None:
+            return
         self.profile_path = os.path.join(self.tmpdir, 'gologin_'+self.profile_id)
         self.profile_zip_path = os.path.join(self.tmpdir, 'gologin_'+self.profile_id+'.zip')
         self.profile_zip_path_upload = os.path.join(self.tmpdir, 'gologin_'+self.profile_id+'_upload.zip')
@@ -37,7 +39,9 @@ class GoLogin(object):
         if proxy:
             proxy_host = proxy.get('host')
             proxy = proxy['mode']+'://'+proxy['host']+':'+str(proxy['port'])
-        tz = self.getTimeZone()
+        
+        tz = self.tz.get('timezone')
+
         params = [
         self.executablePath,
         '--remote-debugging-port='+str(self.port),
@@ -105,10 +109,6 @@ class GoLogin(object):
 
         signedUrl = requests.get(API_URL + '/browser/' + self.profile_id + '/storage-signature', headers=headers).content.decode('utf-8')
 
-        # files = {
-        #     'profile': open(self.profile_zip_path_upload, 'rb'),
-        # }
-
         requests.put(signedUrl, data=open(self.profile_zip_path_upload, 'rb'))
 
         print('commit profile complete')
@@ -148,14 +148,16 @@ class GoLogin(object):
             data = requests.get('https://time.gologin.app', proxies=proxies)
         else:
             data = requests.get('https://time.gologin.app')
-        return json.loads(data.content.decode('utf-8')).get('timezone')
+        return json.loads(data.content.decode('utf-8'))
 
-    def downloadProfile(self):
+
+    def getProfile(self, profile_id=None):
+        profile = self.profile_id if profile_id==None else profile_id
         headers = {
             'Authorization': 'Bearer ' + self.access_token,
             'User-Agent': 'Selenium-API'
         }
-        return json.loads(requests.get(API_URL + '/browser/'+self.profile_id, headers=headers).content.decode('utf-8'))
+        return json.loads(requests.get(API_URL + '/browser/' + profile, headers=headers).content.decode('utf-8'))
 
     def downloadProfileZip(self):
         s3path = self.profile.get('s3Path', '')
@@ -201,7 +203,66 @@ class GoLogin(object):
             zip_ref.extractall(self.profile_path)       
         os.remove(self.profile_zip_path)
 
+
+    def getGeolocationParams(self, profileGeolocationParams, tzGeolocationParams):
+        if profileGeolocationParams.get('fillBasedOnIp'):
+          return {
+            'mode': profileGeolocationParams['mode'],
+            'latitude': float(tzGeolocationParams['latitude']),
+            'longitude': float(tzGeolocationParams['longitude']),
+            'accuracy': float(tzGeolocationParams['accuracy']),
+          }
+        
+        return {
+          'mode': profileGeolocationParams['mode'],
+          'latitude': profileGeolocationParams['latitude'],
+          'longitude': profileGeolocationParams['longitude'],
+          'accuracy': profileGeolocationParams['accuracy'],
+        }
+
+
     def convertPreferences(self, preferences):
+        resolution = preferences.get('resolution', '1920x1080')
+        preferences['screenWidth'] = int(resolution.split('x')[0])
+        preferences['screenHeight'] = int(resolution.split('x')[1])
+        
+        self.tz = self.getTimeZone()
+        # print('tz=', self.tz)
+        tzGeoLocation = {
+            'latitude': self.tz['ll'][0],
+            'longitude': self.tz['ll'][1],
+            'accuracy': self.tz['accuracy'],
+        }
+
+        preferences['geoLocation'] = self.getGeolocationParams(preferences['geolocation'], tzGeoLocation)
+
+        preferences['webRtc'] = {
+            'mode': 'public' if preferences.get('webRTC',{}).get('mode') == 'alerted' else preferences.get('webRTC',{}).get('mode'),
+            'publicIP': self.tz['ip'] if preferences.get('webRTC',{}).get('fillBasedOnIp') else preferences.get('webRTC',{}).get('publicIp'),
+            'localIps': preferences.get('webRTC',{}).get('localIps', [])
+        }
+
+        preferences['timezone'] = {
+            'id': self.tz.get('timezone')
+        }
+
+        preferences['webgl_noise_value'] = preferences.get('webGL', {}).get('noise')
+        preferences['get_client_rects_noise'] = preferences.get('webGL', {}).get('getClientRectsNoise')
+        preferences['canvasMode'] = preferences.get('canvas', {}).get('mode')
+        preferences['canvasNoise'] = preferences.get('canvas', {}).get('noise');
+        preferences['audioContext'] = {
+            'enable': preferences.get('audioContext').get('mode', 'off'),
+            'noiseValue': preferences.get('audioContext').get('noise'),
+        }
+
+        preferences['webgl'] = {
+            'metadata': {
+              'vendor': preferences.get('webGLMetadata', {}).get('vendor'),
+              'renderer': preferences.get('webGLMetadata', {}).get('renderer'),
+              'enabled': preferences.get('webGLMetadata', {}).get('mode') == 'mask',
+            }
+        }
+
         if preferences.get('navigator', {}).get('userAgent'):
             preferences['userAgent'] = preferences.get('navigator', {}).get('userAgent')
 
@@ -253,6 +314,7 @@ class GoLogin(object):
             print('empty profile name')
             print('profile=', profile)
             exit()
+
         gologin = self.convertPreferences(profile)
         preferences['gologin'] = gologin
         pfile = open(pref_file, 'w')
@@ -261,6 +323,75 @@ class GoLogin(object):
     def createStartup(self):
         if os.path.exists(self.profile_path):
             shutil.rmtree(self.profile_path)
-        self.profile = self.downloadProfile()
+        self.profile = self.getProfile()
         self.downloadProfileZip()
         self.updatePreferences()
+
+
+    def headers(self):
+        return {
+            'Authorization': 'Bearer ' + self.access_token,
+            'User-Agent': 'Selenium-API'
+        }
+
+
+    def getRandomFingerprint(self, options):
+        os_type = options.get('os', 'lin')
+        return json.loads(requests.get(API_URL + '/browser/fingerprint?os=' + os_type, headers=self.headers()).content.decode('utf-8'))
+
+    def profiles(self):
+        return json.loads(requests.get(API_URL + '/browser/', headers=self.headers()).content.decode('utf-8'))
+
+    def create(self, options={}):
+        profile_options = self.getRandomFingerprint(options);
+        profile = {
+          "name": "default_name",
+          "notes": "auto generated",
+          "browserType": "chrome",
+          "os": "lin",
+          "startUrl": "google.com",
+          "googleServicesEnabled": True,
+          "lockEnabled": False,
+          "audioContext": {
+            "mode": "noise"
+          },
+          "canvas": {
+            "mode": "noise"
+          },
+          "webRTC": {
+            "mode": "disabled",
+            "enabled": False,
+            "customize": True,
+            "fillBasedOnIp": True
+          },
+          "navigator": profile_options.navigator,
+          "screenHeight": 768,
+          "screenWidth": 1024,
+          "proxyEnabled": True,
+          "profile": json.dumps(profile_options),
+        };
+    
+        if profile.get('navigator'):
+          profile['navigator']['resolution'] = "1024x768";
+        else:
+          profile['navigator'] = {'resolution': "1024x768"};
+        
+        for k,v in options.items:
+            profile[k] = v
+
+        response = json.loads(requests.post(API_URL + '/browser/', headers=self.headers(), json=profile).content.decode('utf-8'))
+        return response.get('id');
+
+
+    def delete(self, profile_id=None):
+        profile = self.profile_id if profile_id==None else profile_id
+        requests.delete(API_URL + '/browser/' + profile, headers=self.headers())
+
+
+    def update(self, options):
+        self.profile_id = options.get('id')
+        profile = self.getProfile();
+        for k,v in options.items():
+            profile[k] = v
+        return json.loads(requests.put(API_URL + '/browser/' + profile_id, headers=self.headers(), json=profile).content.decode('utf-8'))
+
