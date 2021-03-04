@@ -8,7 +8,7 @@ const GoLogin = require('./gologin');
         executablePath: '/usr/bin/orbita-browser/chrome',
     });
 
-    const wsUrl = await GL.start(); 
+    const const {status, wsUrl} = await GL.start(); 
     const browser = await puppeteer.connect({
         browserWSEndpoint: wsUrl.toString(), 
         ignoreHTTPSErrors: true,

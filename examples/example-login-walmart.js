@@ -10,7 +10,7 @@ const delay = ms => new Promise(res => setTimeout(res, ms));
         executablePath: '/usr/bin/orbita-browser/chrome',
     });
 
-    const wsUrl = await GL.start(); 
+    const {status, wsUrl} = await GL.start(); 
     const browser = await puppeteer.connect({
         browserWSEndpoint: wsUrl, 
         ignoreHTTPSErrors: true,
