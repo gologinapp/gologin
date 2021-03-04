@@ -47,7 +47,7 @@ const GL = new GoLogin({
 
 #### start()  
 
-- returns: string 
+- returns: <[object]> {status, wsUrl} 
 
 starting browser with profile id, returning WebSocket url for puppeteer
 
