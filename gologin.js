@@ -774,7 +774,13 @@ class GoLogin {
   async update(options){
     this.profile_id = options.id;
     const profile = await this.getProfile();
-    Object.keys(options).map((e)=>{profile[e]=options[e]});
+    
+    if(options.navigator){
+      Object.keys(options.navigator).map((e)=>{profile.navigator[e]=options.navigator[e]});
+    }
+
+    Object.keys(options).filter( e => e!='navigator').map((e)=>{profile[e]=options[e]});
+
     debug('update profile', profile);
     const response = await requests.put(`https://api.gologin.app/browser/${options.id}`,{
           json: profile,
@@ -782,7 +788,7 @@ class GoLogin {
               'Authorization': `Bearer ${this.access_token}`
           }
     });    
-    debug('response', response.body);
+    debug('response', JSON.stringify(response.body));
     return response.body
   }
 
