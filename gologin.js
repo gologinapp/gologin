@@ -774,13 +774,16 @@ class GoLogin {
   async update(options){
     this.profile_id = options.id;
     const profile = await this.getProfile();
-    Object.keys(options).map((e)=>{profile[e]=options[e]})
-    return await requests.put(`https://api.gologin.app/browser/${options.id}`,{
+    Object.keys(options).map((e)=>{profile[e]=options[e]});
+    debug('update profile', profile);
+    const response = await requests.put(`https://api.gologin.app/browser/${options.id}`,{
           json: profile,
           headers: {
               'Authorization': `Bearer ${this.access_token}`
           }
     });    
+    debug('response', response.body);
+    return response.body
   }
 
   setActive(is_active){
