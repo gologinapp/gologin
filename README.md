@@ -2,7 +2,7 @@
 
 ## Getting Started
 
-GoLogin supported Linux platform, under MacOS and Windows in work
+GoLogin supported Linux, MacOS and Windows platforms.
 
 ### Installation
 
