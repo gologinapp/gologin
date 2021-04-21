@@ -6,7 +6,7 @@ GoLogin supports Linux, MacOS and Windows platforms.
 
 ### Installation
 
-`npm install https://github.com/gologinapp/gologin.git`
+`npm install gologin`
 
 for running example.js install puppeteer-core
 
