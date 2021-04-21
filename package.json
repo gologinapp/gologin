@@ -1,11 +1,14 @@
 {
-  "name": "GoLogin",
-  "version": "0.0.2",
+  "name": "gologin",
+  "version": "1.0.1",
   "description": "A high-level API to control Orbita browser over GoLogin API",
-  "main": "gologin.js",
-  "repository": "github:gologinapp/gologin",
+  "main": "./gologin.js",
+  "repository": {
+    "type": "git",
+    "url":: "github:gologinapp/gologin",
+  },
   "engines": {
-    "node": ">=10.18.1"
+    "node": ">=12.17.0"
   },
   "author": "The GoLogin Authors",
   "license": "GPL",
