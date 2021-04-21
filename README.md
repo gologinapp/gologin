@@ -1,4 +1,4 @@
-# class GoLogin - class for working with <a href="https://gologin.app" target="_blank">gologin.com</a> API
+# class GoLogin - class for working with <a href="https://gologin.com" target="_blank">gologin.com</a> API
 
 ## Getting Started
 
@@ -12,27 +12,19 @@ for running example.js install puppeteer-core
 
 `npm i puppeteer-core`
 
-### Selenium
-
-To use GoLogin with Selenium see  `selenium/example.js`
-
-### DEBUG
-
-For debugging use `DEBUG=* node example.js` command
-
 ### Methods
 
 #### constructor
 
 - `options` <[Object]> Options for profile
-	- `token` <[string]> your API <a href="https://gologin.app/#/personalArea/TokenApi" target="_blank">token</a>
+	- `token` <[string]> your API <a href="https://gologin.com/#/personalArea/TokenApi" target="_blank">token</a>
 	- `profile_id` <[string]> profile ID
 	- `executablePath` <[string]> path to Orbita browser. Orbita will be downloaded automatically if not specified.
 	- `vncPort` <[integer]> port of VNC server if you using it
   - `tmpdir` <[string]> path to temporary directore for saving profiles
   - `extra_params` arrayof <[string]> extra params for browser orbita (ex. extentions etc.)
 
-<a  href="https://gologin.app" target="_blank">Where is token? token is here</a>
+<a href="https://app.gologin.com/#/personalArea/TokenApi" target="_blank">Where is token? token is here</a>
 
 ![Token API in Settings](https://user-images.githubusercontent.com/62306291/78453427-53220100-769a-11ea-9465-0aae3ae602b7.jpg)
 
@@ -81,12 +73,20 @@ const GoLogin = require('gologin');
 })();
 ```
 
-
-Running example:
+### Running example:
 
 `DEBUG=gologin* node example.js`
 
-## <a  href="https://gologin.app" target="_blank">Full GoLogin API</a>
+### DEBUG
+
+For debugging use `DEBUG=* node example.js` command
+
+### Selenium
+
+To use GoLogin with Selenium see  `selenium/example.js`
+
+## Full GoLogin API
+<a href="https://api.gologin.com/docs" target="_blank">API link here</a>
 
 ## For local profiles
 
