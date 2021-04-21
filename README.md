@@ -15,9 +15,10 @@ for running example.js install puppeteer-core
 ### Usage
 
 Where is token? API token is <a href="https://app.gologin.com/#/personalArea/TokenApi" target="_blank">here</a>
+
 ![Token API in Settings](https://user-images.githubusercontent.com/62306291/78453427-53220100-769a-11ea-9465-0aae3ae602b7.jpg)
 
-####
+
 #### Methods
 #### constructor
 
