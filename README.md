@@ -13,6 +13,10 @@ for running example.js install puppeteer-core
 `npm i puppeteer-core`
 
 ### Usage
+
+Where is token? API token is <a href="https://app.gologin.com/#/personalArea/TokenApi" target="_blank">here</a>
+![Token API in Settings](https://user-images.githubusercontent.com/62306291/78453427-53220100-769a-11ea-9465-0aae3ae602b7.jpg)
+
 ####
 #### Methods
 #### constructor
@@ -25,9 +29,7 @@ for running example.js install puppeteer-core
   - `tmpdir` <[string]> path to temporary directore for saving profiles
   - `extra_params` arrayof <[string]> extra params for browser orbita (ex. extentions etc.)
 
-<a href="https://app.gologin.com/#/personalArea/TokenApi" target="_blank">Where is token? token is here</a>
 
-![Token API in Settings](https://user-images.githubusercontent.com/62306291/78453427-53220100-769a-11ea-9465-0aae3ae602b7.jpg)
 
 ```js
 const GoLogin = require('gologin');
