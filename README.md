@@ -12,8 +12,9 @@ for running example.js install puppeteer-core
 
 `npm i puppeteer-core`
 
-### Methods
-
+### Usage
+####
+#### Methods
 #### constructor
 
 - `options` <[Object]> Options for profile
@@ -46,7 +47,7 @@ start browser with profile id, returning WebSocket url for puppeteer
 
 stop browser with profile id
 
-### example.js 
+### Example
 
 ```js
 const puppeteer = require('puppeteer-core');
