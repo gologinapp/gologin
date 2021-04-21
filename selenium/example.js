@@ -1,6 +1,6 @@
-var GoLogin = require('../gologin');
-var webdriver = require("selenium-webdriver");
-var chrome = require("selenium-webdriver/chrome");
+const GoLogin = require('../gologin');
+const webdriver = require("selenium-webdriver");
+const chrome = require("selenium-webdriver/chrome");
 chrome.setDefaultService(new chrome.ServiceBuilder('./chromedriver').build());
  
 
@@ -15,7 +15,7 @@ chrome.setDefaultService(new chrome.ServiceBuilder('./chromedriver').build());
     console.log('spawn arguments')
     const arguments = await GL.spawnArguments();
     console.log('set options')
-    var chromeOptions = new chrome.Options();
+    const chromeOptions = new chrome.Options();
     arguments.forEach((e) => {
       console.log('e=', e);
       chromeOptions.addArguments(e)

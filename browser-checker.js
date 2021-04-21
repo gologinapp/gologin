@@ -46,11 +46,11 @@ class BrowserChecker {
 
   constructor() {
     this.#homedir = os.homedir();
-    this.#browserPath = path.join(this.#homedir, '.gologin', 'browser2');
+    this.#browserPath = path.join(this.#homedir, '.gologin', 'browser');
 
     let executableFilePath = path.join(this.#browserPath, 'orbita-browser', 'chrome');
     if (PLATFORM === 'darwin') {
-      executableFilePath = path.join(this.#browserPath, 'Orbita-Browser.app');
+      executableFilePath = path.join(this.#browserPath, 'Orbita-Browser.app', 'Contents', 'MacOS', 'Orbita');
     } else if (PLATFORM === 'win32') {
       executableFilePath = path.join(this.#browserPath, 'orbita-browser', 'chrome.exe');
     }
@@ -259,11 +259,18 @@ class BrowserChecker {
 
   async replaceBrowser() {
     console.log('Copy Orbita to target path');
-
     if (PLATFORM === 'darwin') {
-
+      await rmdir(path.join(this.#browserPath, 'Orbita-Browser.app'), { recursive: true });
+      const files = await readdir(path.join(this.#browserPath, EXTRACTED_FOLDER));
+      const promises = [];
+      files.forEach((filename) => {
+        if (filename.match(/.*\.dylib$/)) {
+          promises.push(fs.copy(path.join(this.#browserPath, EXTRACTED_FOLDER, filename), path.join(this.#browserPath, filename)));
+        }
+      });
+      return Promise.all(promises);
     } else {
-      await rmdir(path.join(this.#browserPath, 'orbita-browser'), { recursive: true })
+      await rmdir(path.join(this.#browserPath, 'orbita-browser'), { recursive: true });
       await this.copyDir(
         path.join(this.#browserPath, EXTRACTED_FOLDER, 'orbita-browser'),
         path.join(this.#browserPath, 'orbita-browser')

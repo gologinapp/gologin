@@ -1,5 +1,5 @@
 const puppeteer = require('puppeteer-core');
-const GoLogin = require('./gologin');
+const GoLogin = require('gologin');
 
 (async () => {
   const GL = new GoLogin({
