@@ -56,7 +56,7 @@ const GoLogin = require('gologin');
 - `options` <[Object]> Options for profile
 	- `token` <[string]> your API <a href="https://gologin.com/#/personalArea/TokenApi" target="_blank">token</a>
 	- `profile_id` <[string]> profile ID
-	- `executablePath` <[string]> path to Orbita browser. Orbita will be downloaded automatically if not specified.
+	- `executablePath` <[string]> path to executable Orbita file. Orbita will be downloaded automatically if not specified.
 	- `vncPort` <[integer]> port of VNC server if you using it
   - `tmpdir` <[string]> path to temporary directore for saving profiles
   - `extra_params` arrayof <[string]> extra params for browser orbita (ex. extentions etc.)
