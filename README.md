@@ -18,38 +18,6 @@ Where is token? API token is <a href="https://app.gologin.com/#/personalArea/Tok
 
 ![Token API in Settings](https://user-images.githubusercontent.com/62306291/78453427-53220100-769a-11ea-9465-0aae3ae602b7.jpg)
 
-
-#### Methods
-#### constructor
-
-- `options` <[Object]> Options for profile
-	- `token` <[string]> your API <a href="https://gologin.com/#/personalArea/TokenApi" target="_blank">token</a>
-	- `profile_id` <[string]> profile ID
-	- `executablePath` <[string]> path to Orbita browser. Orbita will be downloaded automatically if not specified.
-	- `vncPort` <[integer]> port of VNC server if you using it
-  - `tmpdir` <[string]> path to temporary directore for saving profiles
-  - `extra_params` arrayof <[string]> extra params for browser orbita (ex. extentions etc.)
-
-
-
-```js
-const GoLogin = require('gologin');
-const GL = new GoLogin({
-    token: 'yU0token',
-    profile_id: 'yU0Pr0f1leiD',
-});
-```
-
-#### start()  
-
-- returns: <[object]> { status, wsUrl } 
-
-start browser with profile id, returning WebSocket url for puppeteer
-
-#### stop()  
-
-stop browser with profile id
-
 ### Example
 
 ```js
@@ -80,6 +48,38 @@ const GoLogin = require('gologin');
 ### Running example:
 
 `DEBUG=gologin* node example.js`
+
+###
+### Methods
+#### constructor
+
+- `options` <[Object]> Options for profile
+	- `token` <[string]> your API <a href="https://gologin.com/#/personalArea/TokenApi" target="_blank">token</a>
+	- `profile_id` <[string]> profile ID
+	- `executablePath` <[string]> path to Orbita browser. Orbita will be downloaded automatically if not specified.
+	- `vncPort` <[integer]> port of VNC server if you using it
+  - `tmpdir` <[string]> path to temporary directore for saving profiles
+  - `extra_params` arrayof <[string]> extra params for browser orbita (ex. extentions etc.)
+
+
+
+```js
+const GoLogin = require('gologin');
+const GL = new GoLogin({
+    token: 'yU0token',
+    profile_id: 'yU0Pr0f1leiD',
+});
+```
+
+#### start()  
+
+- returns: <[object]> { status, wsUrl } 
+
+start browser with profile id, returning WebSocket url for puppeteer
+
+#### stop()  
+
+stop browser with profile id
 
 ### DEBUG
 
