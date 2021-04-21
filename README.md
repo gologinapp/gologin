@@ -2,7 +2,7 @@
 
 ## Getting Started
 
-GoLogin supported Linux, MacOS and Windows platforms.
+GoLogin supports Linux, MacOS and Windows platforms.
 
 ### Installation
 
@@ -27,7 +27,7 @@ For debugging use `DEBUG=* node example.js` command
 - `options` <[Object]> Options for profile
 	- `token` <[string]> your API <a href="https://gologin.app/#/personalArea/TokenApi" target="_blank">token</a>
 	- `profile_id` <[string]> profile ID
-	- `executablePath` <[string]> path to Orbita browser
+	- `executablePath` <[string]> path to Orbita browser. Orbita will be downloaded automatically if not specified.
 	- `vncPort` <[integer]> port of VNC server if you using it
   - `tmpdir` <[string]> path to temporary directore for saving profiles
   - `extra_params` arrayof <[string]> extra params for browser orbita (ex. extentions etc.)
@@ -41,7 +41,6 @@ const GoLogin = require('./gologin');
 const GL = new GoLogin({
     token: 'yU0token',
     profile_id: 'yU0Pr0f1leiD',
-    executablePath: '/usr/bin/orbita-browser/chrome',
 });
 ```
 
@@ -239,7 +238,6 @@ const GoLogin = require('./gologin');
     const GL = new GoLogin({
         token: 'yU0token',
         profile_id: 'yU0Pr0f1leiD',
-        executablePath: '/usr/bin/orbita-browser/chrome',
     });
 
     const wsUrl = await GL.start(); 
@@ -250,7 +248,7 @@ const GoLogin = require('./gologin');
     });
 
     const page = await browser.newPage();
-    await page.goto('https://myip.gologin.app/mini');   
+    await page.goto('https://myip.link/mini');   
     console.log(await page.content());
     await browser.close();
     await GL.stop();
@@ -284,7 +282,6 @@ const GoLogin = require('../gologin');
     const GL = new GoLogin({
         token: 'yU0token',
         profile_id: 'yU0Pr0f1leiD',
-        executablePath: '/usr/bin/orbita-browser/chrome',
         tmpdir: '/my/tmp/dir',
     });
     const wsUrl = await GL.startLocal(); 
@@ -294,7 +291,7 @@ const GoLogin = require('../gologin');
     });
 
     const page = await browser.newPage();
-    await page.goto('https://myip.gologin.app/mini');   
+    await page.goto('https://myip.link/mini');   
     console.log(await page.content());
     await browser.close();
     await GL.stopLocal({posting: false});
