@@ -13,18 +13,14 @@ const FormData = require('form-data');
 const extract = require('extract-zip');
 const unzipper = require('unzipper');
 const path = require('path');
-var shell = require('shelljs');
+const shell = require('shelljs');
 
 const API_URL = 'https://api.gologin.app';
+const BrowserChecker = require('./browser-checker');
 
 // process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
 
-function delay(time) {
-  return new Promise(function(resolve) { 
-    setTimeout(resolve, time)
-  });
-}  
-
+const delay = (time) => new Promise((resolve) => setTimeout(resolve, time));
 
 class GoLogin {
   constructor(options) {
@@ -38,6 +34,7 @@ class GoLogin {
     this.is_active = false;
     this.is_stopping = false;
     this.tmpdir = os.tmpdir();
+    this.browserChecker = new BrowserChecker();
     if(options.tmpdir){
       this.tmpdir = options.tmpdir;
       if(!fs.existsSync(this.tmpdir)){
@@ -48,6 +45,9 @@ class GoLogin {
     this.profile_zip_path = `${this.tmpdir}/gologin_${this.profile_id}.zip`;    
     debug('INIT GOLOGIN', this.profile_id);
   }
+  
+  async checkBrowser() { return this.browserChecker.checkBrowser() }
+
   async setProfileId(profile_id){
     this.profile_id = profile_id;
     this.profile_zip_path = `${this.tmpdir}/gologin_${this.profile_id}.zip`;    
@@ -99,7 +99,6 @@ class GoLogin {
     return profiles;
   }
 
-
   async getProfile(profile_id) {
     const id = profile_id || this.profile_id;
     debug('getProfile', this.access_token, id);
@@ -119,7 +118,6 @@ class GoLogin {
   	let b64 = fs.readFileSync('./gologin_zeroprofile.b64').toString();
   	return b64;
   }
-
 
   async getProfileS3(s3path) {
       const token = this.access_token;
@@ -151,7 +149,6 @@ class GoLogin {
       }
       return Buffer.from(profileResponse.body);
   }
-
 
   async postFile(fileName, fileBody) {
       debug('POSTING FILE', fileBody.length);
@@ -188,14 +185,12 @@ class GoLogin {
       });
   }
 
-
   async emptyProfileFolder() {
     debug('get emptyProfileFolder');
     let profile = fs.readFileSync(path.resolve(__dirname, './gologin_zeroprofile.zip'));
     debug('emptyProfileFolder LENGTH ::', profile.length);
     return profile;
   }
-
 
   convertPreferences(preferences) {
     if(_.get(preferences, 'navigator.userAgent')){
@@ -216,7 +211,6 @@ class GoLogin {
 
     return preferences;
   }
-
 
   async createBrowserExtension() {
     const that = this;
@@ -251,7 +245,7 @@ class GoLogin {
     return fs.createReadStream(zipfile).pipe(unzipper.Extract({ path })).on('entry', entry => entry.autodrain()).promise();
   }
 
-  async checkLocalProfile(){
+  async checkLocalProfile() {
 
   }
 
@@ -397,29 +391,26 @@ class GoLogin {
       return path;
   }
 
-
   async commitProfile() {
-      const data = await this.getProfileDataToUpdate();
-      debug('begin updating', data.length);
-      if (data.length == 0) {
-          debug('WARN: profile zip data empty - SKIPPING PROFILE COMMIT');
-          return;
-      }
-      try {
-          debug('Patching profile');
-          await this.postFile('profile', data);
-      }
-      catch (e) {
-          debug('CANNOT COMMIT PROFILE', e);
-      }
-      debug('COMMIT COMPLETED');
+    const data = await this.getProfileDataToUpdate();
+    debug('begin updating', data.length);
+    if (data.length == 0) {
+      debug('WARN: profile zip data empty - SKIPPING PROFILE COMMIT');
+      return;
+    }
+    try {
+      debug('Patching profile');
+      await this.postFile('profile', data);
+    }
+    catch (e) {
+      debug('CANNOT COMMIT PROFILE', e);
+    }
+    debug('COMMIT COMPLETED');
   }
-
 
   profilePath() {
     return `${this.tmpdir}/gologin_profile_${this.profile_id}`;
   }
-
 
   orbitaExtensionPath() {
     return `${this.tmpdir}/orbita_extension_${this.profile_id}`;
@@ -427,11 +418,10 @@ class GoLogin {
 
 
   getRandomInt(min, max) {
-      min = Math.ceil(min);
-      max = Math.floor(max);
-      return Math.floor(Math.random() * (max - min + 1)) + min;
+    min = Math.ceil(min);
+    max = Math.floor(max);
+    return Math.floor(Math.random() * (max - min + 1)) + min;
   }
-
 
   async checkPortAvailable(port) {
     debug('CHECKING PORT AVAILABLE', port);
@@ -448,7 +438,6 @@ class GoLogin {
     return true;
   }
 
-
   async getRandomPort() {
     let port = this.getRandomInt(20000, 40000);
     let port_available = this.checkPortAvailable(port);
@@ -458,7 +447,6 @@ class GoLogin {
     }
     return port;
   }
-
 
   async getTimeZone(proxy){
     let data = null;
@@ -515,7 +503,7 @@ class GoLogin {
 
     this.port = remote_debugging_port;
     
-    const ORBITA_BROWSER = this.executablePath || '/usr/bin/orbita-browser/chrome';
+    const ORBITA_BROWSER = this.executablePath || this.browserChecker.getOrbitaPath;
 
     const env = {};
     Object.keys(process.env).forEach((key) => {
@@ -547,9 +535,7 @@ class GoLogin {
       }
       var child = require('child_process').execFile(ORBITA_BROWSER, params, {env});
       // var child = require('child_process').spawn(ORBITA_BROWSER, params, { env, shell: true });
-      child.stdout.on('data', function(data) {
-          debug(data.toString()); 
-      });      
+      child.stdout.on('data', (data) => debug(data.toString()));
       debug('SPAWN CMD', ORBITA_BROWSER, params.join(" "));      
     }
 
@@ -563,22 +549,19 @@ class GoLogin {
     return _.get(data, 'body.webSocketDebuggerUrl', '');
   }
 
-
   async createStartupAndSpawnBrowser() {
     await this.createStartup();
     const ws = await this.spawnBrowser();
     return ws;
   }
 
-
   async clearProfileFiles(){
     await rimraf(`${this.tmpdir}/gologin_profile_${this.profile_id}`);
     await rimraf(`${this.tmpdir}/gologin_${this.profile_id}_upload.zip`);
   }
 
-
   async stopAndCommit(options, local=false) {    
-    if(this.is_stopping==true){
+    if(this.is_stopping === true){
       return true;
     }
     const is_posting = options.postings || false;
@@ -592,8 +575,8 @@ class GoLogin {
     this.is_active = false;
     await delay(3000);
     await this.clearProfileFiles();
-    if(local==false){
-          await rimraf(`${this.tmpdir}/gologin_${this.profile_id}.zip`);
+    if (local === false) {
+      await rimraf(`${this.tmpdir}/gologin_${this.profile_id}.zip`);
     }    
     debug(`PROFILE ${this.profile_id} STOPPED AND CLEAR`);
     return false;
@@ -632,7 +615,7 @@ class GoLogin {
       const path_to_remove = `${that.profilePath()}${d}`
       return new Promise(resolve => {
         debug('DROPPING', path_to_remove);        
-        rimraf(path_to_remove, {maxBusyTries: 100}, function(e){
+        rimraf(path_to_remove, { maxBusyTries: 100 }, (e) => {
           // debug('DROPPING RESULT', e);
           resolve();
         });
@@ -832,7 +815,6 @@ class GoLogin {
     return {"status": "failure", "status_code": response.statusCode, "body": response.body};
   }
 
-
   async getCookies(profile_id) {
     const response = await requests.get(`${API_URL}/browser/${profile_id}/cookies`, {
         headers: {
@@ -842,17 +824,20 @@ class GoLogin {
     return response.body;
   }
 
-
   async start() {
-    if(this.is_remote){
+    if (this.is_remote) {
       return this.startRemote()
+    }
+
+    if (!this.executablePath) {
+     await this.checkBrowser();
     }
 
     await this.createStartup();
     // await this.createBrowserExtension();
     const wsUrl = await this.spawnBrowser();
     this.setActive(true);
-    return {status: 'success', wsUrl};
+    return { status: 'success', wsUrl };
   }
 
   async startLocal() {
@@ -865,7 +850,7 @@ class GoLogin {
 
 
   async stop() {
-    if(this.is_remote){
+    if (this.is_remote) {
       return this.stopRemote()
     }
 
@@ -876,7 +861,6 @@ class GoLogin {
     const opts = options || {posting: false};
     await this.stopAndCommit(true, opts.posting);
   }
-
 
   async waitDebuggingUrl(delay_ms, try_count=0){
     await delay(delay_ms);
@@ -930,11 +914,10 @@ class GoLogin {
       }
     });
     console.log(`stopRemote ${profileResponse.body}`);
-    if(profileResponse.body){
+    if (profileResponse.body) {
       return JSON.parse(profileResponse.body);
     }
   }
 }
-
 
 module.exports = GoLogin;
