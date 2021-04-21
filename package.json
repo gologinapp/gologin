@@ -5,7 +5,7 @@
   "main": "./gologin.js",
   "repository": {
     "type": "git",
-    "url": "github:gologinapp/gologin"
+    "url": "git+https://github.com/gologinapp/gologin.git"
   },
   "engines": {
     "node": ">=12.17.0"
