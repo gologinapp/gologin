@@ -31,7 +31,7 @@ const GoLogin = require('gologin');
         profile_id: 'yU0Pr0f1leiD',
     });
 
-    const wsUrl = await GL.start(); 
+  const { status, wsUrl } = await GL.start();
 
     const browser = await puppeteer.connect({
         browserWSEndpoint: wsUrl.toString(), 
@@ -117,7 +117,7 @@ const GoLogin = require('gologin');
         profile_id: 'yU0Pr0f1leiD',
         tmpdir: '/my/tmp/dir',
     });
-    const wsUrl = await GL.startLocal(); 
+    const { status, wsUrl } = await GL.start(); 
     const browser = await puppeteer.connect({
         browserWSEndpoint: wsUrl.toString(), 
         ignoreHTTPSErrors: true,

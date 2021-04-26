@@ -843,9 +843,9 @@ class GoLogin {
   async startLocal() {
     await this.createStartup(true);
     // await this.createBrowserExtension();
-    const url = await this.spawnBrowser();
+    const wsUrl = await this.spawnBrowser();
     this.setActive(true);
-    return url;
+    return { status: 'success', wsUrl };
   }
 
 
