@@ -8,13 +8,15 @@ import requests
 import zipfile
 import subprocess
 import pathlib
+import tempfile
 
 API_URL = 'https://api.gologin.app';
 
 class GoLogin(object):
     def __init__(self, options):
         self.access_token = options.get('token')
-        self.tmpdir = options.get('tmpdir', '/tmp')
+
+        self.tmpdir = options.get('tmpdir', tempfile.gettempdir())
         self.address = options.get('address', '127.0.0.1')
         self.extra_params = options.get('extra_params', [])
         self.port = options.get('port', 3500)
@@ -25,6 +27,7 @@ class GoLogin(object):
             print('extra_params', self.extra_params)
         self.setProfileId(options.get('profile_id')) 
 
+
     def setProfileId(self, profile_id):
         self.profile_id = profile_id
         if self.profile_id==None:
@@ -32,13 +35,14 @@ class GoLogin(object):
         self.profile_path = os.path.join(self.tmpdir, 'gologin_'+self.profile_id)
         self.profile_zip_path = os.path.join(self.tmpdir, 'gologin_'+self.profile_id+'.zip')
         self.profile_zip_path_upload = os.path.join(self.tmpdir, 'gologin_'+self.profile_id+'_upload.zip')
-    
+
+
     def spawnBrowser(self):
         proxy = self.proxy
         proxy_host = ''
         if proxy:
             proxy_host = proxy.get('host')
-            proxy = proxy['mode']+'://'+proxy['host']+':'+str(proxy['port'])
+            proxy = '{mode}://{host}:{port}'.format(proxy)
         
         tz = self.tz.get('timezone')
 
@@ -114,7 +118,6 @@ class GoLogin(object):
         print('commit profile complete')
 
 
-
     def sanitizeProfile(self):
         remove_dirs = [
             'Default/Cache',
@@ -144,7 +147,7 @@ class GoLogin(object):
     def getTimeZone(self):
         proxy = self.proxy
         if proxy:
-            proxies = {proxy.get('mode'): proxy['mode']+'://'+proxy['host']+':'+str(proxy['port'])}
+            proxies = {proxy.get('mode'): '{mode}://{host}:{port}'.format(proxy)}
             data = requests.get('https://time.gologin.app', proxies=proxies)
         else:
             data = requests.get('https://time.gologin.app')
