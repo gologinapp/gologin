@@ -370,7 +370,7 @@ class GoLogin(object):
             "customize": True,
             "fillBasedOnIp": True
           },
-          "navigator": profile_options.navigator,
+          "navigator": profile_options.get('navigator', {}),
           "screenHeight": 768,
           "screenWidth": 1024,
           "proxyEnabled": True,
