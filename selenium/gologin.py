@@ -146,7 +146,7 @@ class GoLogin(object):
 
     def getTimeZone(self):
         proxy = self.proxy
-        if proxy:
+        if proxy:            
             proxies = {proxy.get('mode'): '{mode}://{host}:{port}'.format(proxy)}
             data = requests.get('https://time.gologin.app', proxies=proxies)
         else:
@@ -310,6 +310,9 @@ class GoLogin(object):
         if not proxy or proxy.get('mode')=='none':
             print('no proxy')
             proxy = None
+        
+        if proxy and proxy.get('mode')==None:
+            proxy['mode'] = 'http'
 
         self.proxy = proxy
         self.profile_name = profile.get('name')
