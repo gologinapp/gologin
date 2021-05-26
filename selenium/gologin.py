@@ -382,7 +382,7 @@ class GoLogin(object):
         else:
           profile['navigator'] = {'resolution': "1024x768"};
         
-        for k,v in options.items:
+        for k,v in options.items():
             profile[k] = v
 
         response = json.loads(requests.post(API_URL + '/browser/', headers=self.headers(), json=profile).content.decode('utf-8'))
