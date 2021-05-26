@@ -41,7 +41,9 @@ class GoLogin(object):
         proxy = self.proxy
         proxy_host = ''
         if proxy:
-            proxy_host = proxy.get('host')
+        	if proxy.get('mode')==None:
+        		proxy['mode'] = 'http'
+            proxy_host = proxy.get('host')            
             proxy = '{mode}://{host}:{port}'.format(proxy)
         
         tz = self.tz.get('timezone')
