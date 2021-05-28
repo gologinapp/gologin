@@ -41,10 +41,10 @@ class GoLogin(object):
         proxy = self.proxy
         proxy_host = ''
         if proxy:
-        	if proxy.get('mode')==None:
-        		proxy['mode'] = 'http'
+            if proxy.get('mode')==None:
+                proxy['mode'] = 'http'
             proxy_host = proxy.get('host')            
-            proxy = '{mode}://{host}:{port}'.format(proxy)
+            proxy = self.formatProxyUrl(proxy)
         
         tz = self.tz.get('timezone')
 
@@ -66,9 +66,9 @@ class GoLogin(object):
             params.append(param)
 
         if sys.platform == "darwin":
-        	subprocess.Popen(params)
+            subprocess.Popen(params)
         else:
-        	subprocess.Popen(params, start_new_session=True)
+            subprocess.Popen(params, start_new_session=True)
 
         try_count = 1
         url = str(self.address) + ':' + str(self.port)
@@ -145,11 +145,21 @@ class GoLogin(object):
                     shutil.rmtree(fpath)
                 except:
                     continue
+    
+    def formatProxyUrl(self, proxy):
+        return proxy.get('mode', 'http')+'://'+proxy.get('host','')+':'+proxy.get('port','80')        
+
+    def formatProxyUrlPassword(self, proxy):
+        if proxy.get('username', '')=='':
+            return proxy.get('mode', 'http')+'://'+proxy.get('host','')+':'+proxy.get('port','80')        
+        else:
+            return proxy.get('mode', 'http')+'://'+proxy.get('username','')+':'+proxy.get('password')+'@'+proxy.get('host','')+':'+proxy.get('port','80')        
+
 
     def getTimeZone(self):
         proxy = self.proxy
         if proxy:            
-            proxies = {proxy.get('mode'): '{mode}://{host}:{port}'.format(proxy)}
+            proxies = {proxy.get('mode'): self.formatProxyUrlPassword(proxy)}
             data = requests.get('https://time.gologin.app', proxies=proxies)
         else:
             data = requests.get('https://time.gologin.app')
