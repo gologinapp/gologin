@@ -588,6 +588,11 @@ class GoLogin {
         params.push(`--proxy-server=${proxy}`);
         params.push(`--host-resolver-rules=${hr_rules}`);
       }
+
+      if(this.extra_params){
+        params.push(...this.extra_params);
+      }
+
       var child = require('child_process').execFile(ORBITA_BROWSER, params, {env});
       // var child = require('child_process').spawn(ORBITA_BROWSER, params, { env, shell: true });
       child.stdout.on('data', (data) => debug(data.toString()));
