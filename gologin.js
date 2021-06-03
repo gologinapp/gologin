@@ -531,15 +531,15 @@ class GoLogin {
     const tz = await this.getTimeZone(this.proxy);
     env['TZ'] = tz;
 
-    const params = [`--proxy-server=${proxy}`, `--user-data-dir=${profile_path}`, `--password-store=basic`, `--tz=${tz}`, `--gologin-profile=${profile_name}`, `--lang=en`]    
-    
-    if(this.extra_params){
-      params.concat(this.extra_params);
+    let params = [`--proxy-server=${proxy}`, `--user-data-dir=${profile_path}`, `--password-store=basic`, `--tz=${tz}`, `--gologin-profile=${profile_name}`, `--lang=en`]
+    if (this.extra_params){
+      params = params.concat(this.extra_params);
     }
 
-    if(this.remote_debugging_port){
+    if (this.remote_debugging_port) {
       params.push(`--remote-debugging-port=${remote_debugging_port}`);
     }
+
     return params;
   }
 
