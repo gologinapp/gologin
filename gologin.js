@@ -532,7 +532,7 @@ class GoLogin {
     env['TZ'] = tz;
 
     let params = [`--proxy-server=${proxy}`, `--user-data-dir=${profile_path}`, `--password-store=basic`, `--tz=${tz}`, `--gologin-profile=${profile_name}`, `--lang=en`]
-    if (this.extra_params){
+    if (Array.isArray(this.extra_params) && this.extra_params.length) {
       params = params.concat(this.extra_params);
     }
 
