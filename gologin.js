@@ -570,25 +570,31 @@ class GoLogin {
     if (this.vnc_port) {
       const script_path = path.resolve(__dirname, './run.sh');
       debug('RUNNING', script_path, ORBITA_BROWSER, remote_debugging_port, proxy, profile_path, this.vnc_port);
-      var child = require('child_process').execFile(script_path, [ORBITA_BROWSER, remote_debugging_port, proxy, profile_path, this.vnc_port, tz, profile_name], {env});
+      require('child_process').execFile(script_path, [ORBITA_BROWSER, remote_debugging_port, proxy, profile_path, this.vnc_port, tz, profile_name], {env});
     } else {
       const [splittedLangs] = this.language.split(';');
       const browserLangs = splittedLangs.split(',');
       const browserLang = browserLangs[browserLangs.length - 1];
-      const params = [
+      let params = [
         `--remote-debugging-port=${remote_debugging_port}`,
         `--user-data-dir=${profile_path}`, 
         `--password-store=basic`, 
         `--tz=${tz}`, 
         `--gologin-profile=${profile_name}`, 
         `--lang=${browserLang || 'en'}`,
-        ]    
-      if(proxy){
+      ];
+
+      if (proxy) {
         const hr_rules = `"MAP * 0.0.0.0 , EXCLUDE ${proxy_host}"`;
         params.push(`--proxy-server=${proxy}`);
         params.push(`--host-resolver-rules=${hr_rules}`);
       }
-      var child = require('child_process').execFile(ORBITA_BROWSER, params, {env});
+
+      if (Array.isArray(this.extra_params) && this.extra_params.length) {
+        params = params.concat(this.extra_params);
+      }
+
+      const child = require('child_process').execFile(ORBITA_BROWSER, params, {env});
       // var child = require('child_process').spawn(ORBITA_BROWSER, params, { env, shell: true });
       child.stdout.on('data', (data) => debug(data.toString()));
       debug('SPAWN CMD', ORBITA_BROWSER, params.join(" "));      
