@@ -20,6 +20,8 @@ class GoLogin(object):
         self.address = options.get('address', '127.0.0.1')
         self.extra_params = options.get('extra_params', [])
         self.port = options.get('port', 3500)
+        self.spawn_browser = options.get('spawn_browser', True)
+
         home = str(pathlib.Path.home())
         self.executablePath = options.get('executablePath', os.path.join(home, '.gologin/browser/orbita-browser/chrome'))
         print('executablePath', self.executablePath)
@@ -83,8 +85,10 @@ class GoLogin(object):
         return url
 
     def start(self):
-        self.createStartup()
-        return self.spawnBrowser()
+        profile_path = self.createStartup()
+        if self.spawn_browser == True:
+            return self.spawnBrowser()
+        return profile_path
 
     def zipdir(self, path, ziph):
         for root, dirs, files in os.walk(path):
@@ -344,6 +348,7 @@ class GoLogin(object):
         self.profile = self.getProfile()
         self.downloadProfileZip()
         self.updatePreferences()
+        return self.profile_path
 
 
     def headers(self):
@@ -413,3 +418,29 @@ class GoLogin(object):
             profile[k] = v
         return json.loads(requests.put(API_URL + '/browser/' + profile_id, headers=self.headers(), json=profile).content.decode('utf-8'))
 
+    def waitDebuggingUrl(self, delay_s, try_count=3):
+        url = 'https://' + self.profile_id + '.orbita.gologin.com/json/version';
+        wsUrl = ''
+        try_number = 1
+        while wsUrl=='':
+            time.sleep(delay_s)
+            try:
+                response = json.loads(requests.get(url).content)
+                wsUrl = response.get('webSocketDebuggerUrl', '')
+            except:
+                pass
+            if try_number >= try_count:
+                return {'status': 'failure', 'wsUrl': wsUrl}
+            try_number += 1
+
+        wsUrl = wsUrl.replace('ws://', 'wss://').replace('127.0.0.1', self.profile_id + '.orbita.gologin.com')
+        return {'status': 'success', 'wsUrl': wsUrl}
+
+    def startRemote(self, delay_s=3):
+        profileResponse = requests.post(API_URL + '/browser/' + self.profile_id + '/web', headers=self.headers()).content.decode('utf-8')
+        if profileResponse == 'ok':
+            return self.waitDebuggingUrl(delay_s)
+        return {'status': 'failure'}
+
+    def stopRemote(self):
+        requests.delete(API_URL + '/browser/' + self.profile_id + '/web', headers=self.headers())
