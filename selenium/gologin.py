@@ -10,7 +10,7 @@ import subprocess
 import pathlib
 import tempfile
 
-API_URL = 'https://api.gologin.app';
+API_URL = 'https://api.gologin.com';
 
 class GoLogin(object):
     def __init__(self, options):
@@ -190,7 +190,7 @@ class GoLogin(object):
             data = requests.get(API_URL + '/browser/'+self.profile_id, headers=headers).content
         else:
             # print('downloading profile s3')
-            s3url = 'https://s3.eu-central-1.amazonaws.com/gprofiles.gologin/' + s3path.replace(' ', '+');
+            s3url = 'https://gprofiles.gologin.com/' + s3path.replace(' ', '+');
             data = requests.get(s3url).content
 
         if len(data)==0:
