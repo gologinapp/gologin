@@ -151,13 +151,13 @@ class GoLogin(object):
                     continue
     
     def formatProxyUrl(self, proxy):
-        return proxy.get('mode', 'http')+'://'+proxy.get('host','')+':'+proxy.get('port','80')        
+        return proxy.get('mode', 'http')+'://'+proxy.get('host','')+':'+str(proxy.get('port',80))
 
     def formatProxyUrlPassword(self, proxy):
         if proxy.get('username', '')=='':
-            return proxy.get('mode', 'http')+'://'+proxy.get('host','')+':'+proxy.get('port','80')        
+            return proxy.get('mode', 'http')+'://'+proxy.get('host','')+':'+str(proxy.get('port',80))
         else:
-            return proxy.get('mode', 'http')+'://'+proxy.get('username','')+':'+proxy.get('password')+'@'+proxy.get('host','')+':'+proxy.get('port','80')        
+            return proxy.get('mode', 'http')+'://'+proxy.get('username','')+':'+proxy.get('password')+'@'+proxy.get('host','')+':'+str(proxy.get('port',80))
 
 
     def getTimeZone(self):
