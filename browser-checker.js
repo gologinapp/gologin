@@ -12,29 +12,25 @@ const readline = require('readline');
 
 const PLATFORM = process.platform;
 
-const MAC_ORBITA_BUCKET = 'releases-mac-orbita';
-const DEB_ORBITA_BUCKET = 'releases-deb-orbita';
-const WIN_ORBITA_BUCKET = 'releases-win-orbita';
-
 const VERSION_FILE = 'latest-version.txt';
-const MAC_VERSION_FILE_URL = `https://${MAC_ORBITA_BUCKET}.s3.eu-central-1.amazonaws.com/${VERSION_FILE}`;
-const DEB_VERSION_FILE_URL = `https://${DEB_ORBITA_BUCKET}.s3.eu-central-1.amazonaws.com/${VERSION_FILE}`;
-const WIN_VERSION_FILE_URL = `https://${WIN_ORBITA_BUCKET}.s3.eu-central-1.amazonaws.com/${VERSION_FILE}`;
+const MAC_VERSION_FILE_URL = `https://orbita-browser-mac.gologin.com/${VERSION_FILE}`;
+const DEB_VERSION_FILE_URL = `https://orbita-browser-linux.gologin.com/${VERSION_FILE}`;
+const WIN_VERSION_FILE_URL = `https://orbita-browser-windows.gologin.com/${VERSION_FILE}`;
 
 const WIN_FOLDERSIZE_FILE = 'foldersize.txt';
-const WIN_FOLDERSIZE_FILE_LINK = `https://${WIN_ORBITA_BUCKET}.s3.eu-central-1.amazonaws.com/${WIN_FOLDERSIZE_FILE}`;
+const WIN_FOLDERSIZE_FILE_LINK = `https://orbita-browser-windows.gologin.com/${WIN_FOLDERSIZE_FILE}`;
 
 const BROWSER_ARCHIVE_NAME = `orbita-browser-latest.${PLATFORM === 'win32' ? 'zip' : 'tar.gz'}`;
-const MAC_BROWSER_LINK = `https://${MAC_ORBITA_BUCKET}.s3.eu-central-1.amazonaws.com/${BROWSER_ARCHIVE_NAME}`;
-const DEB_BROWSER_LINK = `https://${DEB_ORBITA_BUCKET}.s3.eu-central-1.amazonaws.com/${BROWSER_ARCHIVE_NAME}`;
-const WIN_BROWSER_LINK = `https://${WIN_ORBITA_BUCKET}.s3.eu-central-1.amazonaws.com/${BROWSER_ARCHIVE_NAME}`;
+const MAC_BROWSER_LINK = `https://orbita-browser-mac.gologin.com/${BROWSER_ARCHIVE_NAME}`;
+const DEB_BROWSER_LINK = `https://orbita-browser-linux.gologin.com/${BROWSER_ARCHIVE_NAME}`;
+const WIN_BROWSER_LINK = `https://orbita-browser-windows.gologin.com/${BROWSER_ARCHIVE_NAME}`;
 
 const MAC_HASH_FILE = 'hashfile.mtree';
 const DEB_HASH_FILE = 'hashfile.txt';
 const WIN_HASH_FILE = DEB_HASH_FILE;
-const MAC_HASHFILE_LINK = `https://${MAC_ORBITA_BUCKET}.s3.eu-central-1.amazonaws.com/${MAC_HASH_FILE}`;
-const DEB_HASHFILE_LINK = `https://${DEB_ORBITA_BUCKET}.s3.eu-central-1.amazonaws.com/${DEB_HASH_FILE}`;
-const WIN_HASHFILE_LINK = `https://${WIN_ORBITA_BUCKET}.s3.eu-central-1.amazonaws.com/${WIN_HASH_FILE}`;
+const MAC_HASHFILE_LINK = `https://orbita-browser-mac.gologin.com/${MAC_HASH_FILE}`;
+const DEB_HASHFILE_LINK = `https://orbita-browser-linux.gologin.com/${DEB_HASH_FILE}`;
+const WIN_HASHFILE_LINK = `https://orbita-browser-windows.gologin.com/${WIN_HASH_FILE}`;
 
 const FAIL_SUM_MATCH_MESSAGE = 'hash_sum_not_matched';
 const EXTRACTED_FOLDER = 'extracted-browser';

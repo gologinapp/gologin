@@ -15,7 +15,7 @@ const decompressUnzip = require('decompress-unzip');
 const path = require('path');
 const shell = require('shelljs');
 
-const API_URL = 'https://api.gologin.app';
+const API_URL = 'https://api.gologin.com';
 const BrowserChecker = require('./browser-checker');
 
 // process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
@@ -123,7 +123,7 @@ class GoLogin {
     const token = this.access_token;
     debug('getProfileS3 token=', token, 'profile=', this.profile_id, 's3path=', s3path);
     if (s3path) { //загрузка профиля из публичного бакета s3 быстрее
-      const s3url = `https://s3.eu-central-1.amazonaws.com/gprofiles.gologin/${s3path}`.replace(/\s+/mg, '+');
+      const s3url = `https://gprofiles.gologin.com/${s3path}`.replace(/\s+/mg, '+');
       debug('loading profile from public s3 bucket, url=', s3url);
       const profileResponse = await requests.get(s3url, {
         encoding: null
@@ -621,22 +621,22 @@ class GoLogin {
     await rimraf(`${this.tmpdir}/gologin_${this.profile_id}_upload.zip`);
   }
 
-  async stopAndCommit(options, local=false) {    
-    if(this.is_stopping === true){
+  async stopAndCommit(options, local= false) {
+    if (this.is_stopping) {
       return true;
     }
     const is_posting = options.postings || false;
 
     this.is_stopping = true;
     await this.sanitizeProfile();
-    if(is_posting){
+    if (is_posting) {
       await this.commitProfile();
     }
     this.is_stopping = false;
     this.is_active = false;
     await delay(3000);
     await this.clearProfileFiles();
-    if (local === false) {
+    if (!local) {
       await rimraf(`${this.tmpdir}/gologin_${this.profile_id}.zip`);
     }    
     debug(`PROFILE ${this.profile_id} STOPPED AND CLEAR`);
@@ -741,7 +741,7 @@ class GoLogin {
       os = options.os;
     } 
 
-    let fingerprint = await requests.get(`https://api.gologin.app/browser/fingerprint?os=${os}`,{
+    let fingerprint = await requests.get(`https://api.gologin.com/browser/fingerprint?os=${os}`,{
       headers: {
         'Authorization': `Bearer ${this.access_token}`,
         'User-Agent': 'gologin-api',
@@ -823,7 +823,7 @@ class GoLogin {
     Object.keys(options).filter( e => e!='navigator').map((e)=>{profile[e]=options[e]});
 
     debug('update profile', profile);
-    const response = await requests.put(`https://api.gologin.app/browser/${options.id}`,{
+    const response = await requests.put(`https://api.gologin.com/browser/${options.id}`,{
       json: profile,
       headers: {
         'Authorization': `Bearer ${this.access_token}`
@@ -944,7 +944,7 @@ class GoLogin {
 
   async startRemote(delay_ms=10000) {
     debug(`startRemote ${this.profile_id}`);
-    const profileResponse = await requests.post(`https://api.gologin.app/browser/${this.profile_id}/web`, {
+    const profileResponse = await requests.post(`https://api.gologin.com/browser/${this.profile_id}/web`, {
       headers: {
         'Authorization': `Bearer ${this.access_token}`
       }
@@ -966,7 +966,7 @@ class GoLogin {
 
   async stopRemote() {
     debug(`stopRemote ${this.profile_id}`);
-    const profileResponse = await requests.delete(`https://api.gologin.app/browser/${this.profile_id}/web`, {
+    const profileResponse = await requests.delete(`https://api.gologin.com/browser/${this.profile_id}/web`, {
       headers: {
         'Authorization': `Bearer ${this.access_token}`
       }
