@@ -438,6 +438,7 @@ class GoLogin(object):
 
     def startRemote(self, delay_s=3):
         profileResponse = requests.post(API_URL + '/browser/' + self.profile_id + '/web', headers=self.headers()).content.decode('utf-8')
+        print('profileResponse', profileResponse)
         if profileResponse == 'ok':
             return self.waitDebuggingUrl(delay_s)
         return {'status': 'failure'}
