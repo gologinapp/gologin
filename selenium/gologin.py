@@ -10,7 +10,7 @@ import subprocess
 import pathlib
 import tempfile
 
-API_URL = 'https://api.gologin.com';
+API_URL = 'https://api.gologin.com'
 
 class GoLogin(object):
     def __init__(self, options):
@@ -60,9 +60,9 @@ class GoLogin(object):
         '--lang=en', 
         ]    
         if proxy:
-            hr_rules = '"MAP * 0.0.0.0 , EXCLUDE %s"'%(proxy_host);
-            params.append('--proxy-server='+proxy);
-            params.append('--host-resolver-rules='+hr_rules);
+            hr_rules = '"MAP * 0.0.0.0 , EXCLUDE %s"'%(proxy_host)
+            params.append('--proxy-server='+proxy)
+            params.append('--host-resolver-rules='+hr_rules)
 
         for param in self.extra_params:
             params.append(param)
@@ -190,7 +190,7 @@ class GoLogin(object):
             data = requests.get(API_URL + '/browser/'+self.profile_id, headers=headers).content
         else:
             # print('downloading profile s3')
-            s3url = 'https://gprofiles.gologin.com/' + s3path.replace(' ', '+');
+            s3url = 'https://gprofiles.gologin.com/' + s3path.replace(' ', '+')
             data = requests.get(s3url).content
 
         if len(data)==0:
@@ -268,7 +268,7 @@ class GoLogin(object):
         preferences['webgl_noise_value'] = preferences.get('webGL', {}).get('noise')
         preferences['get_client_rects_noise'] = preferences.get('webGL', {}).get('getClientRectsNoise')
         preferences['canvasMode'] = preferences.get('canvas', {}).get('mode')
-        preferences['canvasNoise'] = preferences.get('canvas', {}).get('noise');
+        preferences['canvasNoise'] = preferences.get('canvas', {}).get('noise')
         preferences['audioContext'] = {
             'enable': preferences.get('audioContext').get('mode', 'off'),
             'noiseValue': preferences.get('audioContext').get('noise'),
@@ -309,7 +309,7 @@ class GoLogin(object):
             autoProxyServer = profile.get('autoProxyServer')
             splittedAutoProxyServer = autoProxyServer.split('://')
             splittedProxyAddress = splittedAutoProxyServer[1].split(':')
-            port = splittedProxyAddress[1];
+            port = splittedProxyAddress[1]
 
             proxy = {
               'mode': 'http',
@@ -366,7 +366,7 @@ class GoLogin(object):
         return json.loads(requests.get(API_URL + '/browser/', headers=self.headers()).content.decode('utf-8'))
 
     def create(self, options={}):
-        profile_options = self.getRandomFingerprint(options);
+        profile_options = self.getRandomFingerprint(options)
         profile = {
           "name": "default_name",
           "notes": "auto generated",
@@ -392,18 +392,18 @@ class GoLogin(object):
           "screenWidth": 1024,
           "proxyEnabled": True,
           "profile": json.dumps(profile_options),
-        };
+        }
     
         if profile.get('navigator'):
-          profile['navigator']['resolution'] = "1024x768";
+          profile['navigator']['resolution'] = "1024x768"
         else:
-          profile['navigator'] = {'resolution': "1024x768"};
+          profile['navigator'] = {'resolution': "1024x768"}
         
         for k,v in options.items():
             profile[k] = v
 
         response = json.loads(requests.post(API_URL + '/browser/', headers=self.headers(), json=profile).content.decode('utf-8'))
-        return response.get('id');
+        return response.get('id')
 
 
     def delete(self, profile_id=None):
@@ -413,13 +413,13 @@ class GoLogin(object):
 
     def update(self, options):
         self.profile_id = options.get('id')
-        profile = self.getProfile();
+        profile = self.getProfile()
         for k,v in options.items():
             profile[k] = v
         return json.loads(requests.put(API_URL + '/browser/' + profile_id, headers=self.headers(), json=profile).content.decode('utf-8'))
 
     def waitDebuggingUrl(self, delay_s, try_count=3):
-        url = 'https://' + self.profile_id + '.orbita.gologin.com/json/version';
+        url = 'https://' + self.profile_id + '.orbita.gologin.com/json/version'
         wsUrl = ''
         try_number = 1
         while wsUrl=='':
