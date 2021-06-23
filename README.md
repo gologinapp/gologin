@@ -1,4 +1,5 @@
 # class GoLogin - class for working with <a href="https://gologin.com" target="_blank">gologin.com</a> API
+# Official Package
 
 ## Getting Started
 
@@ -62,6 +63,8 @@ const GoLogin = require('gologin');
 	- `vncPort` <[integer]> port of VNC server if you using it
     - `tmpdir` <[string]> path to temporary directore for saving profiles
     - `extra_params` arrayof <[string]> extra params for browser orbita (ex. extentions etc.)
+    - `uploadCookiesToServer` upload cookies to server after profile stopping (default false)
+    - `writeCookesFromServer` download cookies from server and write to profile cookies file (default true)
 
 
 
