@@ -1,6 +1,6 @@
 const debug = require('debug')('gologin');
 const _ = require('lodash');
-const requests = require('requestretry').defaults({timeout: 60000});
+const requests = require('requestretry').defaults({ timeout: 60000 });
 const fs = require('fs');
 const os = require('os');
 const child_process = require('child_process');
@@ -763,52 +763,45 @@ class GoLogin {
 
   async create(options) {
     debug('createProfile', options);
-    
-    const profile_options = await this.getRandomFingerprint(options);
-    
-    const json = {
-      "name": "default_name",
-      "notes": "auto generated",
-      "browserType": "chrome",
-      "os": "lin",
-      "startUrl": "google.com",
-      "googleServicesEnabled": true,
-      "lockEnabled": false,
-      "audioContext": {
-        "mode": "noise"
-      },
-      "canvas": {
-        "mode": "noise"
-      },
-      "webRTC": {
-        "mode": "disabled",
-        "enabled": false,
-        "customize": true,
-        "fillBasedOnIp": true
-      },
-      "navigator": profile_options.navigator,
-      "screenHeight": 768,
-      "screenWidth": 1024,
-      "proxyEnabled": true,
-      "profile": JSON.stringify(profile_options),
-    };
-    
-    // Object.keys(profile_options).map((e)=>{json.profile[e]=profile_options[e]});
-    if (json.navigator) {
-      json.navigator.resolution = "1024x768";
-    } else {
-      json.navigator = {resolution: "1024x768"};
+
+    const fingerprint = await this.getRandomFingerprint(options);
+
+    const { navigator, fonts, webGLMetadata, webRTC } = fingerprint;
+    let deviceMemory = navigator.deviceMemory || 2;
+    if (deviceMemory < 1) {
+      deviceMemory = 1;
     }
-    Object.keys(options).map((e)=>{json[e]=options[e]});
+    navigator.deviceMemory = deviceMemory;
+    webGLMetadata.mode = webGLMetadata.mode === 'noise' ? 'mask' : 'off';
+
+    const json = {
+      ...fingerprint,
+      navigator,
+      webGLMetadata,
+      browserType: 'chrome',
+      name: 'default_name',
+      notes: 'auto generated',
+      fonts: {
+        families: fonts,
+      },
+      webRTC: {
+        ...webRTC,
+        mode: 'alerted',
+      },
+    };
+    delete json.fonts;
+
+    Object.keys(options).map((e)=>{ json[e] = options[e] });
 
     // console.log('profileOptions', json);
-    
-    const response = await requests.post(`${API_URL}/browser/`, {
-        headers: {
-            'Authorization': `Bearer ${this.access_token}`
-        },
-        json,
-    });   
+
+    const response = await requests.post(`${API_URL}/browser`, {
+      headers: {
+        'Authorization': `Bearer ${this.access_token}`,
+        'User-Agent': 'gologin-api',
+      },
+      json,
+    });
     // console.log(JSON.stringify(response.body));
     return response.body.id;
   }
@@ -816,9 +809,10 @@ class GoLogin {
   async delete(pid) {
     const profile_id = pid || this.profile_id;
     const response = await requests.delete(`${API_URL}/browser/${profile_id}`, {
-        headers: {
-            'Authorization': `Bearer ${this.access_token}`
-        },
+      headers: {
+        'Authorization': `Bearer ${this.access_token}`,
+        'User-Agent': 'gologin-api',
+      },
     });
   }
 
@@ -830,7 +824,7 @@ class GoLogin {
       Object.keys(options.navigator).map((e)=>{profile.navigator[e]=options.navigator[e]});
     }
 
-    Object.keys(options).filter( e => e!='navigator').map((e)=>{profile[e]=options[e]});
+    Object.keys(options).filter(e => e !== 'navigator').map((e)=>{profile[e]=options[e]});
 
     debug('update profile', profile);
     const response = await requests.put(`https://api.gologin.com/browser/${options.id}`,{
