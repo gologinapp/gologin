@@ -782,7 +782,7 @@ class GoLogin {
       name: 'default_name',
       notes: 'auto generated',
       fonts: {
-        families: fonts,
+        families: [...fonts],
       },
       webRTC: {
         ...webRTC,
