@@ -782,14 +782,13 @@ class GoLogin {
       name: 'default_name',
       notes: 'auto generated',
       fonts: {
-        families: [...fonts],
+        families: fonts,
       },
       webRTC: {
         ...webRTC,
         mode: 'alerted',
       },
     };
-    delete json.fonts;
 
     Object.keys(options).map((e)=>{ json[e] = options[e] });
 
