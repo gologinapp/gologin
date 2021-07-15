@@ -375,7 +375,7 @@ class GoLogin {
       metadata: {
         vendor: _.get(profile, 'webGLMetadata.vendor'),
         renderer: _.get(profile, 'webGLMetadata.renderer'),
-        enabled: _.get(profile, 'webGLMetadata.mode') === 'mask',
+        mode: _.get(profile, 'webGLMetadata.mode') === 'mask',
       }
     };
 
