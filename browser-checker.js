@@ -54,7 +54,7 @@ class BrowserChecker {
     console.log('executableFilePath:', executableFilePath);
   }
   
-  async checkBrowser() {
+  async checkBrowser(autoUpdateBrowser = false) {
     const browserFolderExists = await access(this.#executableFilePath).then(() => true).catch(() => false);
 
     if (!browserFolderExists) {
@@ -67,6 +67,10 @@ class BrowserChecker {
 
     if (browserLatestVersion === currentVersion) {
       return;
+    }
+
+    if (autoUpdateBrowser) {
+      return this.downloadBrowser();
     }
 
     return new Promise(resolve => {
