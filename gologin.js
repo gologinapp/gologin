@@ -14,10 +14,14 @@ const decompressUnzip = require('decompress-unzip');
 const path = require('path');
 const shell = require('shelljs');
 
-const API_URL = 'https://api.gologin.com';
 const BrowserChecker = require('./browser-checker');
 const { BrowserUserDataManager } = require('./browser-user-data-manager');
 const { CookiesManager } = require('./cookies-manager');
+const fontsCollection = require('./fonts');
+
+const SEPARATOR = path.sep;
+const API_URL = 'https://api.gologin.com';
+const OS_PLATFORM = process.platform;
 
 // process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
 
@@ -32,8 +36,11 @@ class GoLogin {
     this.extra_params = options.extra_params;
     this.executablePath = options.executablePath;
     this.vnc_port = options.vncPort;
+    this.fontsMasking = false;
     this.is_active = false;
     this.is_stopping = false;
+    this.differentOs = false;
+    this.profileOs = 'lin';
     this.tmpdir = os.tmpdir();
     this.autoUpdateBrowser = !!options.autoUpdateBrowser;
     this.browserChecker = new BrowserChecker();
@@ -262,7 +269,14 @@ class GoLogin {
     await rimraf(profilePath);
     debug('-', profilePath, 'dropped');
     profile = await this.getProfile();
-    const { navigator = {}, fonts } = profile;
+    const { navigator = {}, fonts, os: profileOs  } = profile;
+    this.fontsMasking = fonts?.enableMasking;
+    this.profileOs = profileOs;
+    this.differentOs =
+      OS_PLATFORM === 'win32' && profileOs !== 'win' ||
+      OS_PLATFORM === 'darwin' && profileOs !== 'mac' ||
+      OS_PLATFORM === 'linux' && profileOs !== 'lin'
+
     const {
       resolution = '1920x1080',
       language = 'en-US,en;q=0.9',
@@ -392,14 +406,14 @@ class GoLogin {
       await this.writeCookiesToFile();
     }
 
-    // if (fonts?.enableMasking) {
-    //   const families = fonts?.families || [];
-    //   if (!families.length) {
-    //     throw new Error('No fonts list provided');
-    //   }
-    //
-    //   await BrowserUserDataManager.composeFonts(families, profilePath);
-    // }
+    if (fonts?.enableMasking) {
+      const families = fonts?.families || [];
+      if (!families.length) {
+        throw new Error('No fonts list provided');
+      }
+
+      await BrowserUserDataManager.composeFonts(families, profilePath, this.differentOs);
+    }
 
     fs.writeFileSync(path.join(profilePath, 'Default', 'Preferences'), JSON.stringify(_.merge(preferences, {
       gologin
@@ -588,7 +602,11 @@ class GoLogin {
     if (this.vnc_port) {
       const script_path = path.resolve(__dirname, './run.sh');
       debug('RUNNING', script_path, ORBITA_BROWSER, remote_debugging_port, proxy, profile_path, this.vnc_port);
-      execFile(script_path, [ORBITA_BROWSER, remote_debugging_port, proxy, profile_path, this.vnc_port, tz, profile_name], {env});
+      execFile(
+        script_path,
+        [ORBITA_BROWSER, remote_debugging_port, proxy, profile_path, this.vnc_port, tz, profile_name],
+        { env }
+      );
     } else {
       const [splittedLangs] = this.language.split(';');
       const browserLangs = splittedLangs.split(',');
@@ -601,6 +619,18 @@ class GoLogin {
         `--gologin-profile=${profile_name}`, 
         `--lang=${browserLang || 'en'}`,
       ];
+
+      if (this.fontsMasking) {
+        let arg = '--font-masking-mode=2';
+        if (this.differentOs) {
+          arg = '--font-masking-mode=3';
+        }
+        if (this.profileOs === 'android') {
+          arg = '--font-masking-mode=0';
+        }
+
+        params.push(arg);
+      }
 
       if (proxy) {
         const hr_rules = `"MAP * 0.0.0.0 , EXCLUDE ${proxy_host}"`;
@@ -687,14 +717,20 @@ class GoLogin {
 
   async sanitizeProfile() {
     const remove_dirs = [
-      '/Default/Cache',
-      '/biahpgbdmdkfgndcmfiipgcebobojjkp',
-      '/afalakplffnnnlkncjhbmahjfjhmlkal',
-      '/cffkpbalmllkdoenhmdmpbkajipdjfam',
-      '/Dictionaries',
-      '/enkheaiicpeffbfgjiklngbpkilnbkoi',
-      '/oofiananboodjbbmdelgdommihjbkfag',
-      '/SafetyTips'
+      `${SEPARATOR}Default${SEPARATOR}Cache`,
+      `${SEPARATOR}Default${SEPARATOR}Service Worker${SEPARATOR}CacheStorage`,
+      `${SEPARATOR}Default${SEPARATOR}Code Cache`,
+      `${SEPARATOR}Default${SEPARATOR}GPUCache`,
+      `${SEPARATOR}GrShaderCache`,
+      `${SEPARATOR}ShaderCache`,
+      `${SEPARATOR}biahpgbdmdkfgndcmfiipgcebobojjkp`,
+      `${SEPARATOR}afalakplffnnnlkncjhbmahjfjhmlkal`,
+      `${SEPARATOR}cffkpbalmllkdoenhmdmpbkajipdjfam`,
+      `${SEPARATOR}Dictionaries`,
+      `${SEPARATOR}enkheaiicpeffbfgjiklngbpkilnbkoi`,
+      `${SEPARATOR}oofiananboodjbbmdelgdommihjbkfag`,
+      `${SEPARATOR}SafetyTips`,
+      `${SEPARATOR}fonts`,
     ];
     const that = this;
 
@@ -1034,6 +1070,12 @@ class GoLogin {
     if (profileResponse.body) {
       return JSON.parse(profileResponse.body);
     }
+  }
+
+  getAvailableFonts() {
+    return fontsCollection
+      .filter(elem => elem.fileNames)
+      .map(elem => elem.name)
   }
 }
 
