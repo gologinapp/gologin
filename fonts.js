@@ -3,11 +3,13 @@ const fontsCollection = [
     name: 'AIGDT',
     value: 'AIGDT',
     fileNames: ['aigdt.ttf'],
+    os: ['win', 'lin'],
   },
   {
     name: 'AMGDT',
     value: 'AMGDT',
     fileNames: ['amgdt.ttf'],
+    os: ['win', 'lin'],
   },
   {
     name: 'Abadi MT Condensed Light',
@@ -17,6 +19,7 @@ const fontsCollection = [
     name: 'Abyssinica Sil Regular',
     value: 'Abyssinica Sil Regular',
     fileNames: ['abyssinica_sil.ttf'],
+    os: ['lin'],
   },
   {
     name: 'Academy Engraved LET',
@@ -105,6 +108,12 @@ const fontsCollection = [
     value: 'Albertus Medium',
   },
   {
+    name: 'Alef',
+    value: 'Alef',
+    fileNames: ['aharoni.ttf'],
+    os: ['lin'],
+  },
+  {
     name: 'Alexandra Script',
     value: 'Alexandra Script',
     fileNames: ['alexandra_script.ttf'],
@@ -135,6 +144,12 @@ const fontsCollection = [
   {
     name: 'American Typewriter',
     value: 'American Typewriter',
+    os: ['mac'],
+  },
+  {
+    name: 'Amiri',
+    value: 'Amiri',
+    os: ['mac'],
   },
   {
     name: 'AnastasiaScript',
@@ -143,6 +158,7 @@ const fontsCollection = [
   {
     name: 'Andale Mono',
     value: 'Andale Mono',
+    os: ['mac'],
   },
   {
     name: 'Andalus',
@@ -157,9 +173,15 @@ const fontsCollection = [
     value: 'AngsanaUPC',
   },
   {
+    name: 'Ani',
+    value: 'Ani',
+    os: ['lin'],
+  },
+  {
     name: 'AnjaliOldLipi',
     value: 'AnjaliOldLipi',
     fileNames: ['anjalioldlipi.ttf'],
+    os: ['lin'],
   },
   {
     name: 'Annabelle',
@@ -175,16 +197,39 @@ const fontsCollection = [
     value: 'Aparajita',
   },
   {
+    name: 'Apple Braille',
+    value: 'Apple Braille',
+    os: ['mac'],
+  },
+  {
     name: 'Apple Chancery',
     value: 'Apple Chancery',
+    os: ['mac'],
   },
   {
     name: 'Apple Color Emoji',
     value: 'Apple Color Emoji',
+    os: ['mac'],
   },
   {
     name: 'Apple SD Gothic Neo',
     value: 'Apple SD Gothic Neo',
+    os: ['mac'],
+  },
+  {
+    name: 'Apple Symbols',
+    value: 'Apple Symbols',
+    os: ['mac'],
+  },
+  {
+    name: 'AppleGothic',
+    value: 'AppleGothic',
+    os: ['mac'],
+  },
+  {
+    name: 'AppleMyungjo',
+    value: 'AppleMyungjo',
+    os: ['mac'],
   },
   {
     name: 'Arabic Transparent',
@@ -197,50 +242,62 @@ const fontsCollection = [
   {
     name: 'Arial',
     value: 'Arial',
+    os: ['win', 'mac'],
   },
   {
     name: 'Arial Baltic',
-    value: 'Arial Baltic'
+    value: 'Arial Baltic',
+    os: ['win', 'mac'],
   },
   {
     name: 'Arial Black',
     value: 'Arial Black',
+    os: ['win', 'mac'],
   },
   {
     name: 'Arial CE',
-    value: 'Arial CE'
+    value: 'Arial CE',
+    os: ['win', 'mac'],
   },
   {
     name: 'Arial Cyr',
     value: 'Arial Cyr',
+    os: ['win', 'mac'],
   },
   {
     name: 'Arial Greek',
-    value: 'Arial Greek'
+    value: 'Arial Greek',
+    os: ['win', 'mac'],
   },
   {
     name: 'Arial Hebrew',
-    value: 'Arial Hebrew'
+    value: 'Arial Hebrew',
+    os: ['win', 'mac'],
   },
   {
     name: 'Arial MT',
-    value: 'Arial MT'
+    value: 'Arial MT',
+    os: ['win', 'mac'],
   },
   {
     name: 'Arial Narrow',
     value: 'Arial Narrow',
+    os: ['win', 'mac'],
   },
   {
     name: 'Arial Rounded MT Bold',
-    value: 'Arial Rounded MT Bold'
+    value: 'Arial Rounded MT Bold',
+    os: ['win', 'mac'],
   },
   {
     name: 'Arial TUR',
-    value: 'Arial TUR'
+    value: 'Arial TUR',
+    os: ['win', 'mac'],
   },
   {
     name: 'Arial Unicode MS',
-    value: 'Arial Unicode MS'
+    value: 'Arial Unicode MS',
+    os: ['win', 'mac'],
   },
   {
     name: 'Ariston',
@@ -296,6 +353,11 @@ const fontsCollection = [
     value: 'Arrus BT',
   },
   {
+    name: 'Athelas',
+    value: 'Athelas',
+    os: ['mac'],
+  },
+  {
     name: 'Aurora Cn BT',
     value: 'Aurora Cn BT',
   },
@@ -310,14 +372,37 @@ const fontsCollection = [
   {
     name: 'Avenir',
     value: 'Avenir',
+    os: ['mac'],
+  },
+  {
+    name: 'Avenir Next',
+    value: 'Avenir Next',
+    os: ['mac'],
+  },
+  {
+    name: 'Avenir Next Condensed',
+    value: 'Avenir Next Condensed',
+    os: ['mac'],
   },
   {
     name: 'Ayuthaya',
     value: 'Ayuthaya',
+    os: ['mac'],
+  },
+  {
+    name: 'Baghdad',
+    value: 'Baghdad',
+    os: ['mac'],
+  },
+  {
+    name: 'Bangla MN',
+    value: 'Bangla MN',
+    os: ['mac'],
   },
   {
     name: 'Bangla Sangam MN',
     value: 'Bangla Sangam MN',
+    os: ['mac'],
   },
   {
     name: 'Bank Gothic',
@@ -334,10 +419,12 @@ const fontsCollection = [
   {
     name: 'Baskerville',
     value: 'Baskerville',
+    os: ['mac'],
   },
   {
     name: 'Baskerville Old Face',
     value: 'Baskerville Old Face',
+    os: ['mac'],
   },
   {
     name: 'Batang',
@@ -354,6 +441,11 @@ const fontsCollection = [
   {
     name: 'Bazooka',
     value: 'Bazooka',
+  },
+  {
+    name: 'Beirut',
+    value: 'Beirut',
+    os: ['mac'],
   },
   {
     name: 'Bell Gothic Std Black',
@@ -413,6 +505,7 @@ const fontsCollection = [
   {
     name: 'Big Caslon',
     value: 'Big Caslon',
+    os: ['mac'],
   },
   {
     name: 'Birch Std',
@@ -441,30 +534,37 @@ const fontsCollection = [
   {
     name: 'Bodoni 72',
     value: 'Bodoni 72',
+    os: ['mac'],
   },
   {
     name: 'Bodoni 72 Oldstyle',
     value: 'Bodoni 72 Oldstyle',
+    os: ['mac'],
   },
   {
     name: 'Bodoni 72 Smallcaps',
     value: 'Bodoni 72 Smallcaps',
+    os: ['mac'],
   },
   {
     name: 'Bodoni MT',
     value: 'Bodoni MT',
+    os: ['mac'],
   },
   {
     name: 'Bodoni MT Black',
     value: 'Bodoni MT Black',
+    os: ['mac'],
   },
   {
     name: 'Bodoni MT Condensed',
     value: 'Bodoni MT Condensed',
+    os: ['mac'],
   },
   {
     name: 'Bodoni MT Poster Compressed',
     value: 'Bodoni MT Poster Compressed',
+    os: ['mac'],
   },
   {
     name: 'Book Antiqua',
@@ -527,12 +627,20 @@ const fontsCollection = [
     value: 'CG Times',
   },
   {
+    name: 'Caladea',
+    value: 'Caladea',
+    fileNames: ['caladea_bold.ttf', 'caladea_bold_italic.ttf', 'caladea-italic.ttf', 'caladea_regular.ttf'],
+    os: ['lin'],
+  },
+  {
     name: 'Calibri',
     value: 'Calibri',
+    os: ['win'],
   },
   {
     name: 'Calibri Light',
     value: 'Calibri Light',
+    os: ['win'],
   },
   {
     name: 'Californian FB',
@@ -553,15 +661,23 @@ const fontsCollection = [
   {
     name: 'Cambria',
     value: 'Cambria',
+    os: ['win'],
   },
   {
     name: 'Cambria Math',
     value: 'Cambria Math',
     fileNames: ['cambria_math.ttf'],
+    os: ['win'],
   },
   {
     name: 'Candara',
     value: 'Candara',
+    os: ['win'],
+  },
+  {
+    name: 'Carrois Gothic SC',
+    value: 'Carrois Gothic SC',
+    os: ['mac'],
   },
   {
     name: 'Carolina',
@@ -603,14 +719,22 @@ const fontsCollection = [
   {
     name: 'Chalkboard',
     value: 'Chalkboard',
+    os: ['mac'],
   },
   {
     name: 'Chalkboard SE',
     value: 'Chalkboard SE',
+    os: ['mac'],
   },
   {
     name: 'Chalkduster',
     value: 'Chalkduster',
+    os: ['mac'],
+  },
+  {
+    name: 'Chandas',
+    value: 'Chandas',
+    os: ['lin'],
   },
   {
     name: 'Chaparral Pro',
@@ -629,17 +753,19 @@ const fontsCollection = [
     value: 'Charlesworth',
   },
   {
-    name: 'Chilanka Regular',
-    value: 'Chilanka Regular',
-    fileNames: ['chilanka_regular.ttf'],
+    name: 'Charter',
+    value: 'Charter',
+    os: ['mac'],
   },
   {
     name: 'Charter BT',
     value: 'Charter BT',
+    os: ['mac'],
   },
   {
     name: 'Charter Bd BT',
     value: 'Charter Bd BT',
+    os: ['mac'],
   },
   {
     name: 'Chaucer',
@@ -648,6 +774,12 @@ const fontsCollection = [
   {
     name: 'ChelthmITC Bk BT',
     value: 'ChelthmITC Bk BT',
+  },
+  {
+    name: 'Chilanka',
+    value: 'Chilanka',
+    fileNames: ['chilanka_regular.ttf'],
+    os: ['lin'],
   },
   {
     name: 'Chiller',
@@ -684,6 +816,12 @@ const fontsCollection = [
   {
     name: 'Cochin',
     value: 'Cochin',
+    os: ['mac'],
+  },
+  {
+    name: 'Collapse',
+    value: 'Collapse',
+    os: ['mac'],
   },
   {
     name: 'Colonna MT',
@@ -692,6 +830,7 @@ const fontsCollection = [
   {
     name: 'Comic Sans MS',
     value: 'Comic Sans MS',
+    os: ['win', 'mac'],
   },
   {
     name: 'CommercialPi BT',
@@ -708,10 +847,12 @@ const fontsCollection = [
   {
     name: 'Consolas',
     value: 'Consolas',
+    os: ['win'],
   },
   {
     name: 'Constantia',
     value: 'Constantia',
+    os: ['win'],
   },
   {
     name: 'Cooper Black',
@@ -724,18 +865,22 @@ const fontsCollection = [
   {
     name: 'Copperplate',
     value: 'Copperplate',
+    os: ['mac'],
   },
   {
     name: 'Copperplate Gothic',
     value: 'Copperplate Gothic',
+    os: ['mac'],
   },
   {
     name: 'Copperplate Gothic Bold',
     value: 'Copperplate Gothic Bold',
+    os: ['mac'],
   },
   {
     name: 'Copperplate Gothic Light',
     value: 'Copperplate Gothic Light',
+    os: ['mac'],
   },
   {
     name: 'Copyist',
@@ -744,6 +889,7 @@ const fontsCollection = [
   {
     name: 'Corbel',
     value: 'Corbel',
+    os: ['win'],
   },
   {
     name: 'Cordia New',
@@ -762,32 +908,44 @@ const fontsCollection = [
     value: 'CountryBlueprint',
   },
   {
+    name: 'Corsiva Hebrew',
+    value: 'Corsiva Hebrew',
+    os: ['mac'],
+  },
+  {
     name: 'Courier',
     value: 'Courier',
+    os: ['win', 'mac'],
   },
   {
     name: 'Courier New',
     value: 'Courier New',
+    os: ['win', 'mac'],
   },
   {
     name: 'Courier New Baltic',
-    value: 'Courier New Baltic'
+    value: 'Courier New Baltic',
+    os: ['win', 'mac'],
   },
   {
     name: 'Courier New CE',
-    value: 'Courier New CE'
+    value: 'Courier New CE',
+    os: ['win', 'mac'],
   },
   {
     name: 'Courier New Cyr',
     value: 'Courier New Cyr',
+    os: ['win', 'mac'],
   },
   {
     name: 'Courier New Greek',
-    value: 'Courier New Greek'
+    value: 'Courier New Greek',
+    os: ['win', 'mac'],
   },
   {
     name: 'Courier New TUR',
-    value: 'Courier New TUR'
+    value: 'Courier New TUR',
+    os: ['win', 'mac'],
   },
   {
     name: 'Curlz MT',
@@ -798,8 +956,28 @@ const fontsCollection = [
     value: 'DFKai-SB',
   },
   {
-    name: 'DIN',
-    value: 'DIN',
+    name: 'DIN Alternate',
+    value: 'DIN Alternate',
+    os: ['mac'],
+  },
+  {
+    name: 'DIN Condensed',
+    value: 'DIN Condensed',
+    os: ['mac'],
+  },
+  {
+    name: 'Damascus',
+    value: 'Damascus',
+    os: ['mac'],
+  },
+  {
+    name: 'Dancing Script',
+    value: 'Dancing Script',
+    fileNames: [
+      'dancing_script_bold.ttf', 'dancing_script_medium.ttf', 'dancing_script_regular.ttf',
+      'dancing_script_semibold.ttf',
+    ],
+    os: ['lin', 'mac'],
   },
   {
     name: 'DaunPenh',
@@ -812,10 +990,18 @@ const fontsCollection = [
   {
     name: 'David',
     value: 'David',
+    os: ['win', 'lin'],
   },
   {
-    name: 'Didot',
-    value: 'Didot',
+    name: 'David CLM',
+    value: 'David',
+    os: ['mac'],
+  },
+  {
+    name: 'David Libre',
+    value: 'David Libre',
+    fileNames: ['david_libre_bold.ttf', 'david_libre_medium.ttf', 'david_libre_regular.ttf'],
+    os: ['win', 'lin'],
   },
   {
     name: 'Decor',
@@ -823,31 +1009,62 @@ const fontsCollection = [
   },
   {
     name: 'DejaVu Sans',
-    value: 'DejaVu Sans'
+    value: 'DejaVu Sans',
+    os: ['win', 'lin', 'mac'],
   },
   {
     name: 'DejaVu Sans Condensed',
-    value: 'DejaVu Sans Condensed'
+    value: 'DejaVu Sans Condensed',
+    os: ['win', 'lin', 'mac'],
   },
   {
     name: 'DejaVu Sans Light',
-    value: 'DejaVu Sans Light'
+    value: 'DejaVu Sans Light',
+    os: ['win', 'lin', 'mac'],
   },
   {
     name: 'DejaVu Sans Mono',
-    value: 'DejaVu Sans Mono'
+    value: 'DejaVu Sans Mono',
+    os: ['win', 'lin', 'mac'],
   },
   {
     name: 'DejaVu Serif',
-    value: 'DejaVu Serif'
+    value: 'DejaVu Serif',
+    os: ['win', 'lin', 'mac'],
   },
   {
     name: 'DejaVu Serif Condensed',
-    value: 'DejaVu Serif Condensed'
+    value: 'DejaVu Serif Condensed',
+    os: ['win', 'lin', 'mac'],
+  },
+  {
+    name: 'Devanagari MT',
+    value: 'Devanagari MT',
+    os: ['mac'],
+  },
+  {
+    name: 'Devanagari Sangam MN',
+    value: 'Devanagari Sangam MN',
+    os: ['mac'],
+  },
+  {
+    name: 'Didot',
+    value: 'Didot',
+    os: ['mac'],
   },
   {
     name: 'DilleniaUPC',
     value: 'DilleniaUPC',
+  },
+  {
+    name: 'Diwan Kufi',
+    value: 'Diwan Kufi',
+    os: ['mac'],
+  },
+  {
+    name: 'Diwan Thuluth',
+    value: 'Diwan Thuluth',
+    os: ['mac'],
   },
   {
     name: 'DokChampa',
@@ -862,6 +1079,16 @@ const fontsCollection = [
     value: 'DotumChe',
   },
   {
+    name: 'Droid Sans',
+    value: 'Droid Sans',
+    os: ['lin', 'mac'],
+  },
+  {
+    name: 'Droid Sans Mono',
+    value: 'Droid Sans Mono',
+    os: ['lin', 'mac'],
+  },
+  {
     name: 'Dutch801 Rm BT',
     value: 'Dutch801 Rm BT',
   },
@@ -873,10 +1100,12 @@ const fontsCollection = [
     name: 'Dyuthi',
     value: 'Dyuthi',
     fileNames: ['dyuthi.ttf'],
+    os: ['lin'],
   },
   {
     name: 'Ebrima',
     value: 'Ebrima',
+    os: ['win'],
   },
   {
     name: 'Eccentric Std',
@@ -925,10 +1154,12 @@ const fontsCollection = [
   {
     name: 'Euphemia',
     value: 'Euphemia',
+    os: ['mac'],
   },
   {
     name: 'Euphemia UCAS',
     value: 'Euphemia UCAS',
+    os: ['mac'],
   },
   {
     name: 'EuroRoman',
@@ -945,6 +1176,16 @@ const fontsCollection = [
   {
     name: 'FangSong',
     value: 'FangSong',
+  },
+  {
+    name: 'Farah',
+    value: 'Farah',
+    os: ['mac'],
+  },
+  {
+    name: 'Farisi',
+    value: 'Farisi',
+    os: ['mac'],
   },
   {
     name: 'Felix Titling',
@@ -964,32 +1205,57 @@ const fontsCollection = [
     value: 'Forte',
   },
   {
-    name: 'FrankRuehl',
-    value: 'FrankRuehl',
+    name: 'Frank Ruehl',
+    value: 'Frank Ruehl',
+    os: ['win', 'lin'],
+  },
+  {
+    name: 'Frank Ruehl Libre Black',
+    value: 'Frank Ruehl Libre Black',
+    fileNames: ['frank_ruhl_libre_black.ttf'],
+    os: ['win', 'lin'],
+  },
+  {
+    name: 'Frank Ruehl Libre',
+    value: 'Frank Ruehl Libre',
+    fileNames: ['frank_ruhl_libre_regular.ttf', 'frank_ruhl_libre_bold.ttf', 'frank_ruhl_libre_medium.ttf'],
+    os: ['win', 'lin'],
+  },
+  {
+    name: 'Frank Ruehl Libre Light',
+    value: 'Frank Ruehl Libre Light',
+    fileNames: ['frank_ruhl_libre_light.ttf'],
+    os: ['win', 'lin'],
   },
   {
     name: 'Franklin Gothic Book',
     value: 'Franklin Gothic Book',
+    os: ['win'],
   },
   {
     name: 'Franklin Gothic Demi',
     value: 'Franklin Gothic Demi',
+    os: ['win'],
   },
   {
     name: 'Franklin Gothic Demi Cond',
     value: 'Franklin Gothic Demi Cond',
+    os: ['win'],
   },
   {
     name: 'Franklin Gothic Heavy',
     value: 'Franklin Gothic Heavy',
+    os: ['win'],
   },
   {
     name: 'Franklin Gothic Medium',
     value: 'Franklin Gothic Medium',
+    os: ['win'],
   },
   {
     name: 'Franklin Gothic Medium Cond',
     value: 'Franklin Gothic Medium Cond',
+    os: ['win'],
   },
   {
     name: 'Freefrm721 Blk BT',
@@ -1003,16 +1269,19 @@ const fontsCollection = [
     name: 'FreeMono',
     value: 'FreeMono',
     fileNames: ['freemono.ttf', 'freemono_bold.ttf', 'freemono_bold_oblique.ttf', 'freemono_oblique.ttf'],
+    os: ['lin'],
   },
   {
     name: 'FreeSans',
     value: 'FreeSans',
     fileNames: ['freesans.ttf', 'freesans_bold.ttf', 'freesans_bold_oblique.ttf', 'freesans_oblique.ttf'],
+    os: ['lin'],
   },
   {
     name: 'FreeSerif',
     value: 'FreeSerif',
     fileNames: ['freeserif.ttf', 'freeserif_bold.ttf', 'freeserif_bold_italic.ttf', 'freeserif_italic.ttf'],
+    os: ['lin'],
   },
   {
     name: 'FreesiaUPC',
@@ -1037,22 +1306,27 @@ const fontsCollection = [
   {
     name: 'Futura',
     value: 'Futura',
+    os: ['mac'],
   },
   {
     name: 'Futura Bk BT',
     value: 'Futura Bk BT',
+    os: ['mac'],
   },
   {
     name: 'Futura Lt BT',
     value: 'Futura Lt BT',
+    os: ['mac'],
   },
   {
     name: 'Futura Md BT',
     value: 'Futura Md BT',
+    os: ['mac'],
   },
   {
     name: 'FuturaBlack BT',
     value: 'FuturaBlack BT',
+    os: ['mac'],
   },
   {
     name: 'GDT',
@@ -1065,10 +1339,12 @@ const fontsCollection = [
   {
     name: 'Gabriola',
     value: 'Gabriola',
+    os: ['win'],
   },
   {
     name: 'Gadugi',
     value: 'Gadugi',
+    os: ['win'],
   },
   {
     name: 'Galliard BT',
@@ -1090,6 +1366,12 @@ const fontsCollection = [
     name: 'Gargi',
     value: 'Gargi',
     fileNames: ['gargi.ttf'],
+    os: ['lin'],
+  },
+  {
+    name: 'Garuda',
+    value: 'Garuda',
+    os: ['lin'],
   },
   {
     name: 'Gautami',
@@ -1098,10 +1380,12 @@ const fontsCollection = [
   {
     name: 'Geeza Pro',
     value: 'Geeza Pro',
+    os: ['mac'],
   },
   {
     name: 'Geneva',
     value: 'Geneva',
+    os: ['mac'],
   },
   {
     name: 'Gentium Basic',
@@ -1133,6 +1417,7 @@ const fontsCollection = [
   {
     name: 'Georgia',
     value: 'Georgia',
+    os: ['win', 'mac'],
   },
   {
     name: 'Giddyup Std',
@@ -1145,26 +1430,32 @@ const fontsCollection = [
   {
     name: 'Gill Sans',
     value: 'Gill Sans',
+    os: ['mac'],
   },
   {
     name: 'Gill Sans MT',
     value: 'Gill Sans MT',
+    os: ['mac'],
   },
   {
     name: 'Gill Sans MT Condensed',
     value: 'Gill Sans MT Condensed',
+    os: ['mac'],
   },
   {
     name: 'Gill Sans MT Ext Condensed Bold',
     value: 'Gill Sans MT Ext Condensed Bold',
+    os: ['mac'],
   },
   {
     name: 'Gill Sans Ultra Bold',
     value: 'Gill Sans Ultra Bold',
+    os: ['mac'],
   },
   {
     name: 'Gill Sans Ultra Bold Condensed',
     value: 'Gill Sans Ultra Bold Condensed',
+    os: ['mac'],
   },
   {
     name: 'Gisha',
@@ -1221,10 +1512,17 @@ const fontsCollection = [
     name: 'Gubbi',
     value: 'Gubbi',
     fileNames: ['gubbi.ttf'],
+    os: ['lin'],
+  },
+  {
+    name: 'Gujarati MT',
+    value: 'Gujarati MT',
+    os: ['mac'],
   },
   {
     name: 'Gujarati Sangam MN',
     value: 'Gujarati Sangam MN',
+    os: ['mac'],
   },
   {
     name: 'Gulim',
@@ -1245,10 +1543,21 @@ const fontsCollection = [
   {
     name: 'Gurmukhi MN',
     value: 'Gurmukhi MN',
+    os: ['mac'],
+  },
+  {
+    name: 'Gurmukhi MT',
+    value: 'Gurmukhi MT',
+    os: ['mac'],
+  },
+  {
+    name: 'Gurmukhi Sangam MN',
+    value: 'Gurmukhi Sangam MN',
+    os: ['mac'],
   },
   {
     name: 'Haettenschweiler',
-    value: 'Haettenschweiler'
+    value: 'Haettenschweiler',
   },
   {
     name: 'Harlow Solid Italic',
@@ -1269,30 +1578,81 @@ const fontsCollection = [
   {
     name: 'Heiti SC',
     value: 'Heiti SC',
+    os: ['mac'],
   },
   {
     name: 'Heiti TC',
     value: 'Heiti TC',
+    os: ['mac'],
   },
   {
     name: 'Helvetica',
     value: 'Helvetica',
+    os: ['mac'],
   },
   {
     name: 'Helvetica Neue',
     value: 'Helvetica Neue',
+    os: ['mac'],
+  },
+  {
+    name: 'Herculanum',
+    value: 'Herculanum',
+    os: ['mac'],
   },
   {
     name: 'High Tower Text',
     value: 'High Tower Text',
   },
   {
+    name: 'Hiragino Kaku Gothic Pro',
+    value: 'Hiragino Kaku Gothic Pro',
+    os: ['mac'],
+  },
+  {
     name: 'Hiragino Kaku Gothic ProN',
     value: 'Hiragino Kaku Gothic ProN',
+    os: ['mac'],
+  },
+  {
+    name: 'Hiragino Kaku Gothic Std',
+    value: 'Hiragino Kaku Gothic StdN',
+    os: ['mac'],
+  },
+  {
+    name: 'Hiragino Kaku Gothic ProN',
+    value: 'Hiragino Kaku Gothic ProN',
+    os: ['mac'],
+  },
+  {
+    name: 'Hiragino Maru Pro',
+    value: 'Hiragino Maru Pro',
+    os: ['mac'],
+  },
+  {
+    name: 'Hiragino Maru ProN',
+    value: 'Hiragino Maru ProN',
+    os: ['mac'],
+  },
+  {
+    name: 'Hiragino Mincho Pro',
+    value: 'Hiragino Mincho Pro',
+    os: ['mac'],
   },
   {
     name: 'Hiragino Mincho ProN',
     value: 'Hiragino Mincho ProN',
+    os: ['mac'],
+  },
+  {
+    name: 'Hiragino Sans',
+    value: 'Hiragino Sans',
+    os: ['mac'],
+  },
+  {
+    name: 'Hiragino Sans GB',
+    value: 'Hiragino Sans GB',
+    os: ['mac'],
   },
   {
     name: 'Hobo Std',
@@ -1301,6 +1661,7 @@ const fontsCollection = [
   {
     name: 'Hoefler Text',
     value: 'Hoefler Text',
+    os: ['mac'],
   },
   {
     name: 'Humanst521 BT',
@@ -1343,12 +1704,28 @@ const fontsCollection = [
     value: 'ISOCTEUR',
   },
   {
+    name: 'ITF Devanagari',
+    value: 'ITF Devanagari',
+    os: ['mac'],
+  },
+  {
+    name: 'ITF Devanagari Marathi',
+    value: 'ITF Devanagari, Marathi',
+    os: ['mac'],
+  },
+  {
     name: 'Impact',
     value: 'Impact',
+    os: ['win', 'mac'],
   },
   {
     name: 'Imprint MT Shadow',
     value: 'Imprint MT Shadow',
+  },
+  {
+    name: 'InaiMathi',
+    value: 'InaiMathi',
+    os: ['mac'],
   },
   {
     name: 'Incised901 BT',
@@ -1380,6 +1757,11 @@ const fontsCollection = [
     value: 'Interstate',
   },
   {
+    name: 'Iowan Old Style',
+    value: 'Iowan Old Style',
+    os: ['mac'],
+  },
+  {
     name: 'IrisUPC',
     value: 'IrisUPC',
   },
@@ -1389,7 +1771,7 @@ const fontsCollection = [
   },
   {
     name: 'Italic',
-    value: 'Italic'
+    value: 'Italic',
   },
   {
     name: 'ItalicC',
@@ -1403,6 +1785,7 @@ const fontsCollection = [
     name: 'Jamrul',
     value: 'Jamrul',
     fileNames: ['jamrul.ttf'],
+    os: ['lin'],
   },
   {
     name: 'JasmineUPC',
@@ -1436,26 +1819,31 @@ const fontsCollection = [
     name: 'KacstBook',
     value: 'KacstBook',
     fileNames: ['kacstbook.ttf'],
+    os: ['win', 'lin'],
   },
   {
     name: 'KacstLetter',
     value: 'KacstLetter',
     fileNames: ['kacstletter.ttf'],
+    os: ['win', 'lin'],
   },
   {
     name: 'KacstOffice',
     value: 'KacstOffice',
     fileNames: ['kacstoffice.ttf'],
+    os: ['win', 'lin'],
   },
   {
     name: 'KacstNaskh',
     value: 'KacstNaskh',
     fileNames: ['kacstnaskh.ttf'],
+    os: ['win', 'lin'],
   },
   {
     name: 'KacstTitlel',
     value: 'KacstTitlel',
     fileNames: ['kacsttitlel.ttf'],
+    os: ['win', 'lin'],
   },
   {
     name: 'KaiTi',
@@ -1464,18 +1852,40 @@ const fontsCollection = [
   {
     name: 'Kailasa',
     value: 'Kailasa',
+    os: ['mac'],
+  },
+  {
+    name: 'Kalapi',
+    value: 'Kalapi',
+    os: ['lin'],
   },
   {
     name: 'Kalinga',
     value: 'Kalinga',
   },
   {
+    name: 'Kalimati',
+    value: 'Kalimati',
+    os: ['lin'],
+  },
+  {
+    name: 'Kannada MN',
+    value: 'Kannada MN',
+    os: ['mac'],
+  },
+  {
     name: 'Kannada Sangam MN',
     value: 'Kannada Sangam MN',
+    os: ['mac'],
   },
   {
     name: 'Kartika',
     value: 'Kartika',
+  },
+  {
+    name: 'Karumbi',
+    value: 'Karumbi',
+    os: ['lin'],
   },
   {
     name: 'Kaufmann BT',
@@ -1486,16 +1896,62 @@ const fontsCollection = [
     value: 'Kaufmann Bd BT',
   },
   {
+    name: 'Kefa',
+    value: 'Kefa',
+    os: ['mac'],
+  },
+  {
+    name: 'Khmer MN',
+    value: 'Khmer MN',
+    os: ['mac'],
+  },
+  {
+    name: 'Khmer OS',
+    value: 'Khmer OS',
+    os: ['lin'],
+  },
+  {
+    name: 'Khmer Sangam MN',
+    value: 'Khmer Sangam MN',
+    os: ['mac'],
+  },
+  {
     name: 'Khmer UI',
     value: 'Khmer UI',
+    os: ['lin'],
+  },
+  {
+    name: 'Kinnari',
+    value: 'Kinnari',
+    os: ['lin'],
   },
   {
     name: 'KodchiangUPC',
     value: 'KodchiangUPC',
   },
   {
+    name: 'Kohinoor Bangla',
+    value: 'Kohinoor Bangla',
+    os: ['mac'],
+  },
+  {
+    name: 'Kohinoor Devanagari',
+    value: 'Kohinoor Devanagari',
+    os: ['mac'],
+  },
+  {
+    name: 'Kohinoor Telugu',
+    value: 'Kohinoor Telugu',
+    os: ['mac'],
+  },
+  {
     name: 'Kokila',
     value: 'Kokila',
+  },
+  {
+    name: 'Kokonor',
+    value: 'Kokonor',
+    os: ['mac'],
   },
   {
     name: 'Korinna BT',
@@ -1604,14 +2060,36 @@ const fontsCollection = [
   {
     name: 'Krungthep',
     value: 'Krungthep',
+    os: ['mac'],
+  },
+  {
+    name: 'KufiStandartGK',
+    value: 'KufiStandartGK',
+    os: ['mac'],
   },
   {
     name: 'Kunstler Script',
     value: 'Kunstler Script',
   },
   {
+    name: 'Laksaman',
+    value: 'Laksaman',
+    os: ['lin'],
+  },
+  {
+    name: 'Lao MN',
+    value: 'Lao MN',
+    os: ['mac'],
+  },
+  {
+    name: 'Lao Sangam MN',
+    value: 'Lao Sangam MN',
+    os: ['mac'],
+  },
+  {
     name: 'Lao UI',
     value: 'Lao UI',
+    os: ['mac'],
   },
   {
     name: 'Latha',
@@ -1625,6 +2103,7 @@ const fontsCollection = [
   {
     name: 'Leelawadee',
     value: 'Leelawadee',
+    os: ['win'],
   },
   {
     name: 'Letter Gothic Std',
@@ -1641,6 +2120,7 @@ const fontsCollection = [
       'liberation_mono_bold.ttf', 'liberation_mono_bold_italic.ttf', 'liberation_mono_italic.ttf',
       'liberation-mono_regular.ttf',
     ],
+    os: ['win', 'lin', 'mac'],
   },
   {
     name: 'Liberation Sans Narrow',
@@ -1649,6 +2129,7 @@ const fontsCollection = [
       'liberation_sans_narrow.ttf', 'liberation_sans_narrow_bold.ttf', 'liberation_sans_narrow_bold_italic.ttf',
       'liberation_sans_narrow_italic.ttf',
     ],
+    os: ['win', 'lin', 'mac'],
   },
   {
     name: 'Liberation Sans',
@@ -1657,6 +2138,7 @@ const fontsCollection = [
       'liberation_sans.otf', 'liberation_sans_bold.otf', 'liberation_sans_bold_italic.otf',
       'liberation_sans_italic.otf',
     ],
+    os: ['win', 'lin', 'mac'],
   },
   {
     name: 'Liberation Serif',
@@ -1665,6 +2147,7 @@ const fontsCollection = [
       'liberation_serif_bold.ttf', 'liberation_serif_bold_italic.ttf', 'liberation_serif_italic.ttf',
       'liberation_serif_regular.ttf',
     ],
+    os: ['win', 'lin'],
   },
   {
     name: 'LilyUPC',
@@ -1686,23 +2169,33 @@ const fontsCollection = [
     name: 'Lohit Devanagari',
     value: 'Lohit Devanagari',
     fileNames: ['lohit_devanagari.ttf'],
+    os: ['lin'],
   },
   {
     name: 'Lohit Telugu',
     value: 'Lohit Telugu',
     fileNames: ['lohit_telugu.ttf'],
+    os: ['lin'],
+  },
+  {
+    name: 'Loma',
+    value: 'Loma',
+    os: ['lin'],
   },
   {
     name: 'Lucida Bright',
     value: 'Lucida Bright',
+    os: ['win'],
   },
   {
     name: 'Lucida Calligraphy',
     value: 'Lucida Calligraphy',
+    os: ['win'],
   },
   {
     name: 'Lucida Console',
     value: 'Lucida Console',
+    os: ['win'],
   },
   {
     name: 'Lucida Fax',
@@ -1711,6 +2204,7 @@ const fontsCollection = [
   {
     name: 'Lucida Grande',
     value: 'Lucida Grande',
+    os: ['mac'],
   },
   {
     name: 'Lucida Handwriting',
@@ -1727,6 +2221,12 @@ const fontsCollection = [
   {
     name: 'Lucida Sans Unicode',
     value: 'Lucida Sans Unicode',
+    os: ['win'],
+  },
+  {
+    name: 'Luminari',
+    value: 'Luminari',
+    os: ['mac'],
   },
   {
     name: 'Lydian BT',
@@ -1739,46 +2239,57 @@ const fontsCollection = [
   {
     name: 'MS Gothic',
     value: 'MS Gothic',
+    os: ['win'],
   },
   {
     name: 'MS LineDraw',
     value: 'MS LineDraw',
+    os: ['win'],
   },
   {
     name: 'MS Mincho',
     value: 'MS Mincho',
+    os: ['win'],
   },
   {
     name: 'MS Outlook',
     value: 'MS Outlook',
+    os: ['win'],
   },
   {
     name: 'MS PGothic',
     value: 'MS PGothic',
+    os: ['win'],
   },
   {
     name: 'MS PMincho',
     value: 'MS PMincho',
+    os: ['win'],
   },
   {
     name: 'MS Reference Sans Serif',
     value: 'MS Reference Sans Serif',
+    os: ['win'],
   },
   {
     name: 'MS Reference Specialty',
     value: 'MS Reference Specialty',
+    os: ['win'],
   },
   {
     name: 'MS Sans Serif',
-    value: 'MS Sans Serif'
+    value: 'MS Sans Serif',
+    os: ['win'],
   },
   {
     name: 'MS Serif',
-    value: 'MS Serif'
+    value: 'MS Serif',
+    os: ['win'],
   },
   {
     name: 'MS UI Gothic',
     value: 'MS UI Gothic',
+    os: ['win'],
   },
   {
     name: 'MT Extra',
@@ -1786,19 +2297,31 @@ const fontsCollection = [
   },
   {
     name: 'MV Boli',
-    value: 'MV Boli'
+    value: 'MV Boli',
+    os: ['win'],
   },
   {
     name: 'Magneto',
-    value: 'Magneto'
+    value: 'Magneto',
   },
   {
     name: 'Maiandra GD',
     value: 'Maiandra GD',
   },
   {
+    name: 'Malayalam MN',
+    value: 'Malayalam MN',
+    os: ['mac'],
+  },
+  {
+    name: 'Malayalam Sangam MN',
+    value: 'Malayalam Sangam MN',
+    os: ['mac'],
+  },
+  {
     name: 'Malgun Gothic',
-    value: 'Malgun Gothic'
+    value: 'Malgun Gothic',
+    os: ['win'],
   },
   {
     name: 'Mangal',
@@ -1808,6 +2331,7 @@ const fontsCollection = [
     name: 'Manjari',
     value: 'Manjari',
     fileNames: ['manjari_bold.ttf', 'manjari_regular.ttf'],
+    os: ['lin'],
   },
 
   {
@@ -1817,15 +2341,18 @@ const fontsCollection = [
   {
     name: 'Marion',
     value: 'Marion',
+    os: ['mac'],
   },
   {
     name: 'Marker Felt',
     value: 'Marker Felt',
     fileNames: ['marker_felt.ttf'],
+    os: ['mac'],
   },
   {
     name: 'Marlett',
     value: 'Marlett',
+    os: ['win'],
   },
   {
     name: 'Matisse ITC',
@@ -1836,6 +2363,17 @@ const fontsCollection = [
     value: 'Matura MT Script Capitals',
   },
   {
+    name: 'Meera',
+    value: 'Meera',
+    os: ['lin'],
+  },
+  {
+    name: 'Meera Inimai',
+    value: 'Meera Inimai',
+    fileNames: ['meera_inimai_regular.ttf'],
+    os: ['lin'],
+  },
+  {
     name: 'Meiryo',
     value: 'Meiryo',
   },
@@ -1844,68 +2382,88 @@ const fontsCollection = [
     value: 'Meiryo UI',
   },
   {
+    name: 'Menlo',
+    value: 'Menlo',
+    os: ['mac'],
+  },
+  {
     name: 'Mesquite Std',
     value: 'Mesquite Std',
   },
   {
     name: 'Microsoft Himalaya',
     value: 'Microsoft Himalaya',
+    os: ['win'],
   },
   {
     name: 'Microsoft JhengHei',
     value: 'Microsoft JhengHei',
+    os: ['win'],
   },
   {
     name: 'Microsoft JhengHei UI',
     value: 'Microsoft JhengHei UI',
+    os: ['win'],
   },
   {
     name: 'Microsoft New Tai Lue',
     value: 'Microsoft New Tai Lue',
+    os: ['win'],
   },
   {
     name: 'Microsoft PhagsPa',
     value: 'Microsoft PhagsPa',
+    os: ['win'],
   },
   {
     name: 'Microsoft Sans Serif',
     value: 'Microsoft Sans Serif',
+    os: ['win', 'mac'],
   },
   {
     name: 'Microsoft Tai Le',
     value: 'Microsoft Tai Le',
+    os: ['win'],
   },
   {
     name: 'Microsoft Uighur',
     value: 'Microsoft Uighur',
+    os: ['win'],
   },
   {
     name: 'Microsoft YaHei',
     value: 'Microsoft YaHei',
+    os: ['win'],
   },
   {
     name: 'Microsoft YaHei UI',
     value: 'Microsoft YaHei UI',
+    os: ['win'],
   },
   {
     name: 'Microsoft Yi Baiti',
     value: 'Microsoft Yi Baiti',
+    os: ['win'],
   },
   {
     name: 'MingLiU',
     value: 'MingLiU',
+    os: ['win'],
   },
   {
     name: 'MingLiU-ExtB',
     value: 'MingLiU-ExtB',
+    os: ['win'],
   },
   {
     name: 'MingLiU_HKSCS',
-    value: 'MingLiU_HKSCS'
+    value: 'MingLiU_HKSCS',
+    os: ['win'],
   },
   {
     name: 'MingLiU_HKSCS-ExtB',
     value: 'MingLiU_HKSCS-ExtB',
+    os: ['win'],
   },
   {
     name: 'Minion',
@@ -1930,34 +2488,59 @@ const fontsCollection = [
   {
     name: 'Miriam',
     value: 'Miriam',
+    os: ['win', 'lin'],
   },
   {
     name: 'Miriam Fixed',
     value: 'Miriam Fixed',
+    os: ['win', 'lin'],
+  },
+  {
+    name: 'Miriam Libre',
+    value: 'Miriam Libre',
+    fileNames: ['miriam_libre_bold.ttf', 'miriam_libre_regular.ttf'],
+    os: ['win', 'lin'],
+  },
+  {
+    name: 'Mishafi',
+    value: 'Mishafi',
+    os: ['mac'],
+  },
+  {
+    name: 'Mishafi Gold',
+    value: 'Mishafi Gold',
+    os: ['mac'],
   },
   {
     name: 'Mistral',
     value: 'Mistral',
   },
   {
+    name: 'Mitra Mono',
+    value: 'Mitra Mono',
+    os: ['lin'],
+  },
+  {
     name: 'Modern',
-    value: 'Modern'
+    value: 'Modern',
   },
   {
     name: 'Modern No. 20',
-    value: 'Modern No. 20'
+    value: 'Modern No. 20',
   },
   {
     name: 'Mona Lisa Solid ITC TT',
-    value: 'Mona Lisa Solid ITC TT'
+    value: 'Mona Lisa Solid ITC TT',
   },
   {
     name: 'Monaco',
-    value: 'Monaco'
+    value: 'Monaco',
+    os: ['mac'],
   },
   {
     name: 'Mongolian Baiti',
     value: 'Mongolian Baiti',
+    os: ['win'],
   },
   {
     name: 'Monospac821 BT',
@@ -1976,9 +2559,30 @@ const fontsCollection = [
     value: 'MoolBoran',
   },
   {
+    name: 'Mshtakan',
+    value: 'Mshtakan',
+    os: ['mac'],
+  },
+  {
     name: 'Mukti Narrow',
     value: 'Mukti Narrow',
     fileNames: ['mukti_narrow.ttf', 'mukti_narrow_bold.ttf'],
+    os: ['lin'],
+  },
+  {
+    name: 'Muna',
+    value: 'Muna',
+    os: ['mac'],
+  },
+  {
+    name: 'Muanmar MN',
+    value: 'Muanmar MN',
+    os: ['mac'],
+  },
+  {
+    name: 'Muanmar Sangam MN',
+    value: 'Muanmar Sangam MN',
+    os: ['mac'],
   },
   {
     name: 'Myriad Arabic',
@@ -2007,19 +2611,27 @@ const fontsCollection = [
   {
     name: 'NSimSun',
     value: 'NSimSun',
+    os: ['win'],
   },
   {
     name: 'Nadeem',
     value: 'Nadeem',
+    os: ['mac'],
   },
   {
     name: 'Nakula',
     value: 'Nakula',
     fileNames: ['nakula_regular.ttf'],
+    os: ['lin'],
   },
   {
     name: 'Narkisim',
     value: 'Narkisim',
+  },
+  {
+    name: 'Navuli',
+    value: 'Navuli',
+    os: ['lin'],
   },
   {
     name: 'News Gothic',
@@ -2030,6 +2642,11 @@ const fontsCollection = [
     value: 'NewsGoth BT',
   },
   {
+    name: 'New Peninim MT',
+    value: 'New Peninim MT',
+    os: ['mac'],
+  },
+  {
     name: 'Niagara Engraved',
     value: 'Niagara Engraved',
   },
@@ -2038,27 +2655,168 @@ const fontsCollection = [
     value: 'Niagara Solid',
   },
   {
+    name: 'Nimbus Roman',
+    value: 'Nimbus Roman',
+    os: ['lin'],
+  },
+  {
+    name: 'Nimbus Sans',
+    value: 'Nimbus Sans',
+    os: ['lin'],
+  },
+  {
+    name: 'Nimbus Sans Narrow',
+    value: 'Nimbus Sans Narrow',
+    os: ['lin'],
+  },
+  {
     name: 'Nirmala UI',
     value: 'Nirmala UI',
+    os: ['win'],
   },
   {
     name: 'Norasi',
     value: 'Norasi',
     fileNames: ['norasi.ttf', 'norasi_bold.ttf', 'norasi_bold_italic.ttf', 'norasi_italic.ttf'],
+    os: ['lin'],
   },
   {
     name: 'Noteworthy',
     value: 'Noteworthy',
+    os: ['mac'],
+  },
+  {
+    name: 'Noto Kufi Arabic',
+    value: 'Noto Kufi Arabic',
+    os: ['mac'],
   },
   {
     name: 'Noto Mono',
     value: 'Noto Mono',
     fileNames: ['noto_mono_regular.ttf'],
+    os: ['win', 'lin'],
+  },
+  {
+    name: 'Noto Nastaliq Urdu',
+    value: 'Noto Nastaliq Urdu',
+    os: ['mac'],
   },
   {
     name: 'Noto Sans',
     value: 'Noto Sans',
     fileNames: ['noto_sans_bold.ttf', 'noto_sans_bold_italic.ttf', 'noto_sans_italic.ttf', 'noto_sans_regular.ttf'],
+    os: ['win', 'lin'],
+  },
+  {
+    name: 'Noto Sans Arabic UI',
+    value: 'Noto Sans Arabic UI',
+    os: ['win', 'lin'],
+  },
+  {
+    name: 'Noto Sans CJK HK',
+    value: 'Noto Sans CJK HK',
+    os: ['win', 'lin'],
+  },
+  {
+    name: 'Noto Sans CJK JP',
+    value: 'Noto Sans CJK JP',
+    os: ['win', 'lin'],
+  },
+  {
+    name: 'Noto Sans CJK KR',
+    value: 'Noto Sans CJK KR',
+    os: ['win', 'lin'],
+  },
+  {
+    name: 'Noto Sans CJK SC',
+    value: 'Noto Sans CJK SC',
+    fileNames: [
+      'noto_sans_cjk_sc_black.otf', 'noto_sans_cjk_sc_bold.otf', 'noto_sans_cjk_sc_demilight.otf',
+      'noto_sans_cjk_sc_light.otf', 'noto_sans_cjk_sc_medium.otf', 'noto_sans_cjk_sc_regular.otf',
+      'noto_sans_cjk_sc_thin.otf',
+    ],
+    os: ['win', 'lin'],
+  },
+  {
+    name: 'Noto Sans CJK TC',
+    value: 'Noto Sans CJK TC',
+    os: ['win', 'lin'],
+  },
+  {
+    name: 'Noto Sans Lisu',
+    value: 'Noto Sans Lisu',
+    os: ['win', 'lin'],
+  },
+  {
+    name: 'Noto Sans Mono CJK HK',
+    value: 'Noto Sans Mono CJK HK',
+    os: ['win', 'lin'],
+  },
+  {
+    name: 'Noto Sans Mono CJK JP',
+    value: 'Noto Sans Mono CJK JP',
+    os: ['win', 'lin'],
+  },
+  {
+    name: 'Noto Sans Mono CJK KR',
+    value: 'Noto Sans Mono CJK KR',
+    os: ['win', 'lin'],
+  },
+  {
+    name: 'Noto Sans Mono CJK SC',
+    value: 'Noto Sans Mono CJK SC',
+    os: ['win', 'lin'],
+  },
+  {
+    name: 'Noto Sans Mono CJK TC',
+    value: 'Noto Sans Mono CJK TC',
+    os: ['win', 'lin'],
+  },
+  {
+    name: 'Noto Serif',
+    value: 'Noto Serif',
+    fileNames: ['noto_serif_regular.ttf', 'noto_serif_italic.ttf', 'noto_serif_bold_italic.ttf', 'noto_serif_bold.ttf'],
+    os: ['win', 'lin'],
+  },
+  {
+    name: 'Noto Serif CJK JP',
+    value: 'Noto Serif CJK JP',
+    os: ['win', 'lin'],
+  },
+  {
+    name: 'Noto Serif CJK KR',
+    value: 'Noto Serif CJK KR',
+    os: ['win', 'lin'],
+  },
+  {
+    name: 'Noto Serif CJK SC',
+    value: 'Noto Serif CJK SC',
+    os: ['win', 'lin'],
+  },
+  {
+    name: 'Noto Serif CJK TC',
+    value: 'Noto Serif CJK TC',
+    os: ['win', 'lin'],
+  },
+  {
+    name: 'Noto Serif Georgian',
+    value: 'Noto Serif Georgian',
+    os: ['win', 'lin'],
+  },
+  {
+    name: 'Noto Serif Hebrew',
+    value: 'Noto Serif Hebrew',
+    os: ['win', 'lin'],
+  },
+  {
+    name: 'Noto Serif Italic',
+    value: 'Noto Serif Italic',
+    os: ['win', 'lin'],
+  },
+  {
+    name: 'Noto Serif Lao',
+    value: 'Noto Serif Lao',
+    os: ['win', 'lin'],
   },
   {
     name: 'Nueva Std',
@@ -2104,23 +2862,40 @@ const fontsCollection = [
     name: 'OpenSymbol',
     value: 'OpenSymbol',
     fileNames: ['opensymbol.ttf'],
+    os: ['win', 'lin'],
   },
   {
     name: 'Optima',
     value: 'Optima',
+    os: ['mac'],
   },
   {
     name: 'Orator Std',
     value: 'Orator Std',
   },
   {
+    name: 'Oriya MN',
+    value: 'Oriya MN',
+    os: ['mac'],
+  },
+  {
     name: 'Oriya Sangam MN',
     value: 'Oriya Sangam MN',
+    os: ['mac'],
   },
   {
     name: 'Osaka',
     value: 'Osaka',
     fileNames: ['osaka.ttf'],
+  },
+  {
+    name: 'Oswald',
+    value: 'Oswald',
+    fileNames: [
+      'oswald_bold.ttf', 'oswald_extralight.ttf', 'oswald_light.ttf', 'oswald_medium.ttf',
+      'oswald_regular.ttf', 'oswald_semibold.ttf',
+    ],
+    os: ['win', 'lin'],
   },
   {
     name: 'Ouverture script',
@@ -2134,32 +2909,73 @@ const fontsCollection = [
   {
     name: 'PMingLiU',
     value: 'PMingLiU',
+    os: ['win'],
   },
   {
     name: 'PMingLiU-ExtB',
     value: 'PMingLiU-ExtB',
+    os: ['win'],
+  },
+  {
+    name: 'PT Mono',
+    value: 'PT Mono',
+    os: ['mac'],
+  },
+  {
+    name: 'PT Sans',
+    value: 'PT Sans',
+    os: ['mac'],
+  },
+  {
+    name: 'PT Sans Caption',
+    value: 'PT Mono Caption',
+    os: ['mac'],
+  },
+  {
+    name: 'PT Sans Narrow',
+    value: 'PT Sans Narrow',
+    os: ['mac'],
+  },
+  {
+    name: 'PT Serif',
+    value: 'PT Serif',
+    os: ['mac'],
+  },
+  {
+    name: 'PT Serif Caption',
+    value: 'PT Serif Caption',
+    os: ['mac'],
   },
   {
     name: 'Padauk',
     value: 'Padauk',
     fileNames: ['padauk_bold.ttf', 'padauk_regular.ttf'],
+    os: ['lin'],
   },
   {
     name: 'Padauk Book',
     value: 'Padauk Book',
     fileNames: ['padauk_book_bold.ttf', 'padauk_book.ttf'],
+    os: ['lin'],
   },
   {
     name: 'Palace Script MT',
     value: 'Palace Script MT',
   },
   {
+    name: 'Pagul',
+    value: 'Pagul',
+    os: ['lin'],
+  },
+  {
     name: 'Palatino',
     value: 'Palatino',
+    os: ['win', 'mac'],
   },
   {
     name: 'Palatino Linotype',
     value: 'Palatino Linotype',
+    os: ['win', 'mac'],
   },
   {
     name: 'PanRoman',
@@ -2168,6 +2984,7 @@ const fontsCollection = [
   {
     name: 'Papyrus',
     value: 'Papyrus',
+    os: ['mac'],
   },
   {
     name: 'Parchment',
@@ -2189,10 +3006,32 @@ const fontsCollection = [
     name: 'Phetsarath OT',
     value: 'Phetsarath OT',
     fileNames: ['phetsarath_ot.ttf'],
+    os: ['lin'],
+  },
+  {
+    name: 'Phosphate',
+    value: 'Phosphate',
+    os: ['mac'],
+  },
+  {
+    name: 'PingFang HK',
+    value: 'PingFang HK',
+    os: ['mac'],
+  },
+  {
+    name: 'PingFang SC',
+    value: 'PingFang SC',
+    os: ['mac'],
+  },
+  {
+    name: 'PingFang TC',
+    value: 'PingFang TC',
+    os: ['mac'],
   },
   {
     name: 'Plantagenet Cherokee',
     value: 'Plantagenet Cherokee',
+    os: ['mac'],
   },
   {
     name: 'Playbill',
@@ -2209,6 +3048,11 @@ const fontsCollection = [
   {
     name: 'PosterBodoni BT',
     value: 'PosterBodoni BT',
+  },
+  {
+    name: 'Pothana2000',
+    value: 'Pothana2000',
+    os: ['lin'],
   },
   {
     name: 'Prestige Elite Std',
@@ -2275,10 +3119,21 @@ const fontsCollection = [
     name: 'Purisa',
     value: 'Purisa',
     fileNames: ['purisa.ttf', 'purisa_bold.ttf', 'purisa_boldoblique.ttf', 'purisa_oblique.ttf'],
+    os: ['lin'],
+  },
+  {
+    name: 'Raanana',
+    value: 'Raanana',
+    os: ['mac'],
   },
   {
     name: 'Raavi',
     value: 'Raavi',
+  },
+  {
+    name: 'Rachana',
+    value: 'Rachana',
+    os: ['lin'],
   },
   {
     name: 'Rage Italic',
@@ -2292,10 +3147,42 @@ const fontsCollection = [
     name: 'Rekha',
     value: 'Rekha',
     fileNames: ['rekha.ttf'],
+    os: ['lin'],
+  },
+  {
+    name: 'Roboto',
+    value: 'Roboto',
+    fileNames: ['roboto_bold.ttf', 'roboto_bold_italic.ttf', 'roboto_italic.ttf', 'roboto_regular.ttf'],
+    os: ['win', 'lin', 'mac'],
+  },
+  {
+    name: 'Roboto Black',
+    value: 'Roboto Black',
+    fileNames: ['roboto_black.ttf', 'roboto_black_italic.ttf'],
+    os: ['win', 'lin', 'mac'],
+  },
+  {
+    name: 'Roboto Light',
+    value: 'Roboto Light',
+    fileNames: ['roboto_light.ttf', 'roboto_light_italic.ttf'],
+    os: ['win', 'lin', 'mac'],
+  },
+  {
+    name: 'Roboto Medium',
+    value: 'Roboto Medium',
+    fileNames: ['roboto_medium.ttf', 'roboto_medium_italic.ttf'],
+    os: ['win', 'lin', 'mac'],
+  },
+  {
+    name: 'Roboto Thin',
+    value: 'Roboto Thin',
+    fileNames: ['roboto_thin.ttf', 'roboto_thin_italic.ttf'],
+    os: ['win', 'lin', 'mac'],
   },
   {
     name: 'Rockwell',
     value: 'Rockwell',
+    os: ['mac'],
   },
   {
     name: 'Rockwell Condensed',
@@ -2311,7 +3198,7 @@ const fontsCollection = [
   },
   {
     name: 'Roman',
-    value: 'Roman'
+    value: 'Roman',
   },
   {
     name: 'RomanC',
@@ -2342,13 +3229,152 @@ const fontsCollection = [
     value: 'Rosewood Std Regular',
   },
   {
+    name: 'Rubik',
+    value: 'Rubik',
+    fileNames: [
+      'rubik_bold.ttf', 'rubik_bold_italic.ttf', 'rubik_italic.ttf', 'rubik_regular.ttf', 'rubik_extrabold.ttf',
+      'rubik_extrabold_italic.ttf', 'rubik_semibold.ttf', 'rubik_semibold_italic.ttf',
+    ],
+    os: ['lin'],
+  },
+  {
+    name: 'Rubik Black',
+    value: 'Rubik Black',
+    fileNames: ['rubik_black.ttf', 'rubik_black_italic.ttf'],
+    os: ['lin'],
+  },
+  {
+    name: 'Rubik Light',
+    value: 'Rubik Light',
+    fileNames: ['rubik_light.ttf', 'rubik_light_italic.ttf'],
+    os: ['lin'],
+  },
+  {
+    name: 'Rubik Medium',
+    value: 'Rubik Medium',
+    fileNames: ['rubik_medium.ttf', 'rubik_medium_italic.ttf'],
+    os: ['lin'],
+  },
+  {
+    name: 'Russo One',
+    value: 'Russo One',
+    fileNames: ['russo_one_regular.ttf'],
+    os: ['lin'],
+  },
+  {
+    name: 'STIXGeneral',
+    value: 'STIXGeneral',
+    os: ['mac'],
+  },
+  {
+    name: 'STIXIntegralsD',
+    value: 'STIXIntegralsD',
+    os: ['mac'],
+  },
+  {
+    name: 'STIXIntegralsSm',
+    value: 'STIXIntegralsSm',
+    os: ['mac'],
+  },
+  {
+    name: 'STIXIntegralsUp',
+    value: 'STIXIntegralsUp',
+    os: ['mac'],
+  },
+  {
+    name: 'STIXIntegralsUpD',
+    value: 'STIXIntegralsUpD',
+    os: ['mac'],
+  },
+  {
+    name: 'STIXIntegralsUpSm',
+    value: 'STIXIntegralsUpSm',
+    os: ['mac'],
+  },
+  {
+    name: 'STIXNoneUnicode',
+    value: 'STIXNoneUnicode',
+    os: ['mac'],
+  },
+  {
+    name: 'STIXSizeFiveSym',
+    value: 'STIXSizeFiveSym',
+    os: ['mac'],
+  },
+  {
+    name: 'STIXSizeFourSym',
+    value: 'STIXSizeFourSym',
+    os: ['mac'],
+  },
+  {
+    name: 'STIXSizeOneSym',
+    value: 'STIXSizeOneSym',
+    os: ['mac'],
+  },
+  {
+    name: 'STIXSizeThreeSym',
+    value: 'STIXSizeThreeSym',
+    os: ['mac'],
+  },
+  {
+    name: 'STIXSizeTwoSym',
+    value: 'STIXSizeTwoSym',
+    os: ['mac'],
+  },
+  {
+    name: 'STIXVariants',
+    value: 'STIXVariants',
+    os: ['mac'],
+  },
+  {
+    name: 'STSong',
+    value: 'STSong',
+    os: ['mac'],
+  },
+  {
     name: 'Saab',
     value: 'Saab',
     fileNames: ['saab.otf'],
+    os: ['lin'],
+  },
+  {
+    name: 'Sahadeva',
+    value: 'Sahadeva',
+    os: ['lin'],
   },
   {
     name: 'Sakkal Majalla',
     value: 'Sakkal Majalla',
+  },
+  {
+    name: 'Samanata',
+    value: 'Samanata',
+    os: ['lin'],
+  },
+  {
+    name: 'Samyak Devanagari',
+    value: 'Samyak Devanagari',
+    os: ['lin'],
+  },
+  {
+    name: 'Samyak Gujarati',
+    value: 'Samyak Gujarati',
+    os: ['lin'],
+  },
+  {
+    name: 'Samyak Malayalam',
+    value: 'Samyak Malayalam',
+    os: ['lin'],
+  },
+  {
+    name: 'Samyak Tamil',
+    value: 'Samyak Tamil',
+    os: ['lin'],
+  },
+  {
+    name: 'Sana',
+    value: 'Sana',
+    os: ['mac'],
   },
   {
     name: 'SansSerif',
@@ -2359,8 +3385,23 @@ const fontsCollection = [
     value: 'Santa Fe LET',
   },
   {
+    name: 'Sarai',
+    value: 'Sarai',
+    os: ['lin'],
+  },
+  {
+    name: 'Sathu',
+    value: 'Sathu',
+    os: ['mac'],
+  },
+  {
     name: 'Savoye LET',
     value: 'Savoye LET',
+    os: ['mac'],
+  },
+  {
+    name: 'Sawasdee',
+    value: 'Sawasdee',
   },
   {
     name: 'Script',
@@ -2386,30 +3427,42 @@ const fontsCollection = [
   {
     name: 'Segoe Print',
     value: 'Segoe Print',
+    os: ['win'],
   },
   {
     name: 'Segoe Script',
     value: 'Segoe Script',
+    os: ['win'],
   },
   {
     name: 'Segoe UI',
     value: 'Segoe UI',
+    os: ['win'],
   },
   {
     name: 'Segoe UI Light',
     value: 'Segoe UI Light',
+    os: ['win'],
   },
   {
     name: 'Segoe UI Semibold',
     value: 'Segoe UI Semibold',
+    os: ['win'],
   },
   {
     name: 'Segoe UI Semilight',
     value: 'Segoe UI Semilight',
+    os: ['win'],
   },
   {
     name: 'Segoe UI Symbol',
     value: 'Segoe UI Symbol',
+    os: ['win'],
+  },
+  {
+    name: 'Seravek',
+    value: 'Seravek',
+    os: ['mac'],
   },
   {
     name: 'Serifa',
@@ -2428,6 +3481,11 @@ const fontsCollection = [
     value: 'ShelleyVolante BT',
   },
   {
+    name: 'Shree Devanagari 714',
+    value: 'Shree Devanagari 714',
+    os: ['mac'],
+  },
+  {
     name: 'Sherwood',
     value: 'Sherwood',
   },
@@ -2444,16 +3502,28 @@ const fontsCollection = [
     value: 'Shruti',
   },
   {
+    name: 'SignPainter',
+    value: 'SignPainter',
+    os: ['mac'],
+  },
+  {
+    name: 'Silom',
+    value: 'Silom',
+    os: ['mac'],
+  },
+  {
     name: 'SimHei',
     value: 'SimHei',
   },
   {
     name: 'SimSun',
     value: 'SimSun',
+    os: ['win'],
   },
   {
     name: 'SimSun-ExtB',
     value: 'SimSun-ExtB',
+    os: ['win'],
   },
   {
     name: 'Simplex',
@@ -2468,16 +3538,23 @@ const fontsCollection = [
     value: 'Simplified Arabic Fixed',
   },
   {
+    name: 'Sinhala MN',
+    value: 'Sinhala MN',
+    os: ['mac'],
+  },
+  {
     name: 'Sinhala Sangam MN',
     value: 'Sinhala Sangam MN',
+    os: ['mac'],
   },
   {
     name: 'Skia',
     value: 'Skia',
+    os: ['mac'],
   },
   {
     name: 'Small Fonts',
-    value: 'Small Fonts'
+    value: 'Small Fonts',
   },
   {
     name: 'Snap ITC',
@@ -2487,41 +3564,121 @@ const fontsCollection = [
   {
     name: 'Snell Roundhand',
     value: 'Snell Roundhand',
+    os: ['mac'],
+  },
+  {
+    name: 'Songti SC',
+    value: 'Songti SC',
+    os: ['mac'],
+  },
+  {
+    name: 'Songti TC',
+    value: 'Songti TC',
+    os: ['mac'],
   },
   {
     name: 'Source Code Pro',
     value: 'Source Code Pro',
-    fileNames: ['source_code_pro.ttf', 'source_code_pro_italic.ttf'],
+    fileNames: [
+      'source_code_pro.ttf', 'source_code_pro_italic.ttf', 'source_code_pro_bold.ttf', 'source_code_pro_bold_italic.ttf',
+    ],
+    os: ['lin', 'mac'],
   },
   {
     name: 'Source Code Pro Black',
     value: 'Source Code Pro Black',
     fileNames: ['source_code_pro_black.ttf', 'source_code_pro_black_italic.ttf'],
-  },
-  {
-    name: 'Source Code Pro Bold',
-    value: 'Source Code Pro Bold',
-    fileNames: ['source_code_pro_bold.ttf', 'source_code_pro_bold_italic.ttf'],
+    os: ['lin', 'mac'],
   },
   {
     name: 'Source Code Pro Extra Light',
     value: 'Source Code Pro Extra Light',
     fileNames: ['source_code_pro_extra_light.ttf', 'source_code_pro_extra_light_italic.ttf'],
+    os: ['lin', 'mac'],
   },
   {
     name: 'Source Code Pro Light',
     value: 'Source Code Pro Light',
     fileNames: ['source_code_pro_light.ttf', 'source_code_pro_light_italic.ttf'],
+    os: ['lin', 'mac'],
   },
   {
     name: 'Source Code Pro Medium',
     value: 'Source Code Pro Medium',
     fileNames: ['source_code_pro_medium.ttf', 'source_code_pro_medium_italic.ttf'],
+    os: ['lin', 'mac'],
   },
   {
     name: 'Source Code Pro Semibold',
     value: 'Source Code Pro Semibold',
     fileNames: ['source_code_pro_semibold.ttf', 'source_code_pro_semibold_italic.ttf'],
+    os: ['lin', 'mac'],
+  },
+  {
+    name: 'Source Serif Pro',
+    value: 'Source Serif Pro',
+    fileNames: [
+      'source_serif_pro_bold.ttf', 'source_serif_pro_bold_italic.ttf', 'source_serif_pro_italic.ttf',
+      'source_serif_pro_regular.ttf',
+    ],
+    os: ['lin', 'mac'],
+  },
+  {
+    name: 'Source Serif Pro Black',
+    value: 'Source Serif Pro Black',
+    fileNames: ['source_serif_pro_black.ttf', 'source_serif_pro_black_italic.ttf'],
+    os: ['lin', 'mac'],
+  },
+  {
+    name: 'Source Serif Pro Extra Light',
+    value: 'Source Serif Pro Extra Light',
+    fileNames: ['source_serif_pro_extralight_italic.ttf', 'source_serif_pro_extralight.ttf'],
+    os: ['lin', 'mac'],
+  },
+  {
+    name: 'Source Serif Pro Light',
+    value: 'Source Serif Pro Light',
+    fileNames: ['source_serif_pro_light.ttf', 'source_serif_pro_light_italic.ttf'],
+    os: ['lin', 'mac'],
+  },
+  {
+    name: 'Source Serif Pro Semibold',
+    value: 'Source Serif Pro Semibold',
+    fileNames: ['source_serif_pro_semibold_italic.ttf', 'source_serif_pro_semibold.ttf'],
+    os: ['lin', 'mac'],
+  },
+  {
+    name: 'Source Sans Pro',
+    value: 'Source Sans Pro',
+    fileNames: [
+      'source_sans_pro_bold.ttf', 'source_sans_pro_bold_italic.ttf', 'source_sans_pro_italic.ttf',
+      'source_sans_pro_regular.ttf',
+    ],
+    os: ['lin', 'mac'],
+  },
+  {
+    name: 'Source Sans Pro Black',
+    value: 'Source Sans Pro Black',
+    fileNames: ['source_sans_pro_black.ttf', 'source_sans_pro_black_italic.ttf'],
+    os: ['lin', 'mac'],
+  },
+  {
+    name: 'Source Sans Pro Extra Light',
+    value: 'Source Sans Pro Extra Light',
+    fileNames: ['source_sans_pro_extralight_italic.ttf', 'source_sans_pro_extralight.ttf'],
+    os: ['lin', 'mac'],
+  },
+  {
+    name: 'Source Sans Pro Light',
+    value: 'Source Sans Pro Light',
+    fileNames: ['source_sans_pro_light.ttf', 'source_sans_pro_light_italic.ttf'],
+    os: ['lin', 'mac'],
+  },
+  {
+    name: 'Source Sans Pro Semibold',
+    value: 'Source Sans Pro Semibold',
+    fileNames: ['source_sans_pro_semibold_italic.ttf', 'source_sans_pro_semibold.ttf'],
+    os: ['lin', 'mac'],
   },
   {
     name: 'Souvenir Lt BT',
@@ -2560,6 +3717,16 @@ const fontsCollection = [
     value: 'Subway',
   },
   {
+    name: 'Sukhumvit Set',
+    value: 'Sukhumvit Set',
+    os: ['mac'],
+  },
+  {
+    name: 'Superclarendon',
+    value: 'Superclarendon',
+    os: ['mac'],
+  },
+  {
     name: 'SuperFrench',
     value: 'SuperFrench',
   },
@@ -2567,6 +3734,7 @@ const fontsCollection = [
     name: 'Suruma',
     value: 'Suruma',
     fileNames: ['suruma.ttf'],
+    os: ['lin'],
   },
   {
     name: 'Swis721 BT',
@@ -2631,6 +3799,7 @@ const fontsCollection = [
   {
     name: 'Sylfaen',
     value: 'Sylfaen',
+    os: ['win'],
   },
   {
     name: 'Symap',
@@ -2643,6 +3812,7 @@ const fontsCollection = [
   {
     name: 'Symbol',
     value: 'Symbol',
+    os: ['win', 'mac'],
   },
   {
     name: 'Symeteo',
@@ -2659,19 +3829,26 @@ const fontsCollection = [
   },
   {
     name: 'System',
-    value: 'System'
+    value: 'System',
   },
   {
     name: 'Tahoma',
     value: 'Tahoma',
+    os: ['win', 'mac'],
+  },
+  {
+    name: 'Tamil MN',
+    value: 'Tamil MN',
+    os: ['mac'],
   },
   {
     name: 'Tamil Sangam MN',
     value: 'Tamil Sangam MN',
+    os: ['mac'],
   },
   {
     name: 'TeamViewer8',
-    value: 'TeamViewer8'
+    value: 'TeamViewer8',
   },
   {
     name: 'Technic',
@@ -2707,8 +3884,14 @@ const fontsCollection = [
     fileNames: ['teletype_regular.ttf'],
   },
   {
+    name: 'Telugu MN',
+    value: 'Telugu MN',
+    os: ['mac'],
+  },
+  {
     name: 'Telugu Sangam MN',
     value: 'Telugu Sangam MN',
+    os: ['mac'],
   },
   {
     name: 'Tempus Sans ITC',
@@ -2721,45 +3904,65 @@ const fontsCollection = [
   {
     name: 'Thonburi',
     value: 'Thonburi',
+    os: ['mac'],
   },
   {
     name: 'Tibetan Machine Uni',
     value: 'Tibetan Machine Uni',
     fileNames: ['tibetan_machine_uni.ttf'],
+    os: ['lin'],
   },
   {
     name: 'Times New Roman',
     value: 'Times New Roman',
+    os: ['win', 'mac'],
   },
   {
     name: 'Times New Roman Baltic',
-    value: 'Times New Roman Baltic'
+    value: 'Times New Roman Baltic',
+    os: ['win', 'mac'],
   },
   {
     name: 'Times New Roman CE',
-    value: 'Times New Roman CE'
+    value: 'Times New Roman CE',
+    os: ['win', 'mac'],
   },
   {
     name: 'Times New Roman Cyr',
     value: 'Times New Roman Cyr',
+    os: ['win', 'mac'],
   },
   {
     name: 'Times New Roman Greek',
-    value: 'Times New Roman Greek'
+    value: 'Times New Roman Greek',
+    os: ['win', 'mac'],
   },
   {
     name: 'Times New Roman TUR',
-    value: 'Times New Roman TUR'
+    value: 'Times New Roman TUR',
+    os: ['win', 'mac'],
   },
   {
-    name: 'TlwgTypewriter',
-    value: 'TlwgTypewriter',
+    name: 'Tlwg Mono',
+    value: 'Tlwg Mono',
+    os: ['lin'],
+  },
+  {
+    name: 'Tlwg Typewriter',
+    value: 'Tlwg Typewriter',
     fileNames: ['tlwgtypewriter.ttf'],
+    os: ['lin'],
+  },
+  {
+    name: 'Tlwg Typist',
+    value: 'Tlwg Typist',
+    os: ['lin'],
   },
   {
     name: 'Tlwg Typo',
     value: 'Tlwg Typo',
     fileNames: ['tlwg_typo.ttf'],
+    os: ['lin'],
   },
   {
     name: 'Traditional Arabic',
@@ -2774,8 +3977,14 @@ const fontsCollection = [
     value: 'Trajan Pro',
   },
   {
+    name: 'Trattatello',
+    value: 'Trattatello',
+    os: ['mac'],
+  },
+  {
     name: 'Trebuchet MS',
     value: 'Trebuchet MS',
+    os: ['win', 'mac'],
   },
   {
     name: 'Tubular',
@@ -2807,9 +4016,25 @@ const fontsCollection = [
     value: 'TypoUpright BT',
   },
   {
+    name: 'URW Bookman L',
+    value: 'URW Gothic L',
+    os: ['lin'],
+  },
+  {
+    name: 'Ubuntu',
+    value: 'Ubuntu',
+    os: ['lin'],
+  },
+  {
     name: 'Ubuntu',
     value: 'Ubuntu',
     fileNames: ['ubuntu_bold.ttf', 'ubuntu_bold_italic.ttf', 'ubuntu_italic.ttf', 'ubuntu_regular.ttf'],
+    os: ['lin'],
+  },
+  {
+    name: 'Umpush',
+    value: 'Umpush',
+    os: ['lin'],
   },
   {
     name: 'Unicorn',
@@ -2830,6 +4055,11 @@ const fontsCollection = [
     value: 'UniversalMath1 BT',
   },
   {
+    name: 'Uroob',
+    value: 'Uroob',
+    os: ['lin'],
+  },
+  {
     name: 'Utsaah',
     value: 'Utsaah',
   },
@@ -2842,8 +4072,14 @@ const fontsCollection = [
     value: 'Vani',
   },
   {
+    name: 'Vemana2000',
+    value: 'Vemana2000',
+    os: ['lin'],
+  },
+  {
     name: 'Verdana',
     value: 'Verdana',
+    os: ['win', 'mac'],
   },
   {
     name: 'Vijaya',
@@ -2941,40 +4177,47 @@ const fontsCollection = [
   },
   {
     name: 'WST_Czec',
-    value: 'WST_Czec'
+    value: 'WST_Czec',
   },
   {
     name: 'WST_Engl',
-    value: 'WST_Engl'
+    value: 'WST_Engl',
   },
   {
     name: 'WST_Fren',
-    value: 'WST_Fren'
+    value: 'WST_Fren',
   },
   {
     name: 'WST_Germ',
-    value: 'WST_Germ'
+    value: 'WST_Germ',
   },
   {
     name: 'WST_Ital',
-    value: 'WST_Ital'
+    value: 'WST_Ital',
   },
   {
     name: 'WST_Span',
-    value: 'WST_Span'
+    value: 'WST_Span',
   },
   {
     name: 'WST_Swed',
-    value: 'WST_Swed'
+    value: 'WST_Swed',
   },
   {
     name: 'Waree',
     value: 'Waree',
     fileNames: ['waree.ttf'],
+    os: ['lin'],
+  },
+  {
+    name: 'Waseem',
+    value: 'Waseem',
+    os: ['mac'],
   },
   {
     name: 'Webdings',
     value: 'Webdings',
+    os: ['win', 'mac'],
   },
   {
     name: 'Westminster',
@@ -2991,14 +4234,32 @@ const fontsCollection = [
   {
     name: 'Wingdings',
     value: 'Wingdings',
+    os: ['win', 'mac'],
   },
   {
     name: 'Wingdings 2',
     value: 'Wingdings 2',
+    os: ['win', 'mac'],
   },
   {
     name: 'Wingdings 3',
     value: 'Wingdings 3',
+    os: ['win', 'mac'],
+  },
+  {
+    name: 'Yu Gothic',
+    value: 'Yu Gothic',
+    os: ['win'],
+  },
+  {
+    name: 'Yu Gothic UI',
+    value: 'Yu Gothic UI',
+    os: ['win'],
+  },
+  {
+    name: 'Zapf Dingbats',
+    value: 'Zapf Dingbats',
+    os: ['win'],
   },
   {
     name: 'ZapfEllipt BT',
@@ -3015,6 +4276,7 @@ const fontsCollection = [
   {
     name: 'Zapfino',
     value: 'Zapfino',
+    os: ['mac'],
   },
   {
     name: 'Zurich BlkEx BT',
@@ -3027,7 +4289,7 @@ const fontsCollection = [
   {
     name: 'ZWAdobeF',
     value: 'ZWAdobeF',
-  }
+  },
 ];
 
 module.exports = fontsCollection;

@@ -87,6 +87,8 @@ class BrowserUserDataManager {
     if (differentOs && !fontsToDownload.length) {
       throw new Error('No fonts to download found. Use getAvailableFonts() method and set some fonts from this list');
     }
+    fontsToDownload.push('LICENSE.txt');
+    fontsToDownload.push('OFL.txt');
 
     const pathToFontsDir = path.join(profilePath, FONTS_DIR_NAME);
     const fontsDirExists = await access(pathToFontsDir).then(() => true, () => false);

@@ -626,7 +626,7 @@ class GoLogin {
           arg = '--font-masking-mode=3';
         }
         if (this.profileOs === 'android') {
-          arg = '--font-masking-mode=0';
+          arg = '--font-masking-mode=1';
         }
 
         params.push(arg);
