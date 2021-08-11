@@ -140,4 +140,4 @@ const GoLogin = require('gologin');
 
 <a href="https://github.com/pyppeteer/pyppeteer" target="_blank">pyppeteer</a> (recommend) and <a href="https://www.selenium.dev" target="_blank">Selenium</a> supported (see file gologin.py)
 
-
+for Selenium may need download <a href="https://chromedriver.chromium.org/downloads" target="_blank">webdriver</a>
