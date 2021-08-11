@@ -136,6 +136,8 @@ const GoLogin = require('gologin');
 })();
 ```
 
+## Python support
 
+<a href="https://github.com/pyppeteer/pyppeteer" target="_blank">pyppeteer</a> (recommend) and <a href="https://www.selenium.dev" target="_blank">Selenium</a> supported (see file gologin.py)
 
 
