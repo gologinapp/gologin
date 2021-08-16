@@ -305,7 +305,7 @@ class GoLogin(object):
         profile = self.profile
         proxy = self.profile.get('proxy')
         # print('proxy=', proxy)
-        if proxy and proxy.get('mode')=='gologin':
+        if proxy and (proxy.get('mode')=='gologin' or proxy.get('mode')=='tor'):
             autoProxyServer = profile.get('autoProxyServer')
             splittedAutoProxyServer = autoProxyServer.split('://')
             splittedProxyAddress = splittedAutoProxyServer[1].split(':')

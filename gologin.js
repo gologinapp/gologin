@@ -330,7 +330,7 @@ class GoLogin {
     let proxy = _.get(profile, 'proxy');
     let name = _.get(profile, 'name');
 
-    if (proxy.mode === 'gologin') {
+    if (proxy.mode === 'gologin' || proxy.mode === 'tor') {
       const autoProxyServer = _.get(profile, 'autoProxyServer');
       const splittedAutoProxyServer = autoProxyServer.split('://');
       const splittedProxyAddress = splittedAutoProxyServer[1].split(':');
