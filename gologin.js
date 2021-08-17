@@ -273,9 +273,11 @@ class GoLogin {
     this.fontsMasking = fonts?.enableMasking;
     this.profileOs = profileOs;
     this.differentOs =
-      OS_PLATFORM === 'win32' && profileOs !== 'win' ||
-      OS_PLATFORM === 'darwin' && profileOs !== 'mac' ||
-      OS_PLATFORM === 'linux' && profileOs !== 'lin'
+      profileOs !== 'android' && (
+        OS_PLATFORM === 'win32' && profileOs !== 'win' ||
+        OS_PLATFORM === 'darwin' && profileOs !== 'mac' ||
+        OS_PLATFORM === 'linux' && profileOs !== 'lin'
+      );
 
     const {
       resolution = '1920x1080',
@@ -406,7 +408,7 @@ class GoLogin {
       await this.writeCookiesToFile();
     }
 
-    if (fonts?.enableMasking) {
+    if (this.fontsMasking) {
       const families = fonts?.families || [];
       if (!families.length) {
         throw new Error('No fonts list provided');
