@@ -618,7 +618,7 @@ class GoLogin {
         `--user-data-dir=${profile_path}`, 
         `--password-store=basic`, 
         `--tz=${tz}`, 
-        `--gologin-profile=${profile_name}`, 
+        `--gologin-profile='${profile_name}'`, 
         `--lang=${browserLang || 'en'}`,
       ];
 

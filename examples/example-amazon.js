@@ -5,7 +5,6 @@ const GoLogin = require('../gologin');
     const GL = new GoLogin({
         token: 'yU0token',
         profile_id: 'yU0Pr0f1leiD',
-        executablePath: '/usr/bin/orbita-browser/chrome',
     });
     const {status, wsUrl} = await GL.start(); 
     const browser = await puppeteer.connect({
@@ -22,7 +21,7 @@ const GoLogin = require('../gologin');
     await session.send('Browser.setWindowBounds', { windowId, bounds: viewPort });
     await session.detach();
     
-    await page.goto('https://www.amazon.com/-/dp/B07GRM747Y');   
+    await page.goto('https://www.amazon.com/-/dp/B0771V1JZX');   
 
     const content = await page.content();
     const matchData = content.match(/'initial': (.*)}/);
