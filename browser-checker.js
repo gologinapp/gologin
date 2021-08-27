@@ -265,7 +265,7 @@ class BrowserChecker {
       const promises = [];
       files.forEach((filename) => {
         if (filename.match(/.*\.dylib$/)) {
-          promises.push(fs.copy(path.join(this.#browserPath, EXTRACTED_FOLDER, filename), path.join(this.#browserPath, filename)));
+          promises.push(fs.copyFileSync(path.join(this.#browserPath, EXTRACTED_FOLDER, filename), path.join(this.#browserPath, filename)));
         }
       });
       return Promise.all(promises);

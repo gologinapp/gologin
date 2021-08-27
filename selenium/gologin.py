@@ -126,21 +126,21 @@ class GoLogin(object):
 
     def sanitizeProfile(self):
         remove_dirs = [
-            'Default/Cache',
-            'biahpgbdmdkfgndcmfiipgcebobojjkp',
-            'afalakplffnnnlkncjhbmahjfjhmlkal',
-            'cffkpbalmllkdoenhmdmpbkajipdjfam',
-            'Dictionaries',
-            'enkheaiicpeffbfgjiklngbpkilnbkoi',
-            'oofiananboodjbbmdelgdommihjbkfag',
-            'SingletonCookie',
-            'SingletonLock',
-            'SingletonSocket',
-            'SafetyTips',
-            'Default/Service Worker/CacheStorage',
-            'Default/Code Cache',
-            'Default/.org.chromium.Chromium.*'
-        ]
+          'Default/Cache',
+          'Default/Service Worker/CacheStorage',
+          'Default/Code Cache',
+          'Default/GPUCache',
+          'GrShaderCache',
+          'ShaderCache',
+          'biahpgbdmdkfgndcmfiipgcebobojjkp',
+          'afalakplffnnnlkncjhbmahjfjhmlkal',
+          'cffkpbalmllkdoenhmdmpbkajipdjfam',
+          'Dictionaries',
+          'enkheaiicpeffbfgjiklngbpkilnbkoi',
+          'oofiananboodjbbmdelgdommihjbkfag',
+          'SafetyTips',
+          'fonts',
+        ];
 
         for d in remove_dirs:
             fpath = os.path.join(self.profile_path, d)
@@ -278,7 +278,7 @@ class GoLogin(object):
             'metadata': {
               'vendor': preferences.get('webGLMetadata', {}).get('vendor'),
               'renderer': preferences.get('webGLMetadata', {}).get('renderer'),
-              'enabled': preferences.get('webGLMetadata', {}).get('mode') == 'mask',
+              'mode': preferences.get('webGLMetadata', {}).get('mode') == 'mask',
             }
         }
 
