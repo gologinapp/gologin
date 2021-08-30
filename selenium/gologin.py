@@ -115,13 +115,13 @@ class GoLogin(object):
             'Authorization': 'Bearer ' + self.access_token,
             'User-Agent': 'Selenium-API'
         }
-        print('profile size=', os.stat(self.profile_zip_path_upload).st_size)
+        # print('profile size=', os.stat(self.profile_zip_path_upload).st_size)
 
         signedUrl = requests.get(API_URL + '/browser/' + self.profile_id + '/storage-signature', headers=headers).content.decode('utf-8')
 
         requests.put(signedUrl, data=open(self.profile_zip_path_upload, 'rb'))
 
-        print('commit profile complete')
+        # print('commit profile complete')
 
 
     def sanitizeProfile(self):
@@ -248,9 +248,9 @@ class GoLogin(object):
         self.tz = self.getTimeZone()
         # print('tz=', self.tz)
         tzGeoLocation = {
-            'latitude': self.tz['ll'][0],
-            'longitude': self.tz['ll'][1],
-            'accuracy': self.tz['accuracy'],
+            'latitude': self.tz.get('ll', [0, 0])[0],
+            'longitude': self.tz.get('ll', [0, 0])[1],
+            'accuracy': self.tz.get('accuracy', 0),
         }
 
         preferences['geoLocation'] = self.getGeolocationParams(preferences['geolocation'], tzGeoLocation)
