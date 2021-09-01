@@ -434,6 +434,7 @@ class GoLogin {
     debug('begin updating', data.length);
     if (!data.length) {
       debug('WARN: profile zip data empty - SKIPPING PROFILE COMMIT');
+
       return;
     }
     try {
