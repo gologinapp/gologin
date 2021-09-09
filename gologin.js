@@ -47,7 +47,8 @@ class GoLogin {
     this.uploadCookiesToServer = options.uploadCookiesToServer || false;
     this.writeCookesFromServer = options.writeCookesFromServer || true;
     this.cookiesFilePath = path.join(os.tmpdir(), `gologin_profile_${this.profile_id}`, 'Default', 'Cookies');
-
+    this.remote_debugging_port = options.remote_debugging_port || 0;
+    
     if (options.tmpdir) {
       this.tmpdir = options.tmpdir;
       if (!fs.existsSync(this.tmpdir)) {
@@ -579,8 +580,12 @@ class GoLogin {
   }
 
   async spawnBrowser() {
-    const remote_debugging_port = await this.getRandomPort();
-    this.remote_debugging_port = remote_debugging_port;
+
+    let remote_debugging_port = this.remote_debugging_port;
+    if(remote_debugging_port == 0){
+      remote_debugging_port = await this.getRandomPort();
+    } 
+    
     const profile_path = this.profilePath();
     
     let proxy = this.proxy;
