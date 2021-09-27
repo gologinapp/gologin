@@ -8,6 +8,8 @@ from gologin import GoLogin
 gl = GoLogin({
 	"token": "yU0token",
 	"profile_id": "yU0Pr0f1leiD",
+	"local": True,
+	"credentials_enable_service": False,
 	})
 
 if platform == "linux" or platform == "linux2":

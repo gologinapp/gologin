@@ -19,8 +19,10 @@ class GoLogin(object):
         self.tmpdir = options.get('tmpdir', tempfile.gettempdir())
         self.address = options.get('address', '127.0.0.1')
         self.extra_params = options.get('extra_params', [])
-        self.port = options.get('port', 3500)
+        self.port  = options.get('port', 3500)
+        self.local = options.get('local', False)
         self.spawn_browser = options.get('spawn_browser', True)
+        self.credentials_enable_service = options.get('credentials_enable_service')
 
         home = str(pathlib.Path.home())
         self.executablePath = options.get('executablePath', os.path.join(home, '.gologin/browser/orbita-browser/chrome'))
@@ -102,9 +104,10 @@ class GoLogin(object):
 
     def stop(self):
         self.sanitizeProfile()
-        self.commitProfile()
-        os.remove(self.profile_zip_path_upload)
-        shutil.rmtree(self.profile_path)
+        if self.local==False:
+            self.commitProfile()
+            os.remove(self.profile_zip_path_upload)
+            shutil.rmtree(self.profile_path)
 
     def commitProfile(self):
         zipf = zipfile.ZipFile(self.profile_zip_path_upload, 'w', zipfile.ZIP_DEFLATED)
@@ -338,15 +341,18 @@ class GoLogin(object):
             exit()
 
         gologin = self.convertPreferences(profile)
+        if self.credentials_enable_service!=None:
+            preferences['credentials_enable_service'] = self.credentials_enable_service
         preferences['gologin'] = gologin
         pfile = open(pref_file, 'w')
         json.dump(preferences, pfile)
 
     def createStartup(self):
-        if os.path.exists(self.profile_path):
+        if self.local==False and os.path.exists(self.profile_path):
             shutil.rmtree(self.profile_path)
         self.profile = self.getProfile()
-        self.downloadProfileZip()
+        if self.local==False:
+            self.downloadProfileZip()
         self.updatePreferences()
         return self.profile_path
 
