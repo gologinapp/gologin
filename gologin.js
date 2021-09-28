@@ -615,14 +615,17 @@ class GoLogin {
       );
     } else {
       const [splittedLangs] = this.language.split(';');
-      const browserLangs = splittedLangs.split(',');
-      const browserLang = browserLangs[browserLangs.length - 1];
+      let [browserLang] = splittedLangs.split(',');
+      if (process.platform === 'darwin') {
+        browserLang = 'en-US';
+      }
+
       let params = [
         `--remote-debugging-port=${remote_debugging_port}`,
         `--user-data-dir=${profile_path}`, 
         `--password-store=basic`, 
         `--tz=${tz}`,
-        `--lang=${browserLang || 'en'}`,
+        `--lang=${browserLang}`,
       ];
 
       if (this.fontsMasking) {
