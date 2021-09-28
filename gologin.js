@@ -919,9 +919,15 @@ class GoLogin {
   };
 
   async postCookies(profileId, cookies) {
+    const formattedCookies = cookies.map(cookie => {
+      if (!['no_restriction', 'lax', 'strict', 'unspecified'].includes(cookie.sameSite)) {
+        cookie.sameSite = 'unspecified';
+      }
+    });
+
     const response = await BrowserUserDataManager.uploadCookies({
       profileId,
-      cookies,
+      cookies: formattedCookies,
       API_BASE_URL: API_URL,
       ACCESS_TOKEN: this.access_token,
     });
