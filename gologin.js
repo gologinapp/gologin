@@ -925,6 +925,8 @@ class GoLogin {
     const formattedCookies = cookies.map(cookie => {
       if (!['no_restriction', 'lax', 'strict', 'unspecified'].includes(cookie.sameSite)) {
         cookie.sameSite = 'unspecified';
+
+        return cookie;
       }
     });
 
