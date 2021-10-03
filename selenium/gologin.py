@@ -100,7 +100,10 @@ class GoLogin(object):
                     continue
                 if stat.S_ISSOCK(os.stat(path).st_mode):
                     continue
-                ziph.write(path, path.replace(self.profile_path, ''))
+                try:
+                    ziph.write(path, path.replace(self.profile_path, ''))
+                except:
+                    continue
 
     def stop(self):
         self.sanitizeProfile()
