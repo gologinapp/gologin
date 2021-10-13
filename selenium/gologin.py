@@ -25,7 +25,7 @@ class GoLogin(object):
         self.credentials_enable_service = options.get('credentials_enable_service')
 
         home = str(pathlib.Path.home())
-        self.executablePath = options.get('executablePath', os.path.join(home, '.gologin/browser/orbita-browser/chrome'))
+        self.executablePath = options.get('executable_path', os.path.join(home, '.gologin/browser/orbita-browser/chrome'))
         print('executablePath', self.executablePath)
         if self.extra_params:
             print('extra_params', self.extra_params)
