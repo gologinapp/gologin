@@ -82,10 +82,10 @@ class GoLogin {
   	}
   }
 
-  async getNewFingerPrint() {
+  async getNewFingerPrint(os) {
     debug('GETTING FINGERPRINT');
 
-    const fpResponse = await requests.get(`${API_URL}/browser/fingerprint?os=lin`, {
+    const fpResponse = await requests.get(`${API_URL}/browser/fingerprint?os=${os}`, {
       json: true,
       headers: {
         'Authorization': `Bearer ${this.access_token}`,
