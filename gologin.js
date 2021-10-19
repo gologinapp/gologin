@@ -48,7 +48,8 @@ class GoLogin {
     this.writeCookesFromServer = options.writeCookesFromServer || true;
     this.cookiesFilePath = path.join(os.tmpdir(), `gologin_profile_${this.profile_id}`, 'Default', 'Cookies');
     this.remote_debugging_port = options.remote_debugging_port || 0;
-    
+    this.timezone = options.timezone;
+
     if (options.tmpdir) {
       this.tmpdir = options.tmpdir;
       if (!fs.existsSync(this.tmpdir)) {
@@ -493,6 +494,12 @@ class GoLogin {
   }
 
   async getTimeZone(proxy) {
+    if(this.timezone){
+      debug('getTimeZone from options', this.timezone);
+      this._tz = this.timezone;
+      return this._tz.timezone;
+    }
+
     let data = null;
     if (proxy) {
       if (proxy.mode.includes('socks')) {
