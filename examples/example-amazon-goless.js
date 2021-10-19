@@ -13,6 +13,13 @@ const GoLogin = require('../gologin');
     });
 
     const page = await browser.newPage();
+    const viewPort = GL.getViewPort();
+    await page.setViewport({ width: Math.round(viewPort.width * 0.994), height: Math.round(viewPort.height * 0.92) });
+    const session = await page.target().createCDPSession();
+    const { windowId } = await session.send('Browser.getWindowForTarget');
+    await session.send('Browser.setWindowBounds', { windowId, bounds: viewPort });
+    await session.detach();
+    
     await page.goto('https://www.amazon.com/-/dp/B0771V1JZX');   
     const content = await page.content();
     const matchData = content.match(/'initial': (.*)}/);

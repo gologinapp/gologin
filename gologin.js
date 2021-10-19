@@ -123,6 +123,11 @@ class GoLogin {
   	if (profileResponse.statusCode !== 200) {
   		throw new Error(`Gologin /browser/${id} response error ${profileResponse.statusCode}`);
   	}
+
+    if(profileResponse.statusCode == 401){
+      throw new Error("invalid token");
+    }    
+
   	return JSON.parse(profileResponse.body);
   }
 
@@ -825,6 +830,15 @@ class GoLogin {
     debug('createProfile', options);
 
     const fingerprint = await this.getRandomFingerprint(options);
+    debug("fingerprint=", fingerprint)
+    
+    if(fingerprint.statusCode == 500){
+      throw new Error("no valid random fingerprint check os param");
+    }
+
+    if(fingerprint.statusCode == 401){
+      throw new Error("invalid token");
+    }
 
     const { navigator, fonts, webGLMetadata, webRTC } = fingerprint;
     let deviceMemory = navigator.deviceMemory || 2;
@@ -1060,6 +1074,11 @@ class GoLogin {
         'Authorization': `Bearer ${this.access_token}`
       }
     });
+
+    if(profileResponse.statusCode == 401){
+      throw new Error("invalid token");
+    }
+
     debug('profileResponse', profileResponse.statusCode, profileResponse.body);
     if (profileResponse.statusCode !== 202) {
       return {'status': 'failure', 'code':  profileResponse.statusCode};
