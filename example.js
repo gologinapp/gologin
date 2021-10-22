@@ -1,5 +1,5 @@
 const puppeteer = require('puppeteer-core');
-const GoLogin = require('gologin');
+const GoLogin = require('./gologin');
 
 (async () => {
   const GL = new GoLogin({
@@ -7,7 +7,16 @@ const GoLogin = require('gologin');
     profile_id: 'yU0Pr0f1leiD',
   });
 
-  const { status, wsUrl } = await GL.start();
+  const { status, wsUrl } = await GL.start().catch((e) => {
+    console.trace(e);
+    return { status: 'failure' };
+  });
+
+  if (status !== 'success') {
+    console.log('Invalid status');
+    return;
+  }
+
   const browser = await puppeteer.connect({
     browserWSEndpoint: wsUrl.toString(),
     ignoreHTTPSErrors: true,

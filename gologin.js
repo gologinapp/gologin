@@ -362,7 +362,10 @@ class GoLogin {
     }
     this.proxy = proxy;
 
-    await this.getTimeZone(proxy);
+    await this.getTimeZone(proxy).catch((e) => {
+      console.error('Proxy Error. Check it and try again.');
+      throw e;
+    });
 
     const [latitude, longitude] = this._tz.ll;
     const accuracy = this._tz.accuracy;
@@ -508,9 +511,9 @@ class GoLogin {
 
       const proxyUrl = `${proxy.mode}://${proxy.username}:${proxy.password}@${proxy.host}:${proxy.port}`;
       debug('getTimeZone start https://time.gologin.com', proxyUrl);
-      data = await requests.get('https://time.gologin.com', { proxy: proxyUrl });
+      data = await requests.get('https://time.gologin.com', { proxy: proxyUrl, timeout: 10 * 1000, maxAttempts: 2 });
     } else {
-      data = await requests.get('https://time.gologin.com');
+      data = await requests.get('https://time.gologin.com', { timeout: 10 * 1000, maxAttempts: 2 });
     }
     debug('getTimeZone finish', data.body);
     this._tz = JSON.parse(data.body);
@@ -555,6 +558,7 @@ class GoLogin {
       }).on('error', (err) => reject(err));
     });
 
+    console.log('checkData:', checkData);
     body = checkData.body || {};
     if (!body.ip && checkData.statusCode.toString().startsWith('4')) {
       throw checkData;
@@ -575,7 +579,10 @@ class GoLogin {
     Object.keys(process.env).forEach((key) => {
       env[key] = process.env[key];
     });
-    const tz = await this.getTimeZone(this.proxy);
+    const tz = await this.getTimeZone(this.proxy).catch((e) => {
+      console.error('Proxy Error. Check it and try again.');
+      throw e;
+    });
     env['TZ'] = tz;
 
     let params = [`--proxy-server=${proxy}`, `--user-data-dir=${profile_path}`, `--password-store=basic`, `--tz=${tz}`, `--lang=en`]
@@ -591,7 +598,6 @@ class GoLogin {
   }
 
   async spawnBrowser() {
-
     let remote_debugging_port = this.remote_debugging_port;
     if(!remote_debugging_port){
       remote_debugging_port = await this.getRandomPort();
@@ -614,7 +620,10 @@ class GoLogin {
     Object.keys(process.env).forEach((key) => {
       env[key] = process.env[key];
     });
-    const tz = await this.getTimeZone(this.proxy);
+    const tz = await this.getTimeZone(this.proxy).catch((e) => {
+      console.error('Proxy Error. Check it and try again.');
+      throw e;
+    });
     env['TZ'] = tz;
 
     if (this.vnc_port) {
