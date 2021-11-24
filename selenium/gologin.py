@@ -424,7 +424,7 @@ class GoLogin(object):
         profile = self.getProfile()
         for k,v in options.items():
             profile[k] = v
-        return json.loads(requests.put(API_URL + '/browser/' + profile_id, headers=self.headers(), json=profile).content.decode('utf-8'))
+        return json.loads(requests.put(API_URL + '/browser/' + self.profile_id, headers=self.headers(), json=profile).content.decode('utf-8'))
 
     def waitDebuggingUrl(self, delay_s, try_count=3):
         url = 'https://' + self.profile_id + '.orbita.gologin.com/json/version'
