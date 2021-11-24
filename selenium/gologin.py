@@ -305,9 +305,8 @@ class GoLogin(object):
 
     def updatePreferences(self):
         pref_file = os.path.join(self.profile_path, 'Default/Preferences')
-        pfile = open(pref_file, 'r')
-        preferences = json.load(pfile)    
-        pfile.close()  
+        with open(pref_file, 'r', encoding="utf-8") as pfile:
+            preferences = json.load(pfile)    
         profile = self.profile
         proxy = self.profile.get('proxy')
         # print('proxy=', proxy)
