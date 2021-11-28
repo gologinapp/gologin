@@ -170,9 +170,9 @@ class GoLogin(object):
         proxy = self.proxy
         if proxy:            
             proxies = {proxy.get('mode'): self.formatProxyUrlPassword(proxy)}
-            data = requests.get('https://time.gologin.app', proxies=proxies)
+            data = requests.get('https://time.gologin.com', proxies=proxies)
         else:
-            data = requests.get('https://time.gologin.app')
+            data = requests.get('https://time.gologin.com')
         return json.loads(data.content.decode('utf-8'))
 
 

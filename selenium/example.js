@@ -28,5 +28,5 @@ chrome.setDefaultService(new chrome.ServiceBuilder('./chromedriver').build());
                  .setChromeOptions(chromeOptions)
                  .build();
 
-    await driver.get('https://myip.gologin.app/mini')
+    await driver.get('https://myip.link')
 })();

@@ -1102,8 +1102,6 @@ class GoLogin {
     
     if (profileResponse.body === 'ok') {
       let wsUrl = await this.waitDebuggingUrl(delay_ms);
-      // const wsUrl = `wss://${this.profile_id}.orbita.gologin.app`
-      // const wsUrl = `wss://${this.profile_id}.orbita.gologin.com`
       return { 'status': 'success', wsUrl }
     }
 

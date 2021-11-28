@@ -15,7 +15,7 @@ const GoLogin = require('../gologin');
     });
 
     const page = await browser.newPage();
-    await page.goto('https://myip.gologin.app/mini');   
+    await page.goto('https://myip.link');   
     console.log(await page.content());
     await browser.close();
     await GL.stopLocal({posting: false});
