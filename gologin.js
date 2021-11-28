@@ -46,19 +46,18 @@ class GoLogin {
     this.browserChecker = new BrowserChecker();
     this.uploadCookiesToServer = options.uploadCookiesToServer || false;
     this.writeCookesFromServer = options.writeCookesFromServer || true;
-    this.cookiesFilePath = path.join(os.tmpdir(), `gologin_profile_${this.profile_id}`, 'Default', 'Cookies');
     this.remote_debugging_port = options.remote_debugging_port || 0;
     this.timezone = options.timezone;
 
     if (options.tmpdir) {
       this.tmpdir = options.tmpdir;
-      this.cookiesFilePath = path.join(this.tmpdir, `gologin_profile_${this.profile_id}`, 'Default', 'Cookies');
       if (!fs.existsSync(this.tmpdir)) {
         debug('making tmpdir', this.tmpdir);
         shell.mkdir('-p', this.tmpdir);
       }
     }
 
+    this.cookiesFilePath = path.join(this.tmpdir, `gologin_profile_${this.profile_id}`, 'Default', 'Cookies');
     this.profile_zip_path = path.join(this.tmpdir, `gologin_${this.profile_id}.zip`);
     debug('INIT GOLOGIN', this.profile_id);
   }
