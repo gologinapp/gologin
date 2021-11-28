@@ -52,6 +52,7 @@ class GoLogin {
 
     if (options.tmpdir) {
       this.tmpdir = options.tmpdir;
+      this.cookiesFilePath = path.join(this.tmpdir, `gologin_profile_${this.profile_id}`, 'Default', 'Cookies');
       if (!fs.existsSync(this.tmpdir)) {
         debug('making tmpdir', this.tmpdir);
         shell.mkdir('-p', this.tmpdir);
@@ -66,6 +67,7 @@ class GoLogin {
 
   async setProfileId(profile_id) {
     this.profile_id = profile_id;
+    this.cookiesFilePath = path.join(this.tmpdir, `gologin_profile_${this.profile_id}`, 'Default', 'Cookies');
     this.profile_zip_path = path.join(this.tmpdir, `gologin_${this.profile_id}.zip`);
   }
 
@@ -697,7 +699,7 @@ class GoLogin {
     await rimraf(path.join(this.tmpdir, `gologin_${this.profile_id}_upload.zip`));
   }
 
-  async stopAndCommit(options, local= false) {
+  async stopAndCommit(options, local = false) {
     if (this.is_stopping) {
       return true;
     }
@@ -1049,12 +1051,12 @@ class GoLogin {
       return this.stopRemote();
     }
 
-    await this.stopAndCommit(false, {});
+    await this.stopAndCommit({ posting: false }, false);
   }
 
   async stopLocal(options) {
-    const opts = options || {posting: false};
-    await this.stopAndCommit(true, opts.posting);
+    const opts = options || { posting: false };
+    await this.stopAndCommit(options, true);
   }
 
   async waitDebuggingUrl(delay_ms, try_count=0) {
