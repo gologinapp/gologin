@@ -15,7 +15,7 @@ const delay = ms => new Promise(res => setTimeout(res, ms));
         os: 'mac',
         navigator: {
             language: 'enUS',
-            userAgent: 'MyUserAgent',
+            userAgent: 'random', // get random user agent for selected os
             resolution: '1024x768',
             platform: 'mac',
         }
@@ -31,6 +31,6 @@ const delay = ms => new Promise(res => setTimeout(res, ms));
     const profile = await GL.getProfile(profile_id);
 
     console.log('new profile name=', profile.name);
-
+    
     //await GL.delete(profile_id);
 })();

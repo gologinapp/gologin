@@ -879,9 +879,12 @@ class GoLogin {
         mode: 'alerted',
       },
     };
-
+    let user_agent = options.navigator?.userAgent;
+    let orig_user_agent = json.navigator.userAgent;
     Object.keys(options).map((e)=>{ json[e] = options[e] });
-
+    if(user_agent=='random'){
+      json.navigator.userAgent = orig_user_agent;
+    }
     // console.log('profileOptions', json);
 
     const response = await requests.post(`${API_URL}/browser`, {
@@ -891,7 +894,15 @@ class GoLogin {
       },
       json,
     });
-    // console.log(JSON.stringify(response.body));
+
+    if(response.body.statusCode==400){
+      throw new Error(`gologin failed account creation with status code, ${data.statusCode} DATA  ${JSON.stringify(response.body.message)}`);
+    }
+
+    if(response.body.statusCode==500){
+      throw new Error(`gologin failed account creation with status code, ${data.statusCode}`);
+    }
+    debug(JSON.stringify(response.body));
     return response.body.id;
   }
 
