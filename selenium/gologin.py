@@ -422,9 +422,12 @@ class GoLogin(object):
     def update(self, options):
         self.profile_id = options.get('id')
         profile = self.getProfile()
+        #print("profile", profile)
         for k,v in options.items():
             profile[k] = v
-        return json.loads(requests.put(API_URL + '/browser/' + self.profile_id, headers=self.headers(), json=profile).content.decode('utf-8'))
+        resp = requests.put(API_URL + '/browser/' + self.profile_id, headers=self.headers(), json=profile).content.decode('utf-8')
+        #print("update", resp)
+        #return json.loads(resp)
 
     def waitDebuggingUrl(self, delay_s, try_count=3):
         url = 'https://' + self.profile_id + '.orbita.gologin.com/json/version'
