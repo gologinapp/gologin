@@ -32,8 +32,8 @@ class CookiesManager {
       const queryPlaceholders = cookies.map(() => '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').join(', ');
       const query = `insert or replace into cookies (creation_utc, top_frame_site_key, host_key, name, value, path, expires_utc, is_secure, is_httponly, last_access_utc, is_persistent, encrypted_value, samesite, has_expires) values ${queryPlaceholders}`;
       const queryParams = cookies.flatMap((cookie) => {
-        const creationDate = cookie.creationDate ? cookie.creationDate : unixToLDAP(todayUnix);
-        let expirationDate = cookie.session ? 0 : unixToLDAP(cookie.expirationDate);
+        const creationDate = cookie.creationDate ? cookie.creationDate : this.unixToLDAP(todayUnix);
+        let expirationDate = cookie.session ? 0 : this.unixToLDAP(cookie.expirationDate);
         const encryptedValue = Buffer.concat([Buffer.from('v11'), Buffer.from(encrypt(cookie.value), 'binary')]);
         const samesite = Object.keys(SAME_SITE).find((key) => SAME_SITE[key] === (cookie.sameSite || '-1'));
         const isSecure =
