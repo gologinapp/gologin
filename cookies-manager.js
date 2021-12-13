@@ -34,7 +34,7 @@ class CookiesManager {
       const queryParams = cookies.flatMap((cookie) => {
         const creationDate = cookie.creationDate ? cookie.creationDate : this.unixToLDAP(todayUnix);
         let expirationDate = cookie.session ? 0 : this.unixToLDAP(cookie.expirationDate);
-        const encryptedValue = Buffer.concat([Buffer.from('v11'), Buffer.from(encrypt(cookie.value), 'binary')]);
+        const encryptedValue = cookie.value;
         const samesite = Object.keys(SAME_SITE).find((key) => SAME_SITE[key] === (cookie.sameSite || '-1'));
         const isSecure =
           cookie.name.startsWith('__Host-') || cookie.name.startsWith('__Secure-') ? 1 : Number(cookie.secure);
