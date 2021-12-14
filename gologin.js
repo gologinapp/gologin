@@ -122,7 +122,7 @@ class GoLogin {
   	})
     debug(profileResponse.body);
   	if (profileResponse.statusCode !== 200) {
-  		throw new Error(`Gologin /browser/${id} response error ${profileResponse.statusCode}`);
+  		throw new Error(`Gologin /browser/${id} response error ${profileResponse.statusCode} INVALID TOKEN OR PROFILE NOT FOUND`);
   	}
 
     if(profileResponse.statusCode == 401){

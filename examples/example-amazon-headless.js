@@ -5,7 +5,7 @@ const GoLogin = require('../gologin');
     const GL = new GoLogin({
         token: 'yU0token',
         profile_id: 'yU0Pr0f1leiD',
-        extra_params: ['--headless'],
+        extra_params: ['--headless', '--no-sandbox'],
     });
     const {status, wsUrl} = await GL.start(); 
     const browser = await puppeteer.connect({
