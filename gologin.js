@@ -548,7 +548,9 @@ class GoLogin {
           let parsedData;
           try {
             parsedData = JSON.parse(resultResponse);
-          } catch (e) {}
+          } catch (e) {
+            reject(e);
+          }
 
           resolve({
             ...res,
