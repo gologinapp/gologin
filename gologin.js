@@ -47,7 +47,6 @@ class GoLogin {
     this.browserChecker = new BrowserChecker();
     this.uploadCookiesToServer = options.uploadCookiesToServer || false;
     this.writeCookesFromServer = options.writeCookesFromServer || true;
-    this.cookiesFilePath = path.join(os.tmpdir(), `gologin_profile_${this.profile_id}`, 'Default', 'Cookies');
     this.remote_debugging_port = options.remote_debugging_port || 0;
     this.timezone = options.timezone;
 
@@ -59,6 +58,7 @@ class GoLogin {
       }
     }
 
+    this.cookiesFilePath = path.join(this.tmpdir, `gologin_profile_${this.profile_id}`, 'Default', 'Cookies');
     this.profile_zip_path = path.join(this.tmpdir, `gologin_${this.profile_id}.zip`);
     debug('INIT GOLOGIN', this.profile_id);
   }
@@ -67,6 +67,7 @@ class GoLogin {
 
   async setProfileId(profile_id) {
     this.profile_id = profile_id;
+    this.cookiesFilePath = path.join(this.tmpdir, `gologin_profile_${this.profile_id}`, 'Default', 'Cookies');
     this.profile_zip_path = path.join(this.tmpdir, `gologin_${this.profile_id}.zip`);
   }
 
@@ -694,7 +695,7 @@ class GoLogin {
     await rimraf(path.join(this.tmpdir, `gologin_${this.profile_id}_upload.zip`));
   }
 
-  async stopAndCommit(options, local= false) {
+  async stopAndCommit(options, local = false) {
     if (this.is_stopping) {
       return true;
     }
@@ -1057,12 +1058,12 @@ class GoLogin {
       return this.stopRemote();
     }
 
-    await this.stopAndCommit(false, {});
+    await this.stopAndCommit({ posting: false }, false);
   }
 
   async stopLocal(options) {
-    const opts = options || {posting: false};
-    await this.stopAndCommit(true, opts.posting);
+    const opts = options || { posting: false };
+    await this.stopAndCommit(options, true);
   }
 
   async waitDebuggingUrl(delay_ms, try_count=0) {
