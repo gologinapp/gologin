@@ -540,7 +540,6 @@ class GoLogin {
         res.on('data', (data) => resultResponse += data);
 
         res.on('end', () => {
-          console.log('resultResponse:', resultResponse);
           let parsedData;
           try {
             parsedData = JSON.parse(resultResponse);
