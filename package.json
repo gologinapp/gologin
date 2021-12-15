@@ -27,6 +27,7 @@
     "rimraf": "^3.0.2",
     "selenium-webdriver": "^4.0.0-alpha.7",
     "shelljs": "^0.8.4",
+    "simple-proxy-agent": "^1.1.0",
     "socks5-https-client": "^1.2.1",
     "sqlite": "^4.0.23",
     "sqlite3": "^5.0.2"
