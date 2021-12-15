@@ -558,7 +558,7 @@ class GoLogin {
       }).on('error', (err) => reject(err));
     });
 
-    console.log('checkData:', checkData);
+    // console.log('checkData:', checkData);
     body = checkData.body || {};
     if (!body.ip && checkData.statusCode.toString().startsWith('4')) {
       throw checkData;
