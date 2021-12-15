@@ -8,7 +8,6 @@ const rimraf = util.promisify(require('rimraf'));
 const exec = util.promisify(require('child_process').exec);
 const { spawn, execFile } = require('child_process');
 const FormData = require('form-data');
-const socks5Http = require('socks5-https-client');
 const ProxyAgent = require('simple-proxy-agent');
 const decompress = require('decompress');
 const decompressUnzip = require('decompress-unzip');
@@ -522,57 +521,6 @@ class GoLogin {
     return this._tz.timezone;
   }
 
-  // async getTimezoneWithSocks(proxy) {
-  //   const { host, port, username, password } = proxy;
-  //   let body;
-  //
-  //   const checkData = await new Promise((resolve, reject) => {
-  //     const timer = setTimeout(() => {
-  //       req.abort();
-  //       reject(new Error('Timeout exceeded'));
-  //     }, 10000);
-  //
-  //     const req = socks5Http.get({
-  //       hostname: 'time.gologin.com',
-  //       path: '/timezone',
-  //       socksHost: host,
-  //       socksPort: port,
-  //       socksUsername: username || '',
-  //       socksPassword: password || '',
-  //     }, (res) => {
-  //       res.setEncoding('utf8');
-  //
-  //       let resultResponse = '';
-  //       res.on('data', (data) => resultResponse += data);
-  //
-  //       res.on('end', () => {
-  //         clearTimeout(timer);
-  //         let parsedData;
-  //         try {
-  //           parsedData = JSON.parse(resultResponse);
-  //         } catch (e) {
-  //           reject(e);
-  //         }
-  //
-  //         resolve({
-  //           ...res,
-  //           body: parsedData,
-  //         });
-  //       });
-  //     }).on('error', (err) => reject(err));
-  //   });
-  //
-  //   // console.log('checkData:', checkData);
-  //   body = checkData.body || {};
-  //   if (!body.ip && checkData.statusCode.toString().startsWith('4')) {
-  //     throw checkData;
-  //   }
-  //   debug('getTimeZone finish', body.body);
-  //   this._tz = body;
-  //
-  //   return this._tz.timezone;
-  // }
-
   async getTimezoneWithSocks(params) {
     const { mode = 'http', host, port, username = '', password = '' } = params;
     let body;
@@ -583,7 +531,7 @@ class GoLogin {
       proxy += username + resultPassword;
     }
     proxy += host + ':' + port;
-    console.log('PROXY:', proxy);
+
     const agent = new ProxyAgent(proxy, { tunnel: true, timeout: 10000 });
 
     const checkData = await new Promise((resolve, reject) => {
