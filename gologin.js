@@ -386,6 +386,8 @@ class GoLogin {
       publicIP: _.get(profile, 'webRTC.fillBasedOnIp') ? this._tz.ip : _.get(profile, 'webRTC.publicIp'),
       localIps: _.get(profile, 'webRTC.localIps', []),
     };
+    
+    debug('profile.webRtc=', profile.webRtc);
 
     const audioContext = profile.audioContext || {};
     const { mode: audioCtxMode = 'off', noise: audioCtxNoise } = audioContext;
@@ -563,7 +565,6 @@ class GoLogin {
     }
     debug('getTimeZone finish', body.body);
     this._tz = body;
-
     return this._tz.timezone;
   }
 
@@ -1110,6 +1111,30 @@ class GoLogin {
     }
     
     if (profileResponse.body === 'ok') {
+      const profile = await this.getProfile();
+      const { navigator = {}, fonts, os: profileOs  } = profile;
+      this.fontsMasking = fonts?.enableMasking;
+      this.profileOs = profileOs;
+      this.differentOs =
+        profileOs !== 'android' && (
+          OS_PLATFORM === 'win32' && profileOs !== 'win' ||
+          OS_PLATFORM === 'darwin' && profileOs !== 'mac' ||
+          OS_PLATFORM === 'linux' && profileOs !== 'lin'
+        );
+
+      const {
+        resolution = '1920x1080',
+        language = 'en-US,en;q=0.9',
+      } = navigator;
+      this.language = language;
+      const [screenWidth, screenHeight] = resolution.split('x');
+      this.resolution = {
+        width: parseInt(screenWidth, 10),
+        height: parseInt(screenHeight, 10),
+      };
+
+
+
       let wsUrl = await this.waitDebuggingUrl(delay_ms);
       return { 'status': 'success', wsUrl }
     }
