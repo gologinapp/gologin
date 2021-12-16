@@ -1133,8 +1133,6 @@ class GoLogin {
         height: parseInt(screenHeight, 10),
       };
 
-
-
       let wsUrl = await this.waitDebuggingUrl(delay_ms);
       return { 'status': 'success', wsUrl }
     }
