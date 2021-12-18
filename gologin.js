@@ -501,6 +501,7 @@ class GoLogin {
   }
 
   async getTimeZone(proxy) {
+    debug('getting timeZone proxy=', proxy);
     if(this.timezone){
       debug('getTimeZone from options', this.timezone);
       this._tz = this.timezone;
@@ -508,16 +509,16 @@ class GoLogin {
     }
 
     let data = null;
-    if (proxy) {
+    if (proxy!==null && proxy.mode !== "none") {
       if (proxy.mode.includes('socks')) {
         return this.getTimezoneWithSocks(proxy);
       }
 
       const proxyUrl = `${proxy.mode}://${proxy.username}:${proxy.password}@${proxy.host}:${proxy.port}`;
       debug('getTimeZone start https://time.gologin.com', proxyUrl);
-      data = await requests.get('https://time.gologin.com', { proxy: proxyUrl, timeout: 10 * 1000, maxAttempts: 2 });
+      data = await requests.get('https://time.gologin.com', { proxy: proxyUrl, timeout: 20 * 1000, maxAttempts: 5 });
     } else {
-      data = await requests.get('https://time.gologin.com', { timeout: 10 * 1000, maxAttempts: 2 });
+      data = await requests.get('https://time.gologin.com', { timeout: 20 * 1000, maxAttempts: 5 });
     }
     debug('getTimeZone finish', data.body);
     this._tz = JSON.parse(data.body);
