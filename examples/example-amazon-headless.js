@@ -1,7 +1,9 @@
 const puppeteer = require('puppeteer-core');
 const GoLogin = require('../gologin');
 
-(async () =>{
+const delay = (time) => new Promise((resolve) => setTimeout(resolve, time));
+
+(async () =>{    
     const GL = new GoLogin({
         token: 'yU0token',
         profile_id: 'yU0Pr0f1leiD',
@@ -14,6 +16,7 @@ const GoLogin = require('../gologin');
     });
 
     const page = await browser.newPage();
+    await delay(300);
 
     const viewPort = GL.getViewPort();
     await page.setViewport({ width: Math.round(viewPort.width * 0.994), height: Math.round(viewPort.height * 0.92) });
