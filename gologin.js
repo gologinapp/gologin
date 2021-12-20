@@ -1036,6 +1036,12 @@ class GoLogin {
     if (!this.executablePath) {
      await this.checkBrowser();
     }
+    
+    const ORBITA_BROWSER = this.executablePath || this.browserChecker.getOrbitaPath;
+
+    if(!fs.existsSync(ORBITA_BROWSER)){
+      throw new Error(`Orbita browser is not exists on path ${ORBITA_BROWSER}, check executablePath param`);
+    }
 
     await this.createStartup();
     // await this.createBrowserExtension();
