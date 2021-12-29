@@ -359,6 +359,11 @@ class GoLogin {
       profile.proxy.password = _.get(profile, 'autoProxyPassword');
     }
     // console.log('proxy=', proxy);
+    
+    if (proxy.mode === 'geolocation') {
+      proxy.mode = 'http';
+    }
+
     if (proxy.mode === 'none') {
       proxy = null;
     }

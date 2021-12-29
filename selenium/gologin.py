@@ -45,7 +45,7 @@ class GoLogin(object):
         proxy = self.proxy
         proxy_host = ''
         if proxy:
-            if proxy.get('mode')==None:
+            if proxy.get('mode')==None or proxy.get('mode')=='geolocation':
                 proxy['mode'] = 'http'
             proxy_host = proxy.get('host')            
             proxy = self.formatProxyUrl(proxy)
