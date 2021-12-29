@@ -359,7 +359,7 @@ class GoLogin {
       profile.proxy.password = _.get(profile, 'autoProxyPassword');
     }
     // console.log('proxy=', proxy);
-    
+
     if (proxy.mode === 'geolocation') {
       proxy.mode = 'http';
     }
@@ -1098,7 +1098,7 @@ class GoLogin {
       if (try_count < 3) {
         return this.waitDebuggingUrl(delay_ms, try_count+1);
       }
-      return { 'status': 'failure', wsUrl }
+      return { 'status': 'failure', wsUrl, 'message': 'Check proxy settings', 'profile_id': this.profile_id }
     }
 
     wsUrl = wsUrl.replace('ws://', `wss://`).replace('127.0.0.1', `${this.profile_id}.orbita.gologin.com`)
