@@ -260,7 +260,8 @@ class BrowserChecker {
   async replaceBrowser() {
     console.log('Copy Orbita to target path');
     if (PLATFORM === 'darwin') {
-      await rmdir(path.join(this.#browserPath, 'Orbita-Browser.app'), { recursive: true });
+      await this.deleteDir(path.join(this.#browserPath, 'Orbita-Browser.app'));
+
       const files = await readdir(path.join(this.#browserPath, EXTRACTED_FOLDER));
       const promises = [];
       files.forEach((filename) => {
@@ -268,22 +269,25 @@ class BrowserChecker {
           promises.push(copyFile(path.join(this.#browserPath, EXTRACTED_FOLDER, filename), path.join(this.#browserPath, filename)));
         }
       });
+
       return Promise.all(promises);
-    } else {
-      await rmdir(path.join(this.#browserPath, 'orbita-browser'), { recursive: true });
-      await this.copyDir(
-        path.join(this.#browserPath, EXTRACTED_FOLDER, 'orbita-browser'),
-        path.join(this.#browserPath, 'orbita-browser')
-      );
     }
+
+    const targetBrowserPath = path.join(this.#browserPath, 'orbita-browser');
+    await this.deleteDir(targetBrowserPath);
+
+    await this.copyDir(
+      path.join(this.#browserPath, EXTRACTED_FOLDER, 'orbita-browser'),
+      targetBrowserPath
+    );
   }
   
   async deleteOldArchives(deleteCurrentBrowser = false) {
     if (deleteCurrentBrowser) {
-      return await rmdir(path.join(this.#browserPath), { recursive: true });
+      return this.deleteDir(path.join(this.#browserPath));
     }
 
-    await rmdir(path.join(this.#browserPath, EXTRACTED_FOLDER), { recursive: true });
+    await this.deleteDir(path.join(this.#browserPath, EXTRACTED_FOLDER));
     return readdir(this.#browserPath)
       .then((files) => {
         const promises = [];
@@ -354,6 +358,19 @@ class BrowserChecker {
 
   get getOrbitaPath() {
     return this.#executableFilePath;
+  }
+
+  async deleteDir(path = '') {
+    if (!path) {
+      return;
+    }
+
+    const directoryExists = await access(path).then(() => true).catch(() => false);
+    if (!directoryExists) {
+      return;
+    }
+
+    return rmdir(path, { recursive: true });
   }
 }
 
