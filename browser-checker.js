@@ -94,7 +94,10 @@ class BrowserChecker {
   }
 
   async downloadBrowser() {
-    await this.deleteOldArchives(true);
+    if (fs.existsSync(this.#browserPath)) {
+      await this.deleteOldArchives(true);
+    }
+    
     await mkdir(this.#browserPath, { recursive: true });
 
     const pathStr = path.join(this.#browserPath, BROWSER_ARCHIVE_NAME);
