@@ -57,13 +57,13 @@ class BrowserUserDataManager {
     const files = await readdir(browserFontsPath);
     const fontsToDownload = fontsList.filter(font => !files.includes(font));
 
-    let promises = fontsToDownload.map(font => request.get(FONTS_URL + font, {
-      maxAttempts: 3,
-      retryDelay: 2000,
-      timeout: 10 * 1000,
-    })
-      .pipe(createWriteStream(path.join(browserFontsPath, font)))
-    );
+    let promises = fontsToDownload.map(font => new Promise(resolve => {
+      request.get(FONTS_URL + font, {
+        maxAttempts: 3,
+        retryDelay: 2000,
+        timeout: 10 * 1000,
+      }).pipe(createWriteStream(path.join(browserFontsPath, font))).on("finish", resolve);
+    }));
 
     if (promises.length) {
       await Promise.all(promises);
