@@ -270,10 +270,13 @@ class BrowserChecker {
       });
       return Promise.all(promises);
     } else {
-      await rmdir(path.join(this.#browserPath, 'orbita-browser'), { recursive: true });
+      const targetPath = path.join(this.#browserPath, 'orbita-browser');
+      if (fs.existsSync(targetPath)) {
+        await rmdir(targetPath, { recursive: true });
+      }
       await this.copyDir(
         path.join(this.#browserPath, EXTRACTED_FOLDER, 'orbita-browser'),
-        path.join(this.#browserPath, 'orbita-browser')
+        targetPath
       );
     }
   }
