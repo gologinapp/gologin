@@ -140,41 +140,29 @@ class GoLogin {
   }
 
   async getProfileS3(s3path) {
+    if (!s3path) {
+      throw new Error('s3path not found');
+    }
+
     const token = this.access_token;
     debug('getProfileS3 token=', token, 'profile=', this.profile_id, 's3path=', s3path);
 
-    if (s3path) { //загрузка профиля из публичного бакета s3 быстрее
-      const s3url = `https://gprofiles.gologin.com/${s3path}`.replace(/\s+/mg, '+');
-      debug('loading profile from public s3 bucket, url=', s3url);
-      const profileResponse = await requests.get(s3url, {
-        encoding: null
-      });
-      if (profileResponse.statusCode !== 200) {
-        debug(`Gologin S3 BUCKET ${s3url} response error ${profileResponse.statusCode}  - use empty`);
-        return '';
-      }
-
-      return Buffer.from(profileResponse.body);
-    }
-
-    debug('old-way loading profile');
-    const profileResponse = await requests.get(`${API_URL}/browser/${this.profile_id}/profile-s3`, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
+    const s3url = `https://gprofiles.gologin.com/${s3path}`.replace(/\s+/mg, '+');
+    debug('loading profile from public s3 bucket, url=', s3url);
+    const profileResponse = await requests.get(s3url, {
       encoding: null
     });
 
     if (profileResponse.statusCode !== 200) {
-      debug(`Gologin /browser/${this.profile_id} response error ${profileResponse.statusCode}  - use empty`);
+      debug(`Gologin S3 BUCKET ${s3url} response error ${profileResponse.statusCode}  - use empty`);
       return '';
     }
 
     return Buffer.from(profileResponse.body);
   }
 
-  async postFile(fileName, fileBody) {
-    debug('POSTING FILE', fileBody.length);
+  async postFile(fileName, fileBuff) {
+    debug('POSTING FILE', fileBuff.length);
     debug('Getting signed URL for S3');
     const apiUrl = `${API_URL}/browser/${this.profile_id}/storage-signature`;
 
@@ -191,25 +179,8 @@ class GoLogin {
 
     const [uploadedProfileUrl] = signedUrl.split('?');
 
-    const fd = new FormData();
-    const boundary = fd.getBoundary();
-    const body = Buffer.concat([
-      Buffer.from('--'),
-      Buffer.from(boundary),
-      Buffer.from('\r\n'),
-      Buffer.from(`Content-Disposition: form-data; name="profile"; filename="${fileName}"`),
-      Buffer.from('\r\n'),
-      Buffer.from('\r\n'),
-      Buffer.from(fileBody),
-      Buffer.from('\r\n'),
-      Buffer.from('--'),
-      Buffer.from(boundary),
-      Buffer.from('--'),
-      Buffer.from('\r\n')
-    ]);
-
     console.log('Uploading profile by signed URL to S3');
-    const bodyBufferBiteLength = Buffer.byteLength(body);
+    const bodyBufferBiteLength = Buffer.byteLength(fileBuff);
     console.log('BUFFER SIZE', bodyBufferBiteLength);
 
     await requests.put(signedUrl, {
@@ -217,7 +188,7 @@ class GoLogin {
         'Content-Type': 'application/zip',
         'Content-Length': bodyBufferBiteLength,
       },
-      body,
+      body: fileBuff,
       maxBodyLength: Infinity,
       maxContentLength: Infinity,
       maxAttempts: 3,
@@ -345,6 +316,7 @@ class GoLogin {
       catch (e) {
         debug('Cannot get profile - using empty', e);
       }
+
       debug('FILE READY', this.profile_zip_path);
       if (!profile_folder.length) {
         profile_folder = await this.emptyProfileFolder();
@@ -491,10 +463,10 @@ class GoLogin {
   }
 
   async commitProfile() {
-    const data = await this.getProfileDataToUpdate();
+    const dataBuff = await this.getProfileDataToUpdate();
 
-    debug('begin updating', data.length);
-    if (!data.length) {
+    debug('begin updating', dataBuff.length);
+    if (!dataBuff.length) {
       debug('WARN: profile zip data empty - SKIPPING PROFILE COMMIT');
 
       return;
@@ -502,7 +474,7 @@ class GoLogin {
 
     try {
       debug('Patching profile');
-      await this.postFile('profile', data);
+      await this.postFile('profile', dataBuff);
     }
     catch (e) {
       debug('CANNOT COMMIT PROFILE', e);
@@ -838,7 +810,7 @@ class GoLogin {
     debug('profile sanitized');
 
     const profilePath = this.profilePath();
-    await new Promise((resolve, reject) => zipdir(profilePath,
+    const fileBuff = await new Promise((resolve, reject) => zipdir(profilePath,
       {
         saveTo: zipPath,
         filter: (path) => !/RunningChromeVersion/.test(path),
@@ -853,15 +825,7 @@ class GoLogin {
     )
 
     debug('PROFILE ZIP CREATED', profilePath, zipPath);
-
-    let data = '';
-    try {
-      data = await readFile(zipPath);
-    } catch (e) {
-      debug('saveprofile error', e);
-    }
-
-    return data;
+    return fileBuff;
   }
 
   async profileExists() {
