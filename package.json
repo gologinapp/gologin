@@ -1,6 +1,6 @@
 {
   "name": "gologin",
-  "version": "1.0.31",
+  "version": "1.0.32",
   "description": "A high-level API to control Orbita browser over GoLogin API",
   "main": "./gologin.js",
   "repository": {
@@ -26,10 +26,10 @@
     "requestretry": "^4.1.0",
     "rimraf": "^3.0.2",
     "selenium-webdriver": "^4.0.0-alpha.7",
-    "shelljs": "^0.8.4",
     "simple-proxy-agent": "^1.1.0",
     "sqlite": "^4.0.23",
-    "sqlite3": "^5.0.2"
+    "sqlite3": "^5.0.2",
+    "zip-dir": "^2.0.0"
   },
   "bugs": {
     "url": "https://github.com/gologinapp/gologin/issues"
