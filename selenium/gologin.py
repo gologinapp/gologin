@@ -371,7 +371,7 @@ class GoLogin(object):
         return json.loads(requests.get(API_URL + '/browser/fingerprint?os=' + os_type, headers=self.headers()).content.decode('utf-8'))
 
     def profiles(self):
-        return json.loads(requests.get(API_URL + '/browser/', headers=self.headers()).content.decode('utf-8'))
+        return json.loads(requests.get(API_URL + '/browser/v2', headers=self.headers()).content.decode('utf-8'))
 
     def create(self, options={}):
         profile_options = self.getRandomFingerprint(options)
