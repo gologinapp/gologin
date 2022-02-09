@@ -450,6 +450,10 @@ class GoLogin {
       await BrowserUserDataManager.composeFonts(families, profilePath, this.differentOs);
     }
 
+    const [languages] = this.language.split(';');
+    preferences.gologin.langHeader = gologin.language;
+    preferences.gologin.languages = languages;
+
     await writeFile(path.join(profilePath, 'Default', 'Preferences'), JSON.stringify(_.merge(preferences, {
       gologin
     })));
