@@ -100,7 +100,7 @@ class GoLogin {
   }
 
   async profiles() {
-  	const profilesResponse = await requests.get(`${API_URL}/browser/`, {
+  	const profilesResponse = await requests.get(`${API_URL}/browser/v2`, {
   		headers: {
   			'Authorization': `Bearer ${this.access_token}`,
         'User-Agent': 'gologin-api',
