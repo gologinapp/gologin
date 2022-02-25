@@ -537,14 +537,22 @@ class GoLogin {
     let data = null;
     if (proxy!==null && proxy.mode !== "none") {
       if (proxy.mode.includes('socks')) {
-        return this.getTimezoneWithSocks(proxy);
+        for(let i=0; i<5; i++){
+          try{
+            debug('getting timeZone socks try', i+1);
+            return this.getTimezoneWithSocks(proxy);
+          } catch (e) {
+            console.log(e.message);
+          }
+        }
+        throw new Error(`Socks proxy connection timed out`);
       }
 
       const proxyUrl = `${proxy.mode}://${proxy.username}:${proxy.password}@${proxy.host}:${proxy.port}`;
-      debug('getTimeZone start https://time.gologin.com', proxyUrl);
-      data = await requests.get('https://time.gologin.com', { proxy: proxyUrl, timeout: 20 * 1000, maxAttempts: 5 });
+      debug('getTimeZone start https://time.gologin.com/timezone', proxyUrl);
+      data = await requests.get('https://time.gologin.com/timezone', { proxy: proxyUrl, timeout: 20 * 1000, maxAttempts: 5 });
     } else {
-      data = await requests.get('https://time.gologin.com', { timeout: 20 * 1000, maxAttempts: 5 });
+      data = await requests.get('https://time.gologin.com/timezone', { timeout: 20 * 1000, maxAttempts: 5 });
     }
     debug('getTimeZone finish', data.body);
     this._tz = JSON.parse(data.body);
