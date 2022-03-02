@@ -1,6 +1,6 @@
 {
   "name": "gologin",
-  "version": "1.0.35",
+  "version": "1.0.36",
   "description": "A high-level API to control Orbita browser over GoLogin API",
   "main": "./gologin.js",
   "repository": {
@@ -15,7 +15,6 @@
   "dependencies": {
     "archiver": "^3.1.1",
     "child_process": "^1.0.2",
-    "chromedriver": "^89.0.0",
     "decompress": "^4.2.1",
     "decompress-unzip": "^4.0.1",
     "form-data": "^3.0.0",
