@@ -124,6 +124,11 @@ class GoLogin {
   		}
   	})
     debug(profileResponse.body);
+    
+    if (profileResponse.statusCode === 404) {
+      throw new Error(JSON.parse(profileResponse.body).message);
+    }   
+
   	if (profileResponse.statusCode !== 200) {
   		throw new Error(`Gologin /browser/${id} response error ${profileResponse.statusCode} INVALID TOKEN OR PROFILE NOT FOUND`);
   	}
@@ -131,6 +136,7 @@ class GoLogin {
     if (profileResponse.statusCode === 401) {
       throw new Error("invalid token");
     }    
+
 
   	return JSON.parse(profileResponse.body);
   }
