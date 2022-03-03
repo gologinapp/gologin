@@ -123,9 +123,14 @@ class GoLogin {
   			'Authorization': `Bearer ${this.access_token}`
   		}
   	})
-    debug(profileResponse.body);
+    debug("profileResponse", profileResponse.statusCode, profileResponse.body);
+    
     
     if (profileResponse.statusCode === 404) {
+      throw new Error(JSON.parse(profileResponse.body).message);
+    }   
+
+    if (profileResponse.statusCode === 403) {
       throw new Error(JSON.parse(profileResponse.body).message);
     }   
 
@@ -1142,17 +1147,7 @@ class GoLogin {
 
   async startRemote(delay_ms = 10000) {
     debug(`startRemote ${this.profile_id}`);
-    const profileResponse = await requests.post(`https://api.gologin.com/browser/${this.profile_id}/web`, {
-      headers: {
-        'Authorization': `Bearer ${this.access_token}`
-      }
-    });
 
-    if (profileResponse.statusCode === 401){
-      throw new Error("invalid token");
-    }
-
-    debug('profileResponse', profileResponse.statusCode, profileResponse.body);
     /*
     if (profileResponse.statusCode !== 202) {
       return {'status': 'failure', 'code':  profileResponse.statusCode};
@@ -1161,6 +1156,19 @@ class GoLogin {
     
     // if (profileResponse.body === 'ok') {
     const profile = await this.getProfile();
+
+    const profileResponse = await requests.post(`https://api.gologin.com/browser/${this.profile_id}/web`, {
+      headers: {
+        'Authorization': `Bearer ${this.access_token}`
+      }
+    });
+    
+    debug('profileResponse', profileResponse.statusCode, profileResponse.body);
+
+    if (profileResponse.statusCode === 401){
+      throw new Error("invalid token");
+    }
+
     const { navigator = {}, fonts, os: profileOs  } = profile;
     this.fontsMasking = fonts?.enableMasking;
     this.profileOs = profileOs;
