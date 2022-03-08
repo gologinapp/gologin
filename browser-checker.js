@@ -39,8 +39,10 @@ class BrowserChecker {
   #homedir;
   #browserPath;
   #executableFilePath;
+  #skipOrbitaHashChecking = false;
 
-  constructor() {
+  constructor(skipOrbitaHashChecking) {
+    this.#skipOrbitaHashChecking = skipOrbitaHashChecking;
     this.#homedir = os.homedir();
     this.#browserPath = path.join(this.#homedir, '.gologin', 'browser');
 
@@ -221,6 +223,10 @@ class BrowserChecker {
   }
 
   async checkBrowserSum() {
+    if (this.#skipOrbitaHashChecking) {
+      return Promise.resolve();
+    }
+
     console.log('Orbita hash checking');
     if (PLATFORM === 'win32') {
       return Promise.resolve();

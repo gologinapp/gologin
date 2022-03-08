@@ -8,7 +8,6 @@ const rimraf = util.promisify(require('rimraf'));
 const { access, unlink, writeFile, readFile } = require('fs').promises;
 const exec = util.promisify(require('child_process').exec);
 const { spawn, execFile } = require('child_process');
-const FormData = require('form-data');
 const ProxyAgent = require('simple-proxy-agent');
 const decompress = require('decompress');
 const decompressUnzip = require('decompress-unzip');
@@ -30,7 +29,7 @@ const OS_PLATFORM = process.platform;
 const delay = (time) => new Promise((resolve) => setTimeout(resolve, time));
 
 class GoLogin {
-  constructor(options) {
+  constructor(options = {}) {
     this.is_remote = options.remote || false;
     this.access_token = options.token;
     this.profile_id = options.profile_id;
@@ -45,7 +44,7 @@ class GoLogin {
     this.profileOs = 'lin';
     this.tmpdir = os.tmpdir();
     this.autoUpdateBrowser = !!options.autoUpdateBrowser;
-    this.browserChecker = new BrowserChecker();
+    this.browserChecker = new BrowserChecker(options.skipOrbitaHashChecking);
     this.uploadCookiesToServer = options.uploadCookiesToServer || false;
     this.writeCookesFromServer = options.writeCookesFromServer || true;
     this.remote_debugging_port = options.remote_debugging_port || 0;

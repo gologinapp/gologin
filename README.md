@@ -65,15 +65,16 @@ const GoLogin = require('gologin');
 
 - `options` <[Object]> Options for profile
     - `autoUpdateBrowser` <[boolean]> do not ask whether download new browser version (default false)
-	- `token` <[string]> your API <a href="https://gologin.com/#/personalArea/TokenApi" target="_blank">token</a>
-	- `profile_id` <[string]> profile ID
-	- `executablePath` <[string]> path to executable Orbita file. Orbita will be downloaded automatically if not specified.
+    - `token` <[string]> your API <a href="https://gologin.com/#/personalArea/TokenApi" target="_blank">token</a>
+    - `profile_id` <[string]> profile ID
+    - `executablePath` <[string]> path to executable Orbita file. Orbita will be downloaded automatically if not specified.
     - `remote_debugging_port` <[int]> port for remote debugging
-	- `vncPort` <[integer]> port of VNC server if you using it
+    - `vncPort` <[integer]> port of VNC server if you using it
     - `tmpdir` <[string]> path to temporary directore for saving profiles
     - `extra_params` arrayof <[string]> extra params for browser orbita (ex. extentions etc.)
     - `uploadCookiesToServer` <[boolean]> upload cookies to server after profile stopping (default false)
     - `writeCookesFromServer` <[boolean]> download cookies from server and write to profile cookies file (default true)
+    - `skipOrbitaHashChecking` <[boolean]> skip hash checking for Orbita after downloading process (default false)
 
 ```js
 const GoLogin = require('gologin');
