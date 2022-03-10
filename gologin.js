@@ -286,10 +286,6 @@ class GoLogin {
     );
   }
 
-  async checkLocalProfile() {
-
-  }
-
   async createStartup(local=false) {
     const profilePath = path.join(this.tmpdir, `gologin_profile_${this.profile_id}`);
     let profile;
@@ -341,8 +337,15 @@ class GoLogin {
 
     debug('Cleaning up..', profilePath);
 
-    await this.extractProfile(profilePath, this.profile_zip_path);
-    debug('extraction done');
+    try{
+      await this.extractProfile(profilePath, this.profile_zip_path);
+      debug('extraction done');
+    } catch(e){
+      console.trace(e);
+      profile_folder = await this.emptyProfileFolder();
+      await writeFile(this.profile_zip_path, profile_folder);      
+      await this.extractProfile(profilePath, this.profile_zip_path);
+    }
 
     const singletonLockPath = path.join(profilePath, 'SingletonLock');
     const singletonLockExists = await access(singletonLockPath).then(() => true).catch(() => false);
@@ -361,7 +364,7 @@ class GoLogin {
     }
 
     const preferences_raw = await readFile(pref_file_name);
-    let preferences = JSON.parse(preferences_raw.toString());
+    let preferences = JSON.parse(preferences_raw.toString());    
     let proxy = _.get(profile, 'proxy');
     let name = _.get(profile, 'name');
 
@@ -457,10 +460,19 @@ class GoLogin {
         throw new Error('No fonts list provided');
       }
 
-      await BrowserUserDataManager.composeFonts(families, profilePath, this.differentOs);
+      try{
+        await BrowserUserDataManager.composeFonts(families, profilePath, this.differentOs);
+      } catch (e) {
+        console.trace(e);
+      }
     }
 
     const [languages] = this.language.split(';');
+    
+    if(preferences.gologin==null){
+      preferences.gologin = {};
+    }
+    
     preferences.gologin.langHeader = gologin.language;
     preferences.gologin.languages = languages;
 
