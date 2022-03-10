@@ -225,7 +225,7 @@ class GoLogin {
 
   async emptyProfileFolder() {
     debug('get emptyProfileFolder');
-    const profile = await readFile(path.resolve(__dirname, 'gologin_zeroprofile.zip'));
+    const profile = await readFile(path.resolve(__dirname, 'zero_profile.zip'));
     debug('emptyProfileFolder LENGTH ::', profile.length);
     return profile;
   }
@@ -337,10 +337,10 @@ class GoLogin {
 
     debug('Cleaning up..', profilePath);
 
-    try{
+    try {
       await this.extractProfile(profilePath, this.profile_zip_path);
       debug('extraction done');
-    } catch(e){
+    } catch(e) {
       console.trace(e);
       profile_folder = await this.emptyProfileFolder();
       await writeFile(this.profile_zip_path, profile_folder);      
