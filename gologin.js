@@ -360,7 +360,10 @@ class GoLogin {
 
     const prefFileExists = await access(pref_file_name).then(() => true).catch(() => false);
     if (!prefFileExists) {
-      debug('Preferences file not exists waiting', pref_file_name);
+      debug('Preferences file not exists waiting', pref_file_name, '. Using empty profile');
+      profile_folder = await this.emptyProfileFolder();
+      await writeFile(this.profile_zip_path, profile_folder);      
+      await this.extractProfile(profilePath, this.profile_zip_path);
     }
 
     const preferences_raw = await readFile(pref_file_name);
