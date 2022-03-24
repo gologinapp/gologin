@@ -13,12 +13,13 @@ const decompress = require('decompress');
 const decompressUnzip = require('decompress-unzip');
 const path = require('path');
 const zipdir = require('zip-dir');
+const https = require('https');
 
 const BrowserChecker = require('./browser-checker');
 const { BrowserUserDataManager } = require('./browser-user-data-manager');
 const { CookiesManager } = require('./cookies-manager');
 const fontsCollection = require('./fonts');
-const https = require('https');
+const ExtensionsManager = require('./extensions-manager');
 
 const SEPARATOR = path.sep;
 const API_URL = 'https://api.gologin.com';
@@ -370,6 +371,40 @@ class GoLogin {
     let preferences = JSON.parse(preferences_raw.toString());    
     let proxy = _.get(profile, 'proxy');
     let name = _.get(profile, 'name');
+    const chromeExtensions = _.get(profile, 'chromeExtensions');
+
+    if (chromeExtensions.length) {
+      const ExtensionsManagerInst = new ExtensionsManager();
+      ExtensionsManagerInst.apiUrl = API_URL;
+      await ExtensionsManagerInst.init()
+        .then(() => ExtensionsManagerInst.updateExtensions())
+        .catch(() => {});
+      ExtensionsManagerInst.accessToken = this.access_token;
+
+      await ExtensionsManagerInst.getExtensionsPolicies();
+      let profileExtensionsCheckRes = [];
+
+      if (ExtensionsManagerInst.useLocalExtStorage) {
+        profileExtensionsCheckRes = await ExtensionsManagerInst.checkChromeExtensions(chromeExtensions).catch((e) => {
+          console.log('checkChromeExtensions error: ', e);
+          return [];
+        });
+      }
+
+      let extSettings;
+      if (ExtensionsManagerInst.useLocalExtStorage && profileExtensionsCheckRes.length) {
+        extSettings = BrowserUserDataManager.setExtPaths(preferences, profileExtensionsCheckRes);
+      } else if (!ExtensionsManagerInst.useLocalExtStorage) {
+        const originalExtensionsFolder = path.join(profilePath, 'Default', 'Extensions');
+        extSettings = await BrowserUserDataManager.setOriginalExtPaths(preferences, originalExtensionsFolder);
+      }
+
+      if (extSettings) {
+        const currentExtSettings = preferences.extensions || {};
+        currentExtSettings.settings = extSettings
+        preferences.extensions = currentExtSettings;
+      }
+    }
 
     if (proxy.mode === 'gologin' || proxy.mode === 'tor') {
       const autoProxyServer = _.get(profile, 'autoProxyServer');
