@@ -113,6 +113,93 @@ class BrowserUserDataManager {
     const result = fileContent.replace(/\$\$GOLOGIN_FONTS\$\$/g, path.join(profilePath, FONTS_DIR_NAME));
     await writeFile(path.join(profilePath, 'Default', 'fonts_config'), result);
   }
+
+  static setExtPaths(settings = {}, profileExtensionsCheckRes = []) {
+    const formattedLocalExtArray = profileExtensionsCheckRes.map((el) => {
+      const [extFolderName = ''] = el.split(path.sep).reverse();
+      const [originalId] = extFolderName.split('@');
+      if (!originalId) {
+        return null;
+      }
+
+      return {
+        path: el,
+        originalId,
+      }
+    }).filter(Boolean);
+
+    if (!formattedLocalExtArray.length) {
+      return;
+    }
+
+    const extensionsSettings = settings.extensions?.settings || {};
+    const extensionsEntries = Object.entries(extensionsSettings);
+
+    extensionsEntries.forEach((extensionObj) => {
+      const [extensionsId] = extensionObj;
+      const localExtObj = formattedLocalExtArray.find(el => el.originalId === extensionsId);
+      if (!localExtObj) {
+        return;
+      }
+
+      extensionsSettings[extensionsId].path = localExtObj?.path || '';
+    });
+
+    return extensionsSettings;
+  }
+
+  static async setOriginalExtPaths(settings = {}, originalExtensionsFolder = '') {
+    if (!originalExtensionsFolder) {
+      return null;
+    }
+
+    const extensionsSettings = settings.extensions?.settings || {};
+    const extensionsEntries = Object.entries(extensionsSettings);
+
+    const originalExtensionsList = await readdir(originalExtensionsFolder).catch(() => []);
+    if (!originalExtensionsList.length) {
+      return null;
+    }
+
+    const promises = originalExtensionsList.map(async (originalId) => {
+      const extFolderPath = path.join(originalExtensionsFolder, originalId);
+      const extFolderContent = await readdir(extFolderPath);
+      if (!extFolderPath.length) {
+        return {};
+      }
+
+      if (extFolderContent.includes('manifest.json')) {
+        return {
+          originalId,
+          path: path.join(originalExtensionsFolder, originalId),
+        };
+      }
+
+      const [version] = extFolderContent;
+      return {
+        originalId,
+        path: path.join(originalExtensionsFolder, originalId, version),
+      };
+    });
+    const originalExtPaths = await Promise.all(promises);
+
+    extensionsEntries.forEach((extensionObj) => {
+      const [extensionsId] = extensionObj;
+      const extPath = extensionsSettings[extensionsId].path;
+      if (!/chrome-extensions/.test(extPath)) {
+        return;
+      }
+
+      const originalExtPath = originalExtPaths.find(el => el.originalId === extensionsId);
+      if (!originalExtPath) {
+        return;
+      }
+
+      extensionsSettings[extensionsId].path = originalExtPath.path || '';
+    });
+
+    return extensionsSettings;
+  }
 }
 
 module.exports = {
