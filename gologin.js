@@ -62,13 +62,6 @@ class GoLogin {
     this.cookiesFilePath = path.join(this.tmpdir, `gologin_profile_${this.profile_id}`, 'Default', 'Cookies');
     this.profile_zip_path = path.join(this.tmpdir, `gologin_${this.profile_id}.zip`);
     debug('INIT GOLOGIN', this.profile_id);
-
-    const ExtensionsManagerInst = new ExtensionsManager();
-    ExtensionsManagerInst.apiUrl = API_URL;
-    ExtensionsManagerInst.init()
-      .then(() => ExtensionsManagerInst.updateExtensions())
-      .catch(() => {});
-    ExtensionsManagerInst.accessToken = this.access_token;
   }
   
   async checkBrowser() { return this.browserChecker.checkBrowser(this.autoUpdateBrowser) }
@@ -380,30 +373,37 @@ class GoLogin {
     let name = _.get(profile, 'name');
     const chromeExtensions = _.get(profile, 'chromeExtensions');
 
-    const ExtensionsManagerInst = new ExtensionsManager();
+    if (chromeExtensions.length) {
+      const ExtensionsManagerInst = new ExtensionsManager();
+      ExtensionsManagerInst.apiUrl = API_URL;
+      await ExtensionsManagerInst.init()
+        .then(() => ExtensionsManagerInst.updateExtensions())
+        .catch(() => {});
+      ExtensionsManagerInst.accessToken = this.access_token;
 
-    await ExtensionsManagerInst.getExtensionsPolicies();
-    let profileExtensionsCheckRes = [];
+      await ExtensionsManagerInst.getExtensionsPolicies();
+      let profileExtensionsCheckRes = [];
 
-    if (ExtensionsManagerInst.useLocalExtStorage) {
-      profileExtensionsCheckRes = await ExtensionsManagerInst.checkChromeExtensions(chromeExtensions).catch((e) => {
-        console.log('checkChromeExtensions error: ', e);
-        return [];
-      });
-    }
+      if (ExtensionsManagerInst.useLocalExtStorage) {
+        profileExtensionsCheckRes = await ExtensionsManagerInst.checkChromeExtensions(chromeExtensions).catch((e) => {
+          console.log('checkChromeExtensions error: ', e);
+          return [];
+        });
+      }
 
-    let extSettings;
-    if (ExtensionsManagerInst.useLocalExtStorage && profileExtensionsCheckRes.length) {
-      extSettings = BrowserUserDataManager.setExtPaths(preferences, profileExtensionsCheckRes);
-    } else if (!ExtensionsManagerInst.useLocalExtStorage) {
-      const originalExtensionsFolder = path.join(profilePath, 'Default', 'Extensions');
-      extSettings = await BrowserUserDataManager.setOriginalExtPaths(preferences, originalExtensionsFolder);
-    }
+      let extSettings;
+      if (ExtensionsManagerInst.useLocalExtStorage && profileExtensionsCheckRes.length) {
+        extSettings = BrowserUserDataManager.setExtPaths(preferences, profileExtensionsCheckRes);
+      } else if (!ExtensionsManagerInst.useLocalExtStorage) {
+        const originalExtensionsFolder = path.join(profilePath, 'Default', 'Extensions');
+        extSettings = await BrowserUserDataManager.setOriginalExtPaths(preferences, originalExtensionsFolder);
+      }
 
-    if (extSettings) {
-      const currentExtSettings = preferences.extensions || {};
-      currentExtSettings.settings = extSettings
-      preferences.extensions = currentExtSettings;
+      if (extSettings) {
+        const currentExtSettings = preferences.extensions || {};
+        currentExtSettings.settings = extSettings
+        preferences.extensions = currentExtSettings;
+      }
     }
 
     if (proxy.mode === 'gologin' || proxy.mode === 'tor') {
