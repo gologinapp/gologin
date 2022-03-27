@@ -373,7 +373,7 @@ class GoLogin {
     let name = _.get(profile, 'name');
     const chromeExtensions = _.get(profile, 'chromeExtensions');
 
-    if (chromeExtensions.length) {
+    if (chromeExtensions && chromeExtensions.length) {
       const ExtensionsManagerInst = new ExtensionsManager();
       ExtensionsManagerInst.apiUrl = API_URL;
       await ExtensionsManagerInst.init()
