@@ -248,6 +248,10 @@ class GoLogin {
       preferences.language = _.get(preferences, 'navigator.language');
     }
 
+    if (_.get(preferences, 'isM1')) {
+      preferences.is_m1 = _.get(preferences, 'navigator.language');
+    }
+    
     return preferences;
   }
 
