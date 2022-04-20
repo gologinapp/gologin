@@ -53,7 +53,7 @@ class BrowserChecker {
       executableFilePath = path.join(this.#browserPath, 'orbita-browser', 'chrome.exe');
     }
     this.#executableFilePath = executableFilePath;
-    console.log('executableFilePath:', executableFilePath);
+    // console.log('executableFilePath:', executableFilePath);
   }
   
   async checkBrowser(autoUpdateBrowser = false) {

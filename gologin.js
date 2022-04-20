@@ -47,7 +47,7 @@ class GoLogin {
     this.autoUpdateBrowser = !!options.autoUpdateBrowser;
     this.browserChecker = new BrowserChecker(options.skipOrbitaHashChecking);
     this.uploadCookiesToServer = options.uploadCookiesToServer || false;
-    this.writeCookesFromServer = options.writeCookesFromServer || true;
+    this.writeCookesFromServer = options.writeCookesFromServer;
     this.remote_debugging_port = options.remote_debugging_port || 0;
     this.timezone = options.timezone;
 
@@ -247,9 +247,19 @@ class GoLogin {
     if (_.get(preferences, 'navigator.language')) {
       preferences.language = _.get(preferences, 'navigator.language');
     }
+    if (_.get(preferences, 'navigator.maxTouchPoints')) {
+      preferences.navigator.max_touch_points = _.get(preferences, 'navigator.maxTouchPoints');
+    }
 
     if (_.get(preferences, 'isM1')) {
-      preferences.is_m1 = _.get(preferences, 'navigator.language');
+      preferences.is_m1 = _.get(preferences, 'isM1');
+    }
+    
+    preferences.mediaDevices = {
+      enable: preferences.mediaDevices.enableMasking,
+      videoInputs: preferences.mediaDevices.videoInputs,
+      audioInputs: preferences.mediaDevices.audioInputs,
+      audioOutputs: preferences.mediaDevices.audioOutputs,
     }
     
     return preferences;
@@ -462,10 +472,16 @@ class GoLogin {
     };
     
     debug('profile.webRtc=', profile.webRtc);
+    debug('profile.timezone=', profile.timezone);
+    debug('profile.mediaDevices=', profile.mediaDevices);
 
     const audioContext = profile.audioContext || {};
     const { mode: audioCtxMode = 'off', noise: audioCtxNoise } = audioContext;
-    profile.timezone = { id: this._tz.timezone };
+    if(profile.timezone.fillBasedOnIp==false){
+      profile.timezone = { id: profile.timezone.timezone };
+    } else {
+      profile.timezone = { id: this._tz.timezone };
+    }
     profile.webgl_noise_value = profile.webGL.noise;
     profile.get_client_rects_noise = profile.webGL.getClientRectsNoise;
     profile.canvasMode = profile.canvas.mode;
@@ -488,10 +504,10 @@ class GoLogin {
 
     const gologin = this.convertPreferences(profile);
 
-    debug(`Writing profile for screenWidth ${profilePath}`, JSON.stringify(profile));
+    debug(`Writing profile for screenWidth ${profilePath}`, JSON.stringify(gologin));
     gologin.screenWidth = this.resolution.width;
     gologin.screenHeight = this.resolution.height;
-
+    debug("writeCookesFromServer", this.writeCookesFromServer)
     if (this.writeCookesFromServer) {
       await this.writeCookiesToFile();
     }
@@ -517,7 +533,7 @@ class GoLogin {
     
     preferences.gologin.langHeader = gologin.language;
     preferences.gologin.languages = languages;
-
+    // debug("convertedPreferences=", preferences.gologin)
     await writeFile(path.join(profilePath, 'Default', 'Preferences'), JSON.stringify(_.merge(preferences, {
       gologin
     })));
@@ -713,7 +729,7 @@ class GoLogin {
     this.port = remote_debugging_port;
     
     const ORBITA_BROWSER = this.executablePath || this.browserChecker.getOrbitaPath;
-
+    console.log("ORBITA_BROWSER=", ORBITA_BROWSER)
     const env = {};
     Object.keys(process.env).forEach((key) => {
       env[key] = process.env[key];
@@ -958,7 +974,7 @@ class GoLogin {
     if (deviceMemory < 1) {
       deviceMemory = 1;
     }
-    navigator.deviceMemory = deviceMemory;
+    navigator.deviceMemory = deviceMemory*1024;
     webGLMetadata.mode = webGLMetadata.mode === 'noise' ? 'mask' : 'off';
 
     const json = {
