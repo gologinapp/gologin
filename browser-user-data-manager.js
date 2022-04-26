@@ -3,6 +3,7 @@ const os = require('os');
 const request = require('requestretry');
 const { rmdirSync, createWriteStream } = require('fs');
 const { access, readFile, writeFile, mkdir, readdir, copyFile } = require('fs').promises;
+const crypto = require('crypto');
 
 const fontsCollection = require('./fonts');
 
@@ -12,6 +13,7 @@ const FONTS_DIR_NAME = 'fonts';
 const HOMEDIR = os.homedir();
 const BROWSER_PATH = path.join(HOMEDIR, '.gologin', 'browser');
 const OS_PLATFORM = process.platform;
+const DEFAULT_ORBITA_EXTENSIONS_NAMES = ['Google Hangouts', 'Chromium PDF Viewer', 'CryptoTokenExtension', 'Web Store'];
 
 class BrowserUserDataManager {
   static downloadCookies({ profileId, ACCESS_TOKEN, API_BASE_URL }) {
@@ -114,7 +116,7 @@ class BrowserUserDataManager {
     await writeFile(path.join(profilePath, 'Default', 'fonts_config'), result);
   }
 
-  static setExtPaths(settings = {}, profileExtensionsCheckRes = []) {
+  static setExtPathsAndRemoveDeleted(settings = {}, profileExtensionsCheckRes = []) {
     const formattedLocalExtArray = profileExtensionsCheckRes.map((el) => {
       const [extFolderName = ''] = el.split(path.sep).reverse();
       const [originalId] = extFolderName.split('@');
@@ -128,21 +130,60 @@ class BrowserUserDataManager {
       }
     }).filter(Boolean);
 
-    if (!formattedLocalExtArray.length) {
-      return;
-    }
-
     const extensionsSettings = settings.extensions?.settings || {};
     const extensionsEntries = Object.entries(extensionsSettings);
 
     extensionsEntries.forEach((extensionObj) => {
-      const [extensionsId] = extensionObj;
-      const localExtObj = formattedLocalExtArray.find(el => el.originalId === extensionsId);
+      let [extensionId, currentExtSettings = {}] = extensionObj;
+      const extName = currentExtSettings.manifest?.name || '';
+      let extPath = currentExtSettings.path || '';
+      let originalId = '';
+
+      const isExtensionToBeDeleted = ['resources', 'passwords-ext', 'cookies-ext'].some(substring => extPath.includes(substring))
+        || DEFAULT_ORBITA_EXTENSIONS_NAMES.includes(extName);
+      if (isExtensionToBeDeleted) {
+        delete extensionsSettings[extensionId];
+        return;
+      }
+
+      if (os.platform() === 'win32') {
+        extPath = extPath.replace(/\//g, '\\');
+      } else {
+        extPath = extPath.replace(/\\/g, '/');
+      }
+      extensionsSettings[extensionId].path = extPath;
+
+      const isExtensionManageable = ['chrome-extensions', 'user-extensions'].some(substring => extPath.includes(substring));
+      if (isExtensionManageable) {
+        const [extFolderName] = extPath.split(path.sep).reverse();
+        [originalId] = extFolderName.split('@');
+        const isExtensionInProfileSettings = formattedLocalExtArray.find(el => el.path.includes(originalId));
+        if (!isExtensionInProfileSettings) {
+          delete extensionsSettings[extensionId];
+          return;
+        }
+
+        if (!currentExtSettings.manifest?.key) {
+          const hexEncodedPath = crypto.createHash('sha256').update(extPath).digest('hex');
+          const newId = hexEncodedPath.split('').slice(0, 32).map(symbol => extIdEncoding[symbol]).join('');
+          delete extensionsSettings[extensionId];
+
+          extensionsSettings[newId] = currentExtSettings;
+          extensionId = newId;
+        }
+      } else {
+        const splittedPath = extPath.split(path.sep);
+        if (splittedPath.length === 2) {
+          [originalId] = splittedPath
+        }
+      }
+
+      const localExtObj = originalId && formattedLocalExtArray.find(el => el.path.includes(originalId));
       if (!localExtObj) {
         return;
       }
 
-      extensionsSettings[extensionsId].path = localExtObj?.path || '';
+      extensionsSettings[extensionId].path = localExtObj?.path || '';
     });
 
     return extensionsSettings;
@@ -201,6 +242,25 @@ class BrowserUserDataManager {
     return extensionsSettings;
   }
 }
+
+const extIdEncoding = {
+  0: 'a',
+  1: 'b',
+  2: 'c',
+  3: 'd',
+  4: 'e',
+  5: 'f',
+  6: 'g',
+  7: 'h',
+  8: 'i',
+  9: 'j',
+  a: 'k',
+  b: 'l',
+  c: 'm',
+  d: 'n',
+  e: 'o',
+  f: 'p',
+};
 
 module.exports = {
   BrowserUserDataManager,
