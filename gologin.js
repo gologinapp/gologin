@@ -395,7 +395,7 @@ class GoLogin {
       let extSettings;
       if (ExtensionsManagerInst.useLocalExtStorage) {
         extSettings = BrowserUserDataManager.setExtPathsAndRemoveDeleted(preferences, profileExtensionsCheckRes);
-      } else if (!ExtensionsManagerInst.useLocalExtStorage) {
+      } else {
         const originalExtensionsFolder = path.join(profilePath, 'Default', 'Extensions');
         extSettings = await BrowserUserDataManager.setOriginalExtPaths(preferences, originalExtensionsFolder);
       }
@@ -750,15 +750,17 @@ class GoLogin {
       if (this.extensionPathsToInstall.length) {
         if (Array.isArray(this.extra_params) && this.extra_params.length) {
           this.extra_params.forEach((param, index) => {
-            if (param.includes('--load-extension=')) {
-              const [_, extPathsString] = param.split('=');
-              const extPathsArray = extPathsString.split(',');
-              this.extensionPathsToInstall = [...this.extensionPathsToInstall, ...extPathsArray];
-              this.extra_params.splice(index, 1);
+            if (!param.includes('--load-extension=')) {
+              return;
             }
+
+            const [_, extPathsString] = param.split('=');
+            const extPathsArray = extPathsString.split(',');
+            this.extensionPathsToInstall = [...this.extensionPathsToInstall, ...extPathsArray];
+            this.extra_params.splice(index, 1);
           });
         }
-        params.push(`--load-extension=${[...this.extensionPathsToInstall]}`);
+        params.push(`--load-extension=${this.extensionPathsToInstall.join(',')}`);
       }
 
       if (this.fontsMasking) {
