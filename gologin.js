@@ -50,6 +50,7 @@ class GoLogin {
     this.writeCookesFromServer = options.writeCookesFromServer || true;
     this.remote_debugging_port = options.remote_debugging_port || 0;
     this.timezone = options.timezone;
+    this.extensionPathsToInstall = [];
 
     if (options.tmpdir) {
       this.tmpdir = options.tmpdir;
@@ -392,12 +393,15 @@ class GoLogin {
       }
 
       let extSettings;
-      if (ExtensionsManagerInst.useLocalExtStorage && profileExtensionsCheckRes.length) {
-        extSettings = BrowserUserDataManager.setExtPaths(preferences, profileExtensionsCheckRes);
+      if (ExtensionsManagerInst.useLocalExtStorage) {
+        extSettings = BrowserUserDataManager.setExtPathsAndRemoveDeleted(preferences, profileExtensionsCheckRes);
       } else if (!ExtensionsManagerInst.useLocalExtStorage) {
         const originalExtensionsFolder = path.join(profilePath, 'Default', 'Extensions');
         extSettings = await BrowserUserDataManager.setOriginalExtPaths(preferences, originalExtensionsFolder);
       }
+
+      this.extensionPathsToInstall =
+        ExtensionsManagerInst.getExtensionsToInstall(extSettings, profileExtensionsCheckRes);
 
       if (extSettings) {
         const currentExtSettings = preferences.extensions || {};
@@ -743,6 +747,20 @@ class GoLogin {
         `--lang=${browserLang}`,
       ];
 
+      if (this.extensionPathsToInstall.length) {
+        if (Array.isArray(this.extra_params) && this.extra_params.length) {
+          this.extra_params.forEach((param, index) => {
+            if (param.includes('--load-extension=')) {
+              const [_, extPathsString] = param.split('=');
+              const extPathsArray = extPathsString.split(',');
+              this.extensionPathsToInstall = [...this.extensionPathsToInstall, ...extPathsArray];
+              this.extra_params.splice(index, 1);
+            }
+          });
+        }
+        params.push(`--load-extension=${[...this.extensionPathsToInstall]}`);
+      }
+
       if (this.fontsMasking) {
         let arg = '--font-masking-mode=2';
         if (this.differentOs) {
@@ -925,7 +943,7 @@ class GoLogin {
       os = options.os;
     } 
 
-    let fingerprint = await requests.get(`https://api.gologin.com/browser/fingerprint?os=${os}`,{
+    let fingerprint = await requests.get(`${API_URL}/browser/fingerprint?os=${os}`,{
       headers: {
         'Authorization': `Bearer ${this.access_token}`,
         'User-Agent': 'gologin-api',

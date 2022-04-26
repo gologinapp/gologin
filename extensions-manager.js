@@ -249,6 +249,28 @@ class ExtensionsManager {
 
     return Promise.all(removeFoldersPromises);
   }
+
+  getExtensionsToInstall(extensionsFromPref, extensionsFromDB) {
+    if (!extensionsFromPref) {
+      return [];
+    }
+
+    const objectEntries = Object.entries(extensionsFromPref);
+    const extensionsInPref = objectEntries?.map(([_, settings]) => {
+      const [extFolderName] = settings.path.split(path.sep).reverse();
+      const [originalId] = extFolderName.split('@');
+      return originalId;
+    }) || [];
+
+    return extensionsFromDB.reduce((acc, extension) => {
+      const [extFolderName] = extension.split(path.sep).reverse();
+      const [originalId] = extFolderName.split('@');
+      if (!extensionsInPref.includes(originalId)) {
+        acc.push(extension);
+      }
+      return acc;
+    }, []);
+  }
 }
 
 const crxToZip = (buf) => {
