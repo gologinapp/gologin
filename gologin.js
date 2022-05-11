@@ -255,7 +255,23 @@ class GoLogin {
     if (_.get(preferences, 'isM1')) {
       preferences.is_m1 = _.get(preferences, 'isM1');
     }
-    
+
+    if (_.get(preferences, 'os') == 'android'){
+      const devicePixelRatio = _.get(preferences, "devicePixelRatio");
+      const deviceScaleFactorCeil = Math.ceil(devicePixelRatio || 3.5);
+      let deviceScaleFactor = devicePixelRatio;
+      if (deviceScaleFactorCeil === devicePixelRatio) {
+        deviceScaleFactor += 0.00000001;
+      }
+
+      preferences.mobile = {
+        enable: true,
+        width: parseInt(this.resolution.width, 10),
+        height: parseInt(this.resolution.height, 10),
+        device_scale_factor: deviceScaleFactor,        
+      }
+    }
+
     preferences.mediaDevices = {
       enable: preferences.mediaDevices.enableMasking,
       videoInputs: preferences.mediaDevices.videoInputs,
