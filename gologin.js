@@ -749,7 +749,7 @@ class GoLogin {
     this.port = remote_debugging_port;
 
     const ORBITA_BROWSER = this.executablePath || this.browserChecker.getOrbitaPath;
-    console.log("ORBITA_BROWSER=", ORBITA_BROWSER)
+    debug(`ORBITA_BROWSER=${ORBITA_BROWSER}`)
     const env = {};
     Object.keys(process.env).forEach((key) => {
       env[key] = process.env[key];
