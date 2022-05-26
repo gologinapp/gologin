@@ -113,7 +113,10 @@ class BrowserUserDataManager {
 
     const fileContent = await readFile(path.resolve(__dirname, 'fonts_config'), 'utf-8');
     const result = fileContent.replace(/\$\$GOLOGIN_FONTS\$\$/g, path.join(profilePath, FONTS_DIR_NAME));
-    await writeFile(path.join(profilePath, 'Default', 'fonts_config'), result);
+
+    const defaultFolderPath = path.join(profilePath, 'Default');
+    await mkdir(defaultFolderPath, { recursive: true });
+    await writeFile(path.join(defaultFolderPath, 'fonts_config'), result);
   }
 
   static setExtPathsAndRemoveDeleted(settings = {}, profileExtensionsCheckRes = []) {
