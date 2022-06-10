@@ -1045,11 +1045,11 @@ class GoLogin {
     });
 
     if (response.body.statusCode === 400) {
-      throw new Error(`gologin failed account creation with status code, ${data.statusCode} DATA  ${JSON.stringify(response.body.message)}`);
+      throw new Error(`gologin failed account creation with status code, ${response.statusCode} DATA  ${JSON.stringify(response.body.message)}`);
     }
 
     if (response.body.statusCode === 500) {
-      throw new Error(`gologin failed account creation with status code, ${data.statusCode}`);
+      throw new Error(`gologin failed account creation with status code, ${response.statusCode}`);
     }
     debug(JSON.stringify(response.body));
     return response.body.id;
