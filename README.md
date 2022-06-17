@@ -103,7 +103,10 @@ For debugging use `DEBUG=* node example.js` command
 To use GoLogin with Selenium see  `selenium/example.js`
 
 ## Full GoLogin API
-<a href="https://api.gologin.com/docs" target="_blank">API link here</a>
+**Swagger:** <a href="https://api.gologin.com/docs" target="_blank">link here</a>
+
+**Postman:** <a href="https://documenter.getpostman.com/view/21126834/Uz5GnvaL" target="_blank">link here</a>
+
 
 ## For local profiles
 
