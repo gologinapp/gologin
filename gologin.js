@@ -484,6 +484,7 @@ class GoLogin {
     };
     profile.geoLocation = this.getGeolocationParams(profileGeolocation, tzGeoLocation);
     profile.name = name;
+    profile.profile_id = this.profile_id;
 
     profile.webRtc = {
       mode: _.get(profile, 'webRTC.mode') === 'alerted' ? 'public' : _.get(profile, 'webRTC.mode'),
