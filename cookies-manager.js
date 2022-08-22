@@ -29,8 +29,8 @@ class CookiesManager {
     const chunckedCookiesArr = this.chunk(cookiesArr, MAX_SQLITE_VARIABLES);
 
     return chunckedCookiesArr.map((cookies) => {
-      const queryPlaceholders = cookies.map(() => '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').join(', ');
-      const query = `insert or replace into cookies (creation_utc, top_frame_site_key, host_key, name, value, path, expires_utc, is_secure, is_httponly, last_access_utc, is_persistent, encrypted_value, samesite, has_expires) values ${queryPlaceholders}`;
+      const queryPlaceholders = cookies.map(() => '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').join(', ');
+      const query = `insert or replace into cookies (creation_utc, host_key, top_frame_site_key, name, value, encrypted_value, path, expires_utc, is_secure, is_httponly, last_access_utc, has_expires, is_persistent, priority, samesite, source_scheme, source_port, is_same_party, last_update_utc) values ${queryPlaceholders}`;
       const queryParams = cookies.flatMap((cookie) => {
         const creationDate = cookie.creationDate ? cookie.creationDate : this.unixToLDAP(todayUnix);
         let expirationDate = cookie.session ? 0 : this.unixToLDAP(cookie.expirationDate);
@@ -38,6 +38,10 @@ class CookiesManager {
         const samesite = Object.keys(SAME_SITE).find((key) => SAME_SITE[key] === (cookie.sameSite || '-1'));
         const isSecure =
           cookie.name.startsWith('__Host-') || cookie.name.startsWith('__Secure-') ? 1 : Number(cookie.secure);
+
+        const sourceScheme = isSecure === 1 ? 2 : 1;
+        const sourcePort = isSecure === 1 ? 443 : 80;
+        // eslint-disable-next-line no-undefined
         let isPersistent = [undefined, null].includes(cookie.session)
           ? Number(expirationDate !== 0)
           : Number(!cookie.session);
@@ -49,19 +53,24 @@ class CookiesManager {
 
         return [
           creationDate,
-          '', // top_frame_site_key
           cookie.domain,
+          '', // top_frame_site_key
           cookie.name,
           '', // value
+          encryptedValue,
           cookie.path,
           expirationDate,
           isSecure,
           Number(cookie.httpOnly),
           0, // last_access_utc
-          isPersistent,
-          encryptedValue,
-          samesite,
           expirationDate === 0 ? 0 : 1, // has_expires
+          isPersistent,
+          1, // default priority value (https://github.com/chromium/chromium/blob/main/net/cookies/cookie_constants.h)
+          samesite,
+          sourceScheme,
+          sourcePort,
+          0, // is_same_party
+          0, // last_update_utc
         ];
       });
 
