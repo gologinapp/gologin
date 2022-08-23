@@ -1,28 +1,23 @@
 const path = require('path');
 const request = require('requestretry').defaults({ timeout: 60000 });
 const fs = require('fs');
-const { mkdir, readdir, rmdir } = require('fs').promises;
-const os = require('os');
+const { mkdir, readdir, rmdir, unlink } = require('fs').promises;
 
-const  ExtensionsExtractor = require('./extensions-extractor');
+const UserExtensionsManager = require('./user-extensions-manager');
+const { composeExtractionPromises, CHROME_EXTENSIONS_PATH, USER_EXTENSIONS_PATH } = require('./common');
 
-const HOMEDIR = os.homedir();
-const CHROME_EXT_DIR_NAME = 'chrome-extensions';
-const EXTENSIONS_PATH = path.join(HOMEDIR, '.gologin', 'extensions');
-const CHROME_EXTENSIONS_PATH = path.join(EXTENSIONS_PATH, CHROME_EXT_DIR_NAME);
 const EXTENSION_URL = 'https://clients2.google.com/service/update2/crx?response=redirect&acceptformat=crx2,crx3&x=id%3D{ext_id}%26uc&prodversion=97.0.4692.71';
 
-class ExtensionsManager {
-  #USER_AGENT = '';
-  #API_BASE_URL = '';
-  #ACCESS_TOKEN = '';
+class ExtensionsManager extends UserExtensionsManager {
   #existedChromeExtensions = [];
   #inited = false;
   #useLocalExtStorage = false;
+  #useCookiesExt = false;
   #deleteProfileExtFolders = false;
-  #deleteWidevineCdmFolder = false;
+  #extensionsUpdating = true;
 
   constructor() {
+    super();
     if (!ExtensionsManager.instance) {
       ExtensionsManager.instance = this;
     }
@@ -30,48 +25,41 @@ class ExtensionsManager {
     return ExtensionsManager.instance;
   }
 
-  get isInited() { return this.#inited }
-  get useLocalExtStorage() { return this.#useLocalExtStorage }
-  get deleteProfileExtFolders() { return this.#deleteProfileExtFolders }
-  get deleteWidevineCdmFolder() { return this.#deleteWidevineCdmFolder }
-
-  set userAgent(userAgent) {
-    if (!userAgent) {
-      return;
-    }
-
-    this.#USER_AGENT = userAgent;
-  }
-
-  set accessToken(accessToken) {
-    if (!accessToken) {
-      return;
-    }
-
-    this.#ACCESS_TOKEN = accessToken;
-  }
-
-  set apiUrl(apiUrl) {
-    if (!apiUrl) {
-      return;
-    }
-
-    this.#API_BASE_URL = apiUrl;
-  }
-
-  init() {
+  async init() {
     if (this.#inited) {
       return Promise.resolve();
     }
 
-    return mkdir(CHROME_EXTENSIONS_PATH, { recursive: true })
-      .then(() => readdir(CHROME_EXTENSIONS_PATH))
-      .then(filesList => {
-        this.#existedChromeExtensions = filesList;
-        this.#inited = true;
-      })
-      .catch((e) => console.log('ExtensionsManager init error:', e));
+    const promises = [
+      mkdir(CHROME_EXTENSIONS_PATH, { recursive: true })
+        .then(() => readdir(CHROME_EXTENSIONS_PATH))
+        .then(filesList => {
+          this.#existedChromeExtensions = filesList.filter(extPath => !extPath.includes('.zip'));
+          return filesList.map(fileName => fileName.includes('.zip') ?
+            unlink(path.join(CHROME_EXTENSIONS_PATH, fileName)) :
+            Promise.resolve());
+        })
+        .then(promisesToDelete => Promise.all(promisesToDelete))
+        .catch((e) => console.log('ExtensionsManager init error:', e)),
+      mkdir(USER_EXTENSIONS_PATH, { recursive: true })
+        .then(() => readdir(USER_EXTENSIONS_PATH))
+        .then(filesList => {
+          this.existedUserExtensions = filesList.filter(extPath => !extPath.includes('.zip'));
+          return filesList.map(fileName => fileName.includes('.zip') ?
+            unlink(path.join(USER_EXTENSIONS_PATH, fileName)) :
+            Promise.resolve());
+        })
+        .then((promisesToDelete) => Promise.all(promisesToDelete))
+        .catch((e) => console.log('error creating user extensions folder:', e)),
+    ]
+
+    return Promise.all(promises).then(() => this.#inited = true);
   }
+
+  get isInited() { return this.#inited }
+  get useLocalExtStorage() { return this.#useLocalExtStorage }
+  get deleteProfileExtFolders() { return this.#deleteProfileExtFolders }
+  get useCookiesExt() { return this.#useCookiesExt }
 
   get existedChromeExtensionsList() {
     return this.#existedChromeExtensions;
@@ -83,20 +71,25 @@ class ExtensionsManager {
     }
 
     const extensionsToDownload = this.#getExtensionsToDownload(profileExtensions);
-    if (!extensionsToDownload) {
-      return [];
-    }
 
     const downloadedArchives = await this.downloadChromeExtensions(extensionsToDownload);
     const filteredArchives = downloadedArchives.filter(Boolean);
-    const promises = composeExtractionPromises(filteredArchives);
 
-    await Promise.all(promises);
+    if (filteredArchives.length) {
+      const [downloadedFolders] = filteredArchives.map(archivePath => archivePath.split(path.sep).reverse());
+      this.#existedChromeExtensions = [...this.#existedChromeExtensions, ...downloadedFolders];
+
+      const promises = composeExtractionPromises(filteredArchives);
+
+      await Promise.all(promises);
+    }
+
     return this.getExtensionsStrToIncludeAsOrbitaParam(profileExtensions);
   }
 
   #getExtensionsToDownload(profileExtensions) {
-    const existedOriginalIds = this.#existedChromeExtensions.map((val) => {
+    const existedExtensionsFolders = [...this.#existedChromeExtensions, ...this.existedUserExtensions]
+    const existedOriginalIds = existedExtensionsFolders.map((val) => {
       const [originalId] = val.split('@');
       return originalId;
     });
@@ -159,10 +152,11 @@ class ExtensionsManager {
   }
 
   async getExtensionsPolicies() {
-    const globalExtConfig = await request.get(`${this.#API_BASE_URL}/gologin-settings/chrome_ext_policies`, {
+    const globalExtConfig = await request.get(`${this.apiBaseUrl}/gologin-settings/chrome_ext_policies`, {
       headers: {
-        Authorization: `Bearer ${this.#ACCESS_TOKEN}`,
-        'user-agent': this.#USER_AGENT,
+        Authorization: `Bearer ${this.accessToken}`,
+        'user-agent': this.userAgent,
+        'x-two-factor-token': this.twoFaKey || '',
       },
       json: true,
       maxAttempts: 2,
@@ -175,12 +169,12 @@ class ExtensionsManager {
     const {
       useLocalExtStorage = false,
       deleteProfileExtFolders = false,
-      deleteWidevineCdmFolder = false,
+      useCookiesExt = true,
     } = chromeExtPolicies;
 
     this.#useLocalExtStorage = useLocalExtStorage;
     this.#deleteProfileExtFolders = deleteProfileExtFolders;
-    this.#deleteWidevineCdmFolder = deleteWidevineCdmFolder;
+    this.#useCookiesExt = useCookiesExt;
   }
 
   async getExtensionsStrToIncludeAsOrbitaParam(profileExtensions = []) {
@@ -188,16 +182,23 @@ class ExtensionsManager {
       return [];
     }
 
-    const chromeExtList = await readdir(CHROME_EXTENSIONS_PATH);
-    if (!chromeExtList) {
+    const folders = await Promise.all([
+      readdir(CHROME_EXTENSIONS_PATH).then(folderNames => folderNames.map(folderName => path.join(CHROME_EXTENSIONS_PATH, folderName))),
+      readdir(USER_EXTENSIONS_PATH).then(folderNames => folderNames.map(folderName => path.join(USER_EXTENSIONS_PATH, folderName))),
+    ]);
+
+    const chromeExtList = [].concat.apply([], folders).filter(Boolean);
+
+    if (!chromeExtList.length) {
       return [];
     }
 
     const formattedIdsList = chromeExtList.map((el) => {
-      const [originalId] = el.split('@');
+      const [folderName] = el.split(path.sep).reverse();
+      const [originalId] = folderName.split('@');
       return {
         originalId,
-        folderName: el,
+        path: el,
       };
     });
 
@@ -207,7 +208,7 @@ class ExtensionsManager {
         return '';
       }
 
-      return path.join(CHROME_EXTENSIONS_PATH, extExisted.folderName);
+      return extExisted.path;
     }).filter(Boolean);
   }
 
@@ -220,7 +221,7 @@ class ExtensionsManager {
     const oldFolders = [];
 
     const versionCheckPromises = fileList.map(async (extension) => {
-      if (!extension.includes('@')) {
+      if (!extension.includes('@') || extension.includes('.zip')) {
         return '';
       }
 
@@ -247,7 +248,70 @@ class ExtensionsManager {
       rmdir(folder, { recursive: true, maxRetries: 3 }).catch(() => {})
     ));
 
-    return Promise.all(removeFoldersPromises);
+    await Promise.all(removeFoldersPromises).then(() => this.#extensionsUpdating = false);
+  }
+
+
+  async checkLocalExtensions() {
+    if (this.#extensionsUpdating || !this.accessToken) {
+      return;
+    }
+
+    const fileList = await readdir(CHROME_EXTENSIONS_PATH).catch(() => []);
+    if (!fileList.length) {
+      return;
+    }
+
+    const extensionsIds = fileList.filter(folderName => folderName.includes('@') && !folderName.includes('.zip'))
+      .map(folderName => {
+        const [name] = folderName.split('@');
+        return name;
+      });
+
+    if (!extensionsIds.length) {
+      return;
+    }
+
+    this.insertExtensionsToDb(extensionsIds);
+  }
+
+  async insertExtensionsToDb(extensionsIds, pathToExtensions = CHROME_EXTENSIONS_PATH) {
+    if (!extensionsIds?.length) {
+      return;
+    }
+
+    const checkResponse = await request(`${this.apiBaseUrl}/extensions/check`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${this.accessToken}`,
+        'user-agent': this.userAgent,
+        'x-two-factor-token': this.twoFaKey || '',
+      },
+      body: {
+        extensionsIds,
+      },
+      json: true,
+    });
+    const { extensionsToAdd = [] } = checkResponse.body;
+
+    if (!extensionsToAdd.length) {
+      return;
+    }
+
+    const extensionsToUpdate = await this.getExtensionsNameAndImage(extensionsToAdd, pathToExtensions);
+
+    request(`${this.apiBaseUrl}/extensions/create`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${this.accessToken}`,
+        'user-agent': this.userAgent,
+        'x-two-factor-token': this.twoFaKey || '',
+      },
+      body: {
+        extensionsInfo: extensionsToUpdate,
+      },
+      json: true,
+    });
   }
 
   getExtensionsToInstall(extensionsFromPref, extensionsFromDB) {
@@ -329,15 +393,6 @@ const getExtVersion = (metadata) => {
   splitExtName.shift();
   return splitExtName.join('_');
 };
-
-const composeExtractionPromises = (filteredArchives) => (
-  filteredArchives.map((extArchivePath) => {
-    const [archiveName = ''] = extArchivePath.split(path.sep).reverse();
-    const [destFolder] = archiveName.split('.');
-    return ExtensionsExtractor.extractExtension(extArchivePath, path.join(CHROME_EXTENSIONS_PATH, destFolder))
-      .then(() => ExtensionsExtractor.deleteExtensionArchive(extArchivePath))
-  })
-);
 
 module.exports = ExtensionsManager;
 

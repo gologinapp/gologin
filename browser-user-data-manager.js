@@ -2,7 +2,7 @@ const path = require('path');
 const os = require('os');
 const request = require('requestretry');
 const { rmdirSync, createWriteStream } = require('fs');
-const { access, readFile, writeFile, mkdir, readdir, copyFile } = require('fs').promises;
+const { access, readFile, writeFile, mkdir, readdir, copyFile, rename } = require('fs').promises;
 const crypto = require('crypto');
 
 const fontsCollection = require('./fonts');
@@ -14,6 +14,9 @@ const HOMEDIR = os.homedir();
 const BROWSER_PATH = path.join(HOMEDIR, '.gologin', 'browser');
 const OS_PLATFORM = process.platform;
 const DEFAULT_ORBITA_EXTENSIONS_NAMES = ['Google Hangouts', 'Chromium PDF Viewer', 'CryptoTokenExtension', 'Web Store'];
+const GOLOGIN_BASE_FOLDER_NAME = '.gologin';
+const GOLOGIN_TEST_FOLDER_NAME = '.gologin_test';
+const osPlatform = process.platform;
 
 class BrowserUserDataManager {
   static downloadCookies({ profileId, ACCESS_TOKEN, API_BASE_URL }) {
@@ -119,7 +122,7 @@ class BrowserUserDataManager {
     await writeFile(path.join(defaultFolderPath, 'fonts_config'), result);
   }
 
-  static setExtPathsAndRemoveDeleted(settings = {}, profileExtensionsCheckRes = []) {
+  static setExtPathsAndRemoveDeleted(settings = {}, profileExtensionsCheckRes = [], profileId = '') {
     const formattedLocalExtArray = profileExtensionsCheckRes.map((el) => {
       const [extFolderName = ''] = el.split(path.sep).reverse();
       const [originalId] = extFolderName.split('@');
@@ -130,54 +133,54 @@ class BrowserUserDataManager {
       return {
         path: el,
         originalId,
-      }
+      };
     }).filter(Boolean);
 
     const extensionsSettings = settings.extensions?.settings || {};
     const extensionsEntries = Object.entries(extensionsSettings);
 
-    extensionsEntries.forEach((extensionObj) => {
+    const promises = extensionsEntries.map(async (extensionObj) => {
       let [extensionId, currentExtSettings = {}] = extensionObj;
       const extName = currentExtSettings.manifest?.name || '';
       let extPath = currentExtSettings.path || '';
       let originalId = '';
 
       const isExtensionToBeDeleted = ['resources', 'passwords-ext', 'cookies-ext'].some(substring => extPath.includes(substring))
-        || DEFAULT_ORBITA_EXTENSIONS_NAMES.includes(extName);
+        && [GOLOGIN_BASE_FOLDER_NAME, GOLOGIN_TEST_FOLDER_NAME].some(substring => extPath.includes(substring))
+        || DEFAULT_ORBITA_EXTENSIONS_NAMES.includes(extName)
+        && [GOLOGIN_BASE_FOLDER_NAME, GOLOGIN_TEST_FOLDER_NAME].some(substring => extPath.includes(substring));
+
       if (isExtensionToBeDeleted) {
         delete extensionsSettings[extensionId];
+
         return;
       }
 
-      if (os.platform() === 'win32') {
+      if (osPlatform === 'win32') {
         extPath = extPath.replace(/\//g, '\\');
       } else {
         extPath = extPath.replace(/\\/g, '/');
       }
+
       extensionsSettings[extensionId].path = extPath;
 
-      const isExtensionManageable = ['chrome-extensions', 'user-extensions'].some(substring => extPath.includes(substring));
+      const splittedPath = extPath.split(path.sep);
+      const isExtensionManageable = ['chrome-extensions', 'user-extensions'].some(substring => extPath.includes(substring))
+        && [GOLOGIN_BASE_FOLDER_NAME, GOLOGIN_TEST_FOLDER_NAME].some(substring => extPath.includes(substring));
+
       if (isExtensionManageable) {
         const [extFolderName] = extPath.split(path.sep).reverse();
         [originalId] = extFolderName.split('@');
+      } else if (splittedPath.length === 2) {
+        [originalId] = splittedPath;
+      }
+
+      if (isExtensionManageable || splittedPath.length === 2) {
         const isExtensionInProfileSettings = formattedLocalExtArray.find(el => el.path.includes(originalId));
         if (!isExtensionInProfileSettings) {
           delete extensionsSettings[extensionId];
+
           return;
-        }
-
-        if (!currentExtSettings.manifest?.key) {
-          const hexEncodedPath = crypto.createHash('sha256').update(extPath).digest('hex');
-          const newId = hexEncodedPath.split('').slice(0, 32).map(symbol => extIdEncoding[symbol]).join('');
-          delete extensionsSettings[extensionId];
-
-          extensionsSettings[newId] = currentExtSettings;
-          extensionId = newId;
-        }
-      } else {
-        const splittedPath = extPath.split(path.sep);
-        if (splittedPath.length === 2) {
-          [originalId] = splittedPath
         }
       }
 
@@ -186,10 +189,28 @@ class BrowserUserDataManager {
         return;
       }
 
-      extensionsSettings[extensionId].path = localExtObj?.path || '';
+      const initialExtName = extensionId;
+
+      extensionId = await this.recalculateId({
+        localExtObj, extensionId, extensionsSettings, currentExtSettings,
+      });
+
+      if (initialExtName !== extensionId) {
+        const profilePath = path.join(os.tmpdir(), `gologin_profile_${profileId}`);
+        const extSyncFolder = path.join(profilePath, 'Default', 'Sync Extension Settings', initialExtName);
+        const newSyncFolder = path.join(profilePath, 'Default', 'Sync Extension Settings', extensionId);
+
+        await rename(extSyncFolder, newSyncFolder).catch(() => null);
+      }
+
+      if (localExtObj.path.endsWith('.zip')) {
+        localExtObj.path = localExtObj.path.replace('.zip', '');
+      }
+
+      extensionsSettings[extensionId].path = localExtObj.path || '';
     });
 
-    return extensionsSettings;
+    return Promise.all(promises).then(() => extensionsSettings);
   }
 
   static async setOriginalExtPaths(settings = {}, originalExtensionsFolder = '') {
@@ -243,6 +264,48 @@ class BrowserUserDataManager {
     });
 
     return extensionsSettings;
+  }
+
+  static async recalculateId({ localExtObj, extensionId, extensionsSettings, currentExtSettings }) {
+    if (currentExtSettings.manifest?.key) {
+      return extensionId;
+    }
+
+    const manifestFilePath = path.join(localExtObj.path, 'manifest.json');
+    const manifestString = await readFile(manifestFilePath, { encoding: 'utf8' }).catch(() => ({}));
+
+    if (!manifestString) {
+      return extensionId;
+    }
+
+    let manifestObject;
+    try {
+      manifestObject = JSON.parse(manifestString);
+    } catch {
+      return extensionId;
+    }
+
+    if (manifestObject.key) {
+      return extensionId;
+    }
+
+    let encoding = 'utf8';
+    if (osPlatform === 'win32') {
+      encoding = 'utf16le';
+    }
+
+    const extPathToEncode = Buffer.from(localExtObj.path, encoding);
+
+    const hexEncodedPath = crypto.createHash('sha256').update(extPathToEncode).digest('hex');
+    const newId = hexEncodedPath.split('').slice(0, 32).map(symbol => extIdEncoding[symbol]).join('');
+    if (extensionId !== newId) {
+      delete extensionsSettings[extensionId];
+
+      extensionsSettings[newId] = currentExtSettings;
+      extensionId = newId;
+    }
+
+    return extensionId;
   }
 }
 
