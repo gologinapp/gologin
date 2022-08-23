@@ -23,6 +23,7 @@ const ExtensionsManager = require('./extensions-manager');
 
 const SEPARATOR = path.sep;
 const API_URL = 'https://api.gologin.com';
+// const API_URL = 'http://localhost:3002';
 const OS_PLATFORM = process.platform;
 
 // process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
@@ -402,9 +403,11 @@ class GoLogin {
     let preferences = JSON.parse(preferences_raw.toString());
     let proxy = _.get(profile, 'proxy');
     let name = _.get(profile, 'name');
-    const chromeExtensions = _.get(profile, 'chromeExtensions');
+    const chromeExtensions = _.get(profile, 'chromeExtensions') || [];
+    const userChromeExtensions = _.get(profile, 'userChromeExtensions') || [];
+    const allExtensions = [...chromeExtensions, ...userChromeExtensions];
 
-    if (chromeExtensions && chromeExtensions.length) {
+    if (allExtensions.length) {
       const ExtensionsManagerInst = new ExtensionsManager();
       ExtensionsManagerInst.apiUrl = API_URL;
       await ExtensionsManagerInst.init()
@@ -416,15 +419,27 @@ class GoLogin {
       let profileExtensionsCheckRes = [];
 
       if (ExtensionsManagerInst.useLocalExtStorage) {
-        profileExtensionsCheckRes = await ExtensionsManagerInst.checkChromeExtensions(chromeExtensions).catch((e) => {
-          console.log('checkChromeExtensions error: ', e);
-          return [];
-        });
+        const promises = [
+          ExtensionsManagerInst.checkChromeExtensions(allExtensions)
+            .then(res => ({ profileExtensionsCheckRes: res }))
+            .catch((e) => {
+            console.log('checkChromeExtensions error: ', e);
+            return { profileExtensionsCheckRes: [] };
+          }),
+          ExtensionsManagerInst.checkLocalUserChromeExtensions().catch((error) => {
+            console.log('checkUserChromeExtensions error: ', error);
+            return null;
+          }),
+        ];
+        const extensionsResult = await Promise.all(promises);
+
+        const profileExtensionsPathRes = extensionsResult.find(el => 'profileExtensionsCheckRes' in el) || {};
+        profileExtensionsCheckRes = profileExtensionsPathRes.profileExtensionsCheckRes;
       }
 
       let extSettings;
       if (ExtensionsManagerInst.useLocalExtStorage) {
-        extSettings = BrowserUserDataManager.setExtPathsAndRemoveDeleted(preferences, profileExtensionsCheckRes);
+        extSettings = await BrowserUserDataManager.setExtPathsAndRemoveDeleted(preferences, profileExtensionsCheckRes, this.profile_id);
       } else {
         const originalExtensionsFolder = path.join(profilePath, 'Default', 'Extensions');
         extSettings = await BrowserUserDataManager.setOriginalExtPaths(preferences, originalExtensionsFolder);
@@ -821,7 +836,7 @@ class GoLogin {
       if (Array.isArray(this.extra_params) && this.extra_params.length) {
         params = params.concat(this.extra_params);
       }
-
+      console.log(params)
       const child = execFile(ORBITA_BROWSER, params, {env});
       // const child = spawn(ORBITA_BROWSER, params, { env, shell: true });
       child.stdout.on('data', (data) => debug(data.toString()));
