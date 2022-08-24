@@ -194,7 +194,11 @@ class UserExtensionsManager {
     }
   }
 
-  checkLocalUserChromeExtensions = async () => {
+  checkLocalUserChromeExtensions = async (userChromeExtensions) => {
+    if (!userChromeExtensions.length) {
+      return;
+    }
+
     const extensionsToDownloadPaths = await request.post(`${this.#API_BASE_URL}/extensions/user_chrome_extensions_paths`, {
       json: true,
       fullResponse: false,
@@ -208,11 +212,14 @@ class UserExtensionsManager {
       }
     }) || [];
 
-    if (!extensionsToDownloadPaths.length) {
+    const extensionsToDownloadPathsFiltered =
+      extensionsToDownloadPaths.filter(extPath => userChromeExtensions.some(extId => extPath.includes(extId)));
+
+    if (!extensionsToDownloadPathsFiltered.length) {
       return;
     }
 
-    const promises = extensionsToDownloadPaths.map(async awsPath => {
+    const promises = extensionsToDownloadPathsFiltered.map(async awsPath => {
       const [basePath] = awsPath.split('?');
       const [extId] = basePath.split('/').reverse();
       const zipPath = `${path.join(USER_EXTENSIONS_PATH, extId)}.zip`;
@@ -240,7 +247,41 @@ class UserExtensionsManager {
       const [downloadedFolders] = zipPaths.map(archivePath => archivePath.split(path.sep).reverse());
       this.#existedUserExtensions = [...this.#existedUserExtensions, ...downloadedFolders];
     }
+
+    return this.getExtensionsStrToIncludeAsOrbitaParam(userChromeExtensions, USER_EXTENSIONS_PATH);
   }
+
+  async getExtensionsStrToIncludeAsOrbitaParam(profileExtensions = [], folderPath = CHROME_EXTENSIONS_PATH) {
+    if (!(Array.isArray(profileExtensions) && profileExtensions.length)) {
+      return [];
+    }
+
+    const folders = await readdir(folderPath).then(folderNames => folderNames.map(folderName => path.join(folderPath, folderName)));
+
+    if (!folders.length) {
+      return [];
+    }
+
+    const formattedIdsList = folders.map((el) => {
+      const [folderName] = el.split(path.sep).reverse();
+      const [originalId] = folderName.split('@');
+      return {
+        originalId,
+        path: el,
+      };
+    });
+
+    return profileExtensions.map((el) => {
+      const extExisted = formattedIdsList.find(chromeExtPathElem => chromeExtPathElem.originalId === el);
+
+      if (!extExisted) {
+        return '';
+      }
+
+      return extExisted.path;
+    }).filter(Boolean);
+  }
+
 
   async getExtensionsNameAndImage(extensionsIds, pathToExtensions) {
     const isCheckLocalFiles = [CHROME_EXTENSIONS_PATH, USER_EXTENSIONS_PATH].includes(pathToExtensions);
