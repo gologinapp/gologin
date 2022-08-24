@@ -177,41 +177,6 @@ class ExtensionsManager extends UserExtensionsManager {
     this.#useCookiesExt = useCookiesExt;
   }
 
-  async getExtensionsStrToIncludeAsOrbitaParam(profileExtensions = []) {
-    if (!(Array.isArray(profileExtensions) && profileExtensions.length)) {
-      return [];
-    }
-
-    const folders = await Promise.all([
-      readdir(CHROME_EXTENSIONS_PATH).then(folderNames => folderNames.map(folderName => path.join(CHROME_EXTENSIONS_PATH, folderName))),
-      readdir(USER_EXTENSIONS_PATH).then(folderNames => folderNames.map(folderName => path.join(USER_EXTENSIONS_PATH, folderName))),
-    ]);
-
-    const chromeExtList = [].concat.apply([], folders).filter(Boolean);
-
-    if (!chromeExtList.length) {
-      return [];
-    }
-
-    const formattedIdsList = chromeExtList.map((el) => {
-      const [folderName] = el.split(path.sep).reverse();
-      const [originalId] = folderName.split('@');
-      return {
-        originalId,
-        path: el,
-      };
-    });
-
-    return profileExtensions.map((el) => {
-      const extExisted = formattedIdsList.find(chromeExtPathElem => chromeExtPathElem.originalId === el);
-      if (!extExisted) {
-        return '';
-      }
-
-      return extExisted.path;
-    }).filter(Boolean);
-  }
-
   async updateExtensions() {
     const fileList = await readdir(CHROME_EXTENSIONS_PATH).catch(() => []);
     if (!fileList.length) {

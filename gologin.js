@@ -426,15 +426,19 @@ class GoLogin {
             console.log('checkChromeExtensions error: ', e);
             return { profileExtensionsCheckRes: [] };
           }),
-          ExtensionsManagerInst.checkLocalUserChromeExtensions().catch((error) => {
-            console.log('checkUserChromeExtensions error: ', error);
-            return null;
-          }),
+          ExtensionsManagerInst.checkLocalUserChromeExtensions(userChromeExtensions)
+            .then(res => ({ profileUserExtensionsCheckRes: res }))
+            .catch((error) => {
+              console.log('checkUserChromeExtensions error: ', error);
+              return null;
+            }),
         ];
         const extensionsResult = await Promise.all(promises);
 
-        const profileExtensionsPathRes = extensionsResult.find(el => 'profileExtensionsCheckRes' in el) || {};
-        profileExtensionsCheckRes = profileExtensionsPathRes.profileExtensionsCheckRes;
+        const profileExtensionPathRes = extensionsResult.find(el => 'profileExtensionsCheckRes' in el) || {};
+        const profileUserExtensionPathRes = extensionsResult.find(el => 'profileUserExtensionsCheckRes' in el);
+        profileExtensionsCheckRes =
+          (profileExtensionPathRes?.profileExtensionsCheckRes || []).concat(profileUserExtensionPathRes?.profileUserExtensionsCheckRes || []);
       }
 
       let extSettings;
