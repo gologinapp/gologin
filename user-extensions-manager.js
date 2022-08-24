@@ -282,7 +282,6 @@ class UserExtensionsManager {
     }).filter(Boolean);
   }
 
-
   async getExtensionsNameAndImage(extensionsIds, pathToExtensions) {
     const isCheckLocalFiles = [CHROME_EXTENSIONS_PATH, USER_EXTENSIONS_PATH].includes(pathToExtensions);
     const extensionFolderNames = await readdir(pathToExtensions).catch(() => {});
