@@ -216,7 +216,7 @@ class UserExtensionsManager {
       extensionsToDownloadPaths.filter(extPath => userChromeExtensions.some(extId => extPath.includes(extId)));
 
     if (!extensionsToDownloadPathsFiltered.length) {
-      return;
+      return this.getExtensionsStrToIncludeAsOrbitaParam(userChromeExtensions, USER_EXTENSIONS_PATH);
     }
 
     const promises = extensionsToDownloadPathsFiltered.map(async awsPath => {
@@ -237,7 +237,7 @@ class UserExtensionsManager {
     const zipPaths = await Promise.all(promises).catch(() => []);
 
     if (!zipPaths) {
-      return;
+      return this.getExtensionsStrToIncludeAsOrbitaParam(userChromeExtensions, USER_EXTENSIONS_PATH);
     }
 
     const extractionPromises = composeExtractionPromises(zipPaths, USER_EXTENSIONS_PATH);
