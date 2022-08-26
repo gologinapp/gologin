@@ -503,6 +503,7 @@ class GoLogin {
     };
     profile.geoLocation = this.getGeolocationParams(profileGeolocation, tzGeoLocation);
     profile.name = name;
+    profile.name_base64 = Buffer.from(name).toString('base64');
     profile.profile_id = this.profile_id;
 
     profile.webRtc = {
