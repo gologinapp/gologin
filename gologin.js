@@ -44,6 +44,7 @@ class GoLogin {
     this.is_stopping = false;
     this.differentOs = false;
     this.profileOs = 'lin';
+    this.waitWebsocket = !!options.waitWebsocket;
     this.tmpdir = os.tmpdir();
     this.autoUpdateBrowser = !!options.autoUpdateBrowser;
     this.browserChecker = new BrowserChecker(options.skipOrbitaHashChecking);
@@ -848,14 +849,17 @@ class GoLogin {
       debug('SPAWN CMD', ORBITA_BROWSER, params.join(" "));
     }
 
-    debug('GETTING WS URL FROM BROWSER');
 
-    let data = await requests.get(`http://127.0.0.1:${remote_debugging_port}/json/version`, {json: true});
+    if(this.waitWebsocket){
+      debug('GETTING WS URL FROM BROWSER');
+      let data = await requests.get(`http://127.0.0.1:${remote_debugging_port}/json/version`, {json: true});
 
-    debug('WS IS', _.get(data, 'body.webSocketDebuggerUrl', ''))
-    this.is_active = true;
+      debug('WS IS', _.get(data, 'body.webSocketDebuggerUrl', ''))
+      this.is_active = true;
 
-    return _.get(data, 'body.webSocketDebuggerUrl', '');
+      return _.get(data, 'body.webSocketDebuggerUrl', '');
+    }
+    return '';
   }
 
   async createStartupAndSpawnBrowser() {
@@ -933,6 +937,8 @@ class GoLogin {
       `${SEPARATOR}oofiananboodjbbmdelgdommihjbkfag`,
       `${SEPARATOR}SafetyTips`,
       `${SEPARATOR}fonts`,
+      `${SEPARATOR}BrowserMetrics`,
+      `${SEPARATOR}BrowserMetrics-spare.pma`,
     ];
     const that = this;
 
