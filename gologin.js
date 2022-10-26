@@ -44,7 +44,10 @@ class GoLogin {
     this.is_stopping = false;
     this.differentOs = false;
     this.profileOs = 'lin';
-    this.waitWebsocket = !!options.waitWebsocket;
+    this.waitWebsocket = true;
+    if(options.waitWebsocket === false){
+      this.waitWebsocket = false;
+    }
     this.tmpdir = os.tmpdir();
     this.autoUpdateBrowser = !!options.autoUpdateBrowser;
     this.browserChecker = new BrowserChecker(options.skipOrbitaHashChecking);
