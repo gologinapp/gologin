@@ -1,11 +1,12 @@
 const path = require('path');
 const fs = require('fs');
 const { readdir, rmdir, readFile, stat, mkdir, copyFile } = require('fs').promises;
+
 const request = require('requestretry').defaults({ timeout: 60000 });
 const zipdir = require('zip-dir');
 
-const ExtensionsExtractor = require('./extensions-extractor');
 const { composeExtractionPromises, CHROME_EXTENSIONS_PATH, USER_EXTENSIONS_PATH } = require('./common');
+const ExtensionsExtractor = require('./extensions-extractor');
 
 const MAX_FILE_SIZE = 80 * 1024 * 1024;
 const MAX_FILE_SIZE_MB = MAX_FILE_SIZE / 1024 / 1024;
@@ -114,11 +115,12 @@ class UserExtensionsManager {
         if (isZip) {
           rmdir(pathToFiles);
         }
+
         throw new Error('There is no manifest.json in the extension folder');
       }
 
       if (!isZip) {
-        const destPath = path.join(USER_EXTENSIONS_PATH, customId)
+        const destPath = path.join(USER_EXTENSIONS_PATH, customId);
         await copyFolder(pathToFiles, destPath).catch(() => {
           throw new Error('Something went wrong coping your folder');
         });
@@ -142,6 +144,7 @@ class UserExtensionsManager {
         },
         json: true,
       });
+
       // if success - there is no body
       if (dbResult.body) {
         throw new Error('Something went wrong inserting your data to database');
@@ -177,6 +180,7 @@ class UserExtensionsManager {
         timeout: 30 * 1000,
         fullResponse: true,
       });
+
       // if success - there is no body, in case of error - there will be an error in the body
       if (uploadResponse.body) {
         throw new Error('Your extension is added locally but we couldn\'t upload it to the cloud');
@@ -185,12 +189,12 @@ class UserExtensionsManager {
       return {
         status: 'success',
         message: nameIconId,
-      }
+      };
     } catch (e) {
       return {
         status: 'error',
         message: e.message,
-      }
+      };
     }
   }
 
@@ -209,7 +213,7 @@ class UserExtensionsManager {
       },
       body: {
         existedUserChromeExtensions: this.#existedUserExtensions,
-      }
+      },
     }) || [];
 
     const extensionsToDownloadPathsFiltered =
@@ -231,6 +235,7 @@ class UserExtensionsManager {
       }).pipe(archiveZip);
 
       await new Promise(r => archiveZip.on('close', () => r()));
+
       return zipPath;
     });
 
@@ -249,7 +254,7 @@ class UserExtensionsManager {
     }
 
     return this.getExtensionsStrToIncludeAsOrbitaParam(userChromeExtensions, USER_EXTENSIONS_PATH);
-  }
+  };
 
   async getExtensionsStrToIncludeAsOrbitaParam(profileExtensions = [], folderPath = CHROME_EXTENSIONS_PATH) {
     if (!(Array.isArray(profileExtensions) && profileExtensions.length)) {
@@ -265,6 +270,7 @@ class UserExtensionsManager {
     const formattedIdsList = folders.map((el) => {
       const [folderName] = el.split(path.sep).reverse();
       const [originalId] = folderName.split('@');
+
       return {
         originalId,
         path: el,
@@ -321,7 +327,9 @@ class UserExtensionsManager {
         try {
           const parsedLocale = JSON.parse(localeString.trim());
           name = parsedLocale[fieldNameInLocale].message;
-        } catch (e) {}
+        } catch (e) {
+          console.log(e);
+        }
       } else {
         name = manifestObject.name;
       }
@@ -350,6 +358,7 @@ class UserExtensionsManager {
     });
 
     const extensionsArray = await Promise.all(namesPromise);
+
     return extensionsArray.filter(Boolean);
   }
 
@@ -362,6 +371,7 @@ class UserExtensionsManager {
       result += characters.charAt(Math.floor(Math.random() *
         charactersLength));
     }
+
     return result;
   }
 }

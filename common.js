@@ -1,7 +1,7 @@
+const os = require('os');
 const path = require('path');
 
 const ExtensionsExtractor = require('./extensions-extractor');
-const os = require('os');
 
 const HOMEDIR = os.homedir();
 const CHROME_EXT_DIR_NAME = 'chrome-extensions';
@@ -13,8 +13,9 @@ const composeExtractionPromises = (filteredArchives, destPath = CHROME_EXTENSION
   filteredArchives.map((extArchivePath) => {
     const [archiveName = ''] = extArchivePath.split(path.sep).reverse();
     const [destFolder] = archiveName.split('.');
+
     return ExtensionsExtractor.extractExtension(extArchivePath, path.join(destPath, destFolder))
-      .then(() => ExtensionsExtractor.deleteExtensionArchive(extArchivePath))
+      .then(() => ExtensionsExtractor.deleteExtensionArchive(extArchivePath));
   })
 );
 

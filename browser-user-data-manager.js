@@ -1,7 +1,9 @@
-const path = require('path');
-const os = require('os');
-const request = require('requestretry');
 const { rmdirSync, createWriteStream } = require('fs');
+const os = require('os');
+const path = require('path');
+
+const request = require('requestretry');
+
 const { access, readFile, writeFile, mkdir, readdir, copyFile, rename } = require('fs').promises;
 const crypto = require('crypto');
 
@@ -31,6 +33,7 @@ class BrowserUserDataManager {
       timeout: 10 * 1000,
     }).catch((e) => {
       console.log(e);
+
       return { body: [] };
     });
   }
@@ -47,6 +50,7 @@ class BrowserUserDataManager {
       timeout: 20 * 1000,
     }).catch((e) => {
       console.log(e);
+
       return e;
     });
   }
@@ -67,7 +71,7 @@ class BrowserUserDataManager {
       retryDelay: 2000,
       timeout: 30 * 1000,
     })
-      .pipe(createWriteStream(path.join(browserFontsPath, font)))
+      .pipe(createWriteStream(path.join(browserFontsPath, font))),
     );
 
     if (promises.length) {
@@ -92,6 +96,7 @@ class BrowserUserDataManager {
     if (differentOs && !fontsToDownload.length) {
       throw new Error('No fonts to download found. Use getAvailableFonts() method and set some fonts from this list');
     }
+
     fontsToDownload.push('LICENSE.txt');
     fontsToDownload.push('OFL.txt');
 
@@ -241,11 +246,13 @@ class BrowserUserDataManager {
       }
 
       const [version] = extFolderContent;
+
       return {
         originalId,
         path: path.join(originalExtensionsFolder, originalId, version),
       };
     });
+
     const originalExtPaths = await Promise.all(promises);
 
     extensionsEntries.forEach((extensionObj) => {
@@ -330,4 +337,4 @@ const extIdEncoding = {
 
 module.exports = {
   BrowserUserDataManager,
-}
+};

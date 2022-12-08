@@ -1,14 +1,15 @@
 const fs = require('fs');
-const util = require('util');
+const https = require('https');
 const os = require('os');
 const path = require('path');
-const https = require('https');
+const readline = require('readline');
+const util = require('util');
 const { access, mkdir, readdir, rmdir, unlink, copyFile, readlink, symlink, lstat } = require('fs').promises;
+
 const exec = util.promisify(require('child_process').exec);
 const decompress = require('decompress');
 const decompressUnzip = require('decompress-unzip');
 const ProgressBar = require('progress');
-const readline = require('readline');
 
 const PLATFORM = process.platform;
 
@@ -52,6 +53,7 @@ class BrowserChecker {
     } else if (PLATFORM === 'win32') {
       executableFilePath = path.join(this.#browserPath, 'orbita-browser', 'chrome.exe');
     }
+
     this.#executableFilePath = executableFilePath;
     // console.log('executableFilePath:', executableFilePath);
   }
@@ -137,6 +139,7 @@ class BrowserChecker {
           width: 30,
           total: Math.round(formattedLen),
         });
+
         let downloadedMb = 0;
 
         res.on('data', (chunk) => {
@@ -148,7 +151,7 @@ class BrowserChecker {
           });
         });
 
-        res.on('end', function () {
+        res.on('end', () => {
           bar.tick(bar.total, {
             fullMb: formattedLen.toFixed(2),
             downloadedMb: formattedLen.toFixed(2),
@@ -170,9 +173,9 @@ class BrowserChecker {
     try {
       await access(pathStr);
     } catch (e) {
-      throw new Error('Archive has not been found. Please run script again.')
+      throw new Error('Archive has not been found. Please run script again.');
     }
-  };
+  }
 
   async extractBrowser() {
     console.log('Extracting Orbita');
@@ -182,12 +185,12 @@ class BrowserChecker {
         {
           plugins: [decompressUnzip()],
           filter: file => !file.path.endsWith('/'),
-        }
+        },
       );
     }
 
     return exec(
-      `tar xzf ${path.join(this.#browserPath, BROWSER_ARCHIVE_NAME)} --directory ${path.join(this.#browserPath, EXTRACTED_FOLDER)}`
+      `tar xzf ${path.join(this.#browserPath, BROWSER_ARCHIVE_NAME)} --directory ${path.join(this.#browserPath, EXTRACTED_FOLDER)}`,
     );
   }
 
@@ -198,6 +201,7 @@ class BrowserChecker {
       hashLink = MAC_HASHFILE_LINK;
       resultPath = path.join(this.#browserPath, MAC_HASH_FILE);
     }
+
     const writableStream = fs.createWriteStream(resultPath);
     writableStream.on('error', async (err) => {
       await unlink(resultPath);
@@ -208,7 +212,7 @@ class BrowserChecker {
       {
         timeout: 10 * 1000,
       }, (res) => {
-        res.on('end', function () {
+        res.on('end', () => {
           console.log('Hashfile downloading completed');
           writableStream.end();
           resolve();
@@ -219,6 +223,7 @@ class BrowserChecker {
 
     const hashFile = PLATFORM === 'darwin' ? MAC_HASH_FILE : DEB_HASH_FILE;
     const hashFilePath = path.join(this.#browserPath, hashFile);
+
     return access(hashFilePath);
   }
 
@@ -235,7 +240,7 @@ class BrowserChecker {
     await this.downloadHashFile();
     if (PLATFORM === 'darwin') {
       const calculatedHash = await exec(
-        `mtree -p ${path.join(this.#browserPath, EXTRACTED_FOLDER, 'Orbita-Browser.app')} < ${path.join(this.#browserPath, MAC_HASH_FILE)} || echo ${FAIL_SUM_MATCH_MESSAGE}`
+        `mtree -p ${path.join(this.#browserPath, EXTRACTED_FOLDER, 'Orbita-Browser.app')} < ${path.join(this.#browserPath, MAC_HASH_FILE)} || echo ${FAIL_SUM_MATCH_MESSAGE}`,
       );
 
       const checkedRes = (calculatedHash || '').toString().trim();
@@ -252,7 +257,7 @@ class BrowserChecker {
 
     const calculateLocalBrowserHash = await exec(
       `cd ${path.join(this.#browserPath, EXTRACTED_FOLDER)} && find orbita-browser -type f -print0 | sort -z | \
-            xargs -0 sha256sum > ${this.#browserPath}/calculatedFolderSha.txt`
+            xargs -0 sha256sum > ${this.#browserPath}/calculatedFolderSha.txt`,
     );
 
     const localHashContent = await exec(`cd ${this.#browserPath} && sha256sum calculatedFolderSha.txt`);
@@ -284,7 +289,7 @@ class BrowserChecker {
 
     await this.copyDir(
       path.join(this.#browserPath, EXTRACTED_FOLDER, 'orbita-browser'),
-      targetBrowserPath
+      targetBrowserPath,
     );
   }
 
@@ -294,6 +299,7 @@ class BrowserChecker {
     }
 
     await this.deleteDir(path.join(this.#browserPath, EXTRACTED_FOLDER));
+
     return readdir(this.#browserPath)
       .then((files) => {
         const promises = [];
@@ -301,11 +307,13 @@ class BrowserChecker {
           if (filename.match(/(txt|dylib|mtree)/)) {
             promises.push(unlink(path.join(this.#browserPath, filename)));
           }
-        })
+        });
+
         return Promise.all(promises);
       })
       .catch(e => {
         console.log(`Error in deleting old archives. ${e.message}`);
+
         return Promise.resolve();
       });
   }
@@ -317,14 +325,14 @@ class BrowserChecker {
       const current = await lstat(path.join(src, files[i]));
       if (current.isDirectory()) {
         await this.copyDir(path.join(src, files[i]), path.join(dest, files[i]));
-      } else if(current.isSymbolicLink()) {
+      } else if (current.isSymbolicLink()) {
         const symlinkObj = await readlink(path.join(src, files[i]));
         await symlink(symlinkObj, path.join(dest, files[i]));
       } else {
         await copyFile(path.join(src, files[i]), path.join(dest, files[i]));
       }
     }
-  };
+  }
 
   getCurrentVersion() {
     let command = `if [ -f ${path.join(this.#browserPath, 'orbita-browser', 'version')} ]; then cat ${path.join(this.#browserPath, 'orbita-browser', 'version')}; else echo 0.0.0; fi`;
@@ -333,8 +341,9 @@ class BrowserChecker {
     } else if (PLATFORM === 'darwin') {
       command = `if [ -f ${path.join(this.#browserPath, 'version', VERSION_FILE)} ]; then cat ${path.join(this.#browserPath, 'version', VERSION_FILE)}; else echo 0.0.0; fi`;
     }
+
     return exec(command);
-  };
+  }
 
   getLatestBrowserVersion() {
     let url = DEB_VERSION_FILE_URL;
@@ -359,8 +368,8 @@ class BrowserChecker {
         res.on('end', () => {
           resolve(resultResponse.trim());
         });
-    }).on('error', (err) => resolve('')));
-  };
+      }).on('error', (err) => resolve('')));
+  }
 
   get getOrbitaPath() {
     return this.#executableFilePath;
