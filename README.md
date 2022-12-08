@@ -23,35 +23,40 @@ To have an access to the page below you need <a href="https://app.gologin.com/#/
 ### Example
 
 ```js
-const puppeteer = require('puppeteer-core');
-const GoLogin = require('gologin');
+import pkg from 'puppeteer-core';
 
-(async () =>{
-    const GL = new GoLogin({
-        token: 'yU0token',
-        profile_id: 'yU0Pr0f1leiD',
-    });
+import GoLogin from './gologin.js';
 
-    const { status, wsUrl } = await GL.start().catch((e) => {
-      console.trace(e);
-      return { status: 'failure' };
-    });
+const { connect } = pkg;
 
-    if (status !== 'success') {
-      console.log('Invalid status');
-      return;
-    }
+(async () => {
+  const GL = new GoLogin({
+    token: 'yU0token',
+    profile_id: 'yU0Pr0f1leiD',
+  });
 
-    const browser = await puppeteer.connect({
-        browserWSEndpoint: wsUrl.toString(), 
-        ignoreHTTPSErrors: true,
-    });
+  const { status, wsUrl } = await GL.start().catch((e) => {
+    console.trace(e);
 
-    const page = await browser.newPage();
-    await page.goto('https://myip.link/mini');   
-    console.log(await page.content());
-    await browser.close();
-    await GL.stop();
+    return { status: 'failure' };
+  });
+
+  if (status !== 'success') {
+    console.log('Invalid status');
+
+    return;
+  }
+
+  const browser = await connect({
+    browserWSEndpoint: wsUrl.toString(),
+    ignoreHTTPSErrors: true,
+  });
+
+  const page = await browser.newPage();
+  await page.goto('https://myip.link/mini');
+  console.log(await page.content());
+  await browser.close();
+  await GL.stop();
 })();
 ```
 
@@ -77,7 +82,7 @@ const GoLogin = require('gologin');
     - `skipOrbitaHashChecking` <[boolean]> skip hash checking for Orbita after downloading process (default false)
 
 ```js
-const GoLogin = require('gologin');
+import GoLogin from './gologin.js';
 const GL = new GoLogin({
     token: 'yU0token',
     profile_id: 'yU0Pr0f1leiD',
@@ -123,26 +128,31 @@ stop current browser without removing archived profile
 ### example-local-profile.js
 
 ```js
-const puppeteer = require('puppeteer-core');
-const GoLogin = require('gologin');
+import pkg from 'puppeteer-core';
 
-(async () =>{
-    const GL = new GoLogin({
-        token: 'yU0token',
-        profile_id: 'yU0Pr0f1leiD',
-        tmpdir: '/my/tmp/dir',
-    });
-    const { status, wsUrl } = await GL.start(); 
-    const browser = await puppeteer.connect({
-        browserWSEndpoint: wsUrl.toString(), 
-        ignoreHTTPSErrors: true,
-    });
+import GoLogin from './gologin.js';
 
-    const page = await browser.newPage();
-    await page.goto('https://myip.link/mini');   
-    console.log(await page.content());
-    await browser.close();
-    await GL.stopLocal({posting: false});
+const { connect } = pkg;
+
+(async () => {
+  const GL = new GoLogin({
+    token: 'yU0token',
+    profile_id: 'yU0Pr0f1leiD',
+    executablePath: '/usr/bin/orbita-browser/chrome',
+    tmpdir: '/my/tmp/dir',
+  });
+
+  const wsUrl = await GL.startLocal();
+  const browser = await connect({
+    browserWSEndpoint: wsUrl.toString(),
+    ignoreHTTPSErrors: true,
+  });
+
+  const page = await browser.newPage();
+  await page.goto('https://myip.link');
+  console.log(await page.content());
+  await browser.close();
+  await GL.stopLocal({ posting: false });
 })();
 ```
 
