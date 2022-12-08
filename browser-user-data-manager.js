@@ -1,19 +1,18 @@
-const { rmdirSync, createWriteStream } = require('fs');
-const os = require('os');
-const path = require('path');
+import { createHash } from 'crypto';
+import { createWriteStream, promises as _promises, rmdirSync } from 'fs';
+import { homedir, tmpdir } from 'os';
+import { join, resolve, sep } from 'path';
+import { get, post } from 'requestretry';
 
-const request = require('requestretry');
+import { filter } from './fonts';
 
-const { access, readFile, writeFile, mkdir, readdir, copyFile, rename } = require('fs').promises;
-const crypto = require('crypto');
-
-const fontsCollection = require('./fonts');
+const { access, readFile, writeFile, mkdir, readdir, copyFile, rename } = _promises;
 
 const FONTS_URL = 'https://fonts.gologin.com/';
 const FONTS_DIR_NAME = 'fonts';
 
-const HOMEDIR = os.homedir();
-const BROWSER_PATH = path.join(HOMEDIR, '.gologin', 'browser');
+const HOMEDIR = homedir();
+const BROWSER_PATH = join(HOMEDIR, '.gologin', 'browser');
 const OS_PLATFORM = process.platform;
 const DEFAULT_ORBITA_EXTENSIONS_NAMES = ['Google Hangouts', 'Chromium PDF Viewer', 'CryptoTokenExtension', 'Web Store'];
 const GOLOGIN_BASE_FOLDER_NAME = '.gologin';
@@ -22,7 +21,7 @@ const osPlatform = process.platform;
 
 class BrowserUserDataManager {
   static downloadCookies({ profileId, ACCESS_TOKEN, API_BASE_URL }) {
-    return request.get(`${API_BASE_URL}/browser/${profileId}/cookies?encrypted=true`, {
+    return get(`${API_BASE_URL}/browser/${profileId}/cookies?encrypted=true`, {
       headers: {
         Authorization: `Bearer ${ACCESS_TOKEN}`,
         'user-agent': 'gologin-api',
@@ -39,7 +38,7 @@ class BrowserUserDataManager {
   }
 
   static uploadCookies({ cookies = [], profileId, ACCESS_TOKEN, API_BASE_URL }) {
-    return request.post(`${API_BASE_URL}/browser/${profileId}/cookies?encrypted=true`, {
+    return post(`${API_BASE_URL}/browser/${profileId}/cookies?encrypted=true`, {
       headers: {
         Authorization: `Bearer ${ACCESS_TOKEN}`,
         'User-Agent': 'gologin-api',
@@ -60,18 +59,18 @@ class BrowserUserDataManager {
       return;
     }
 
-    const browserFontsPath = path.join(BROWSER_PATH, FONTS_DIR_NAME);
+    const browserFontsPath = join(BROWSER_PATH, FONTS_DIR_NAME);
     await mkdir(browserFontsPath, { recursive: true });
 
     const files = await readdir(browserFontsPath);
     const fontsToDownload = fontsList.filter(font => !files.includes(font));
 
-    let promises = fontsToDownload.map(font => request.get(FONTS_URL + font, {
+    let promises = fontsToDownload.map(font => get(FONTS_URL + font, {
       maxAttempts: 5,
       retryDelay: 2000,
       timeout: 30 * 1000,
     })
-      .pipe(createWriteStream(path.join(browserFontsPath, font))),
+      .pipe(createWriteStream(join(browserFontsPath, font))),
     );
 
     if (promises.length) {
@@ -79,7 +78,7 @@ class BrowserUserDataManager {
     }
 
     promises = fontsList.map((font) =>
-      copyFile(path.join(browserFontsPath, font), path.join(profilePath, FONTS_DIR_NAME, font)));
+      copyFile(join(browserFontsPath, font), join(profilePath, FONTS_DIR_NAME, font)));
 
     await Promise.all(promises);
   }
@@ -89,8 +88,7 @@ class BrowserUserDataManager {
       return;
     }
 
-    const fontsToDownload = fontsCollection
-      .filter(elem => fontsList.includes(elem.value))
+    const fontsToDownload = filter(elem => fontsList.includes(elem.value))
       .reduce((res, elem) => res.concat(elem.fileNames || []), []);
 
     if (differentOs && !fontsToDownload.length) {
@@ -100,7 +98,7 @@ class BrowserUserDataManager {
     fontsToDownload.push('LICENSE.txt');
     fontsToDownload.push('OFL.txt');
 
-    const pathToFontsDir = path.join(profilePath, FONTS_DIR_NAME);
+    const pathToFontsDir = join(profilePath, FONTS_DIR_NAME);
     const fontsDirExists = await access(pathToFontsDir).then(() => true, () => false);
     if (fontsDirExists) {
       rmdirSync(pathToFontsDir, { recursive: true });
@@ -119,17 +117,17 @@ class BrowserUserDataManager {
       return;
     }
 
-    const fileContent = await readFile(path.resolve(__dirname, 'fonts_config'), 'utf-8');
-    const result = fileContent.replace(/\$\$GOLOGIN_FONTS\$\$/g, path.join(profilePath, FONTS_DIR_NAME));
+    const fileContent = await readFile(resolve(__dirname, 'fonts_config'), 'utf-8');
+    const result = fileContent.replace(/\$\$GOLOGIN_FONTS\$\$/g, join(profilePath, FONTS_DIR_NAME));
 
-    const defaultFolderPath = path.join(profilePath, 'Default');
+    const defaultFolderPath = join(profilePath, 'Default');
     await mkdir(defaultFolderPath, { recursive: true });
-    await writeFile(path.join(defaultFolderPath, 'fonts_config'), result);
+    await writeFile(join(defaultFolderPath, 'fonts_config'), result);
   }
 
   static setExtPathsAndRemoveDeleted(settings = {}, profileExtensionsCheckRes = [], profileId = '') {
     const formattedLocalExtArray = profileExtensionsCheckRes.map((el) => {
-      const [extFolderName = ''] = el.split(path.sep).reverse();
+      const [extFolderName = ''] = el.split(sep).reverse();
       const [originalId] = extFolderName.split('@');
       if (!originalId) {
         return null;
@@ -169,12 +167,12 @@ class BrowserUserDataManager {
 
       extensionsSettings[extensionId].path = extPath;
 
-      const splittedPath = extPath.split(path.sep);
+      const splittedPath = extPath.split(sep);
       const isExtensionManageable = ['chrome-extensions', 'user-extensions'].some(substring => extPath.includes(substring))
         && [GOLOGIN_BASE_FOLDER_NAME, GOLOGIN_TEST_FOLDER_NAME].some(substring => extPath.includes(substring));
 
       if (isExtensionManageable) {
-        const [extFolderName] = extPath.split(path.sep).reverse();
+        const [extFolderName] = extPath.split(sep).reverse();
         [originalId] = extFolderName.split('@');
       } else if (splittedPath.length === 2) {
         [originalId] = splittedPath;
@@ -201,9 +199,9 @@ class BrowserUserDataManager {
       });
 
       if (initialExtName !== extensionId) {
-        const profilePath = path.join(os.tmpdir(), `gologin_profile_${profileId}`);
-        const extSyncFolder = path.join(profilePath, 'Default', 'Sync Extension Settings', initialExtName);
-        const newSyncFolder = path.join(profilePath, 'Default', 'Sync Extension Settings', extensionId);
+        const profilePath = join(tmpdir(), `gologin_profile_${profileId}`);
+        const extSyncFolder = join(profilePath, 'Default', 'Sync Extension Settings', initialExtName);
+        const newSyncFolder = join(profilePath, 'Default', 'Sync Extension Settings', extensionId);
 
         await rename(extSyncFolder, newSyncFolder).catch(() => null);
       }
@@ -232,7 +230,7 @@ class BrowserUserDataManager {
     }
 
     const promises = originalExtensionsList.map(async (originalId) => {
-      const extFolderPath = path.join(originalExtensionsFolder, originalId);
+      const extFolderPath = join(originalExtensionsFolder, originalId);
       const extFolderContent = await readdir(extFolderPath);
       if (!extFolderPath.length) {
         return {};
@@ -241,7 +239,7 @@ class BrowserUserDataManager {
       if (extFolderContent.includes('manifest.json')) {
         return {
           originalId,
-          path: path.join(originalExtensionsFolder, originalId),
+          path: join(originalExtensionsFolder, originalId),
         };
       }
 
@@ -249,7 +247,7 @@ class BrowserUserDataManager {
 
       return {
         originalId,
-        path: path.join(originalExtensionsFolder, originalId, version),
+        path: join(originalExtensionsFolder, originalId, version),
       };
     });
 
@@ -278,7 +276,7 @@ class BrowserUserDataManager {
       return extensionId;
     }
 
-    const manifestFilePath = path.join(localExtObj.path, 'manifest.json');
+    const manifestFilePath = join(localExtObj.path, 'manifest.json');
     const manifestString = await readFile(manifestFilePath, { encoding: 'utf8' }).catch(() => ({}));
 
     if (!manifestString) {
@@ -303,7 +301,7 @@ class BrowserUserDataManager {
 
     const extPathToEncode = Buffer.from(localExtObj.path, encoding);
 
-    const hexEncodedPath = crypto.createHash('sha256').update(extPathToEncode).digest('hex');
+    const hexEncodedPath = createHash('sha256').update(extPathToEncode).digest('hex');
     const newId = hexEncodedPath.split('').slice(0, 32).map(symbol => extIdEncoding[symbol]).join('');
     if (extensionId !== newId) {
       delete extensionsSettings[extensionId];
@@ -335,6 +333,6 @@ const extIdEncoding = {
   f: 'p',
 };
 
-module.exports = {
+export default {
   BrowserUserDataManager,
 };

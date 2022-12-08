@@ -1,12 +1,12 @@
-const path = require('path');
-const fs = require('fs');
-const { readdir, rmdir, readFile, stat, mkdir, copyFile } = require('fs').promises;
+import { createWriteStream, promises as _promises } from 'fs';
+import { join, sep } from 'path';
+import zipdir from 'zip-dir';
 
+import { CHROME_EXTENSIONS_PATH, composeExtractionPromises, USER_EXTENSIONS_PATH } from './common';
+import ExtensionsExtractor from './extensions-extractor';
+
+const { readdir, rmdir, readFile, stat, mkdir, copyFile } = _promises;
 const request = require('requestretry').defaults({ timeout: 60000 });
-const zipdir = require('zip-dir');
-
-const { composeExtractionPromises, CHROME_EXTENSIONS_PATH, USER_EXTENSIONS_PATH } = require('./common');
-const ExtensionsExtractor = require('./extensions-extractor');
 
 const MAX_FILE_SIZE = 80 * 1024 * 1024;
 const MAX_FILE_SIZE_MB = MAX_FILE_SIZE / 1024 / 1024;
@@ -90,7 +90,7 @@ class UserExtensionsManager {
       const customId = this.generateExtensionId();
 
       if (isZip) {
-        const pathToExtract = path.join(USER_EXTENSIONS_PATH, customId);
+        const pathToExtract = join(USER_EXTENSIONS_PATH, customId);
         await ExtensionsExtractor.extractExtension(pathToFiles, pathToExtract);
         pathToFiles = pathToExtract;
       }
@@ -102,7 +102,7 @@ class UserExtensionsManager {
         const isFolder = (await stat(pathToFiles)).isDirectory();
         if (isFolder) {
           const [folderName] = fileList;
-          pathToFiles = path.join(pathToFiles, folderName);
+          pathToFiles = join(pathToFiles, folderName);
           fileList = await readdir(pathToFiles).catch(() => ['cantReadError']);
         }
       }
@@ -120,7 +120,7 @@ class UserExtensionsManager {
       }
 
       if (!isZip) {
-        const destPath = path.join(USER_EXTENSIONS_PATH, customId);
+        const destPath = join(USER_EXTENSIONS_PATH, customId);
         await copyFolder(pathToFiles, destPath).catch(() => {
           throw new Error('Something went wrong coping your folder');
         });
@@ -226,8 +226,8 @@ class UserExtensionsManager {
     const promises = extensionsToDownloadPathsFiltered.map(async awsPath => {
       const [basePath] = awsPath.split('?');
       const [extId] = basePath.split('/').reverse();
-      const zipPath = `${path.join(USER_EXTENSIONS_PATH, extId)}.zip`;
-      const archiveZip = fs.createWriteStream(zipPath);
+      const zipPath = `${join(USER_EXTENSIONS_PATH, extId)}.zip`;
+      const archiveZip = createWriteStream(zipPath);
 
       await request(awsPath, {
         retryDelay: 2 * 1000,
@@ -249,7 +249,7 @@ class UserExtensionsManager {
     const isExtensionsExtracted = await Promise.all(extractionPromises).catch(() => 'error');
 
     if (isExtensionsExtracted !== 'error') {
-      const [downloadedFolders] = zipPaths.map(archivePath => archivePath.split(path.sep).reverse());
+      const [downloadedFolders] = zipPaths.map(archivePath => archivePath.split(sep).reverse());
       this.#existedUserExtensions = [...this.#existedUserExtensions, ...downloadedFolders];
     }
 
@@ -261,14 +261,14 @@ class UserExtensionsManager {
       return [];
     }
 
-    const folders = await readdir(folderPath).then(folderNames => folderNames.map(folderName => path.join(folderPath, folderName)));
+    const folders = await readdir(folderPath).then(folderNames => folderNames.map(folderName => join(folderPath, folderName)));
 
     if (!folders.length) {
       return [];
     }
 
     const formattedIdsList = folders.map((el) => {
-      const [folderName] = el.split(path.sep).reverse();
+      const [folderName] = el.split(sep).reverse();
       const [originalId] = folderName.split('@');
 
       return {
@@ -306,11 +306,11 @@ class UserExtensionsManager {
 
       let pathToExtensionsFolder = [pathToExtensions, folderName];
       if (!isCheckLocalFiles) {
-        const [extensionVersion] = await readdir(path.join(pathToExtensions, folderName));
+        const [extensionVersion] = await readdir(join(pathToExtensions, folderName));
         pathToExtensionsFolder = [pathToExtensions, folderName, extensionVersion];
       }
 
-      const manifestPath = path.join(...pathToExtensionsFolder, 'manifest.json');
+      const manifestPath = join(...pathToExtensionsFolder, 'manifest.json');
       const manifestString = await readFile(manifestPath, 'utf8').catch(() => '');
       if (!manifestString) {
         return;
@@ -321,7 +321,7 @@ class UserExtensionsManager {
       if (manifestObject.name.includes('__MSG')) {
         const manifestName = manifestObject.name || '';
         const fieldNameInLocale = manifestName.replace(/__/g, '').split('MSG_')[1];
-        const localePath = path.join(...pathToExtensionsFolder, '_locales', manifestObject.default_locale, 'messages.json');
+        const localePath = join(...pathToExtensionsFolder, '_locales', manifestObject.default_locale, 'messages.json');
         const localeString = await readFile(localePath, 'utf8').catch(() => {});
 
         try {
@@ -346,7 +346,7 @@ class UserExtensionsManager {
 
       let iconBSON = '';
       if (iconPath) {
-        const iconPathFull = path.join(...pathToExtensionsFolder, iconPath);
+        const iconPathFull = join(...pathToExtensionsFolder, iconPath);
         iconBSON = await readFile(iconPathFull, 'base64').catch(() => {});
       }
 
@@ -378,7 +378,7 @@ class UserExtensionsManager {
 
 const checkFileSizeSync = async (pathToFile) => {
   try {
-    const [fileName] = pathToFile.split(path.sep).reverse();
+    const [fileName] = pathToFile.split(sep).reverse();
     if (fileName === '.DS_Store') {
       return 0;
     }
@@ -389,7 +389,7 @@ const checkFileSizeSync = async (pathToFile) => {
     }
 
     const files = await readdir(pathToFile);
-    const promises = files.map(async file => checkFileSizeSync(path.join(pathToFile, file)));
+    const promises = files.map(async file => checkFileSizeSync(join(pathToFile, file)));
 
     return (await Promise.all(promises)).reduce((result, value) => result + value, 0);
   } catch {
@@ -409,10 +409,10 @@ const copyFolder = async (fromPath, destPath) => {
   const promises = files.map(async file => {
     await mkdir(destPath, { recursive: true }).catch(() => null);
 
-    return copyFolder(path.join(fromPath, file), path.join(destPath, file));
+    return copyFolder(join(fromPath, file), join(destPath, file));
   });
 
   return Promise.all(promises);
 };
 
-module.exports = UserExtensionsManager;
+export default UserExtensionsManager;

@@ -1,6 +1,6 @@
-const puppeteer = require('puppeteer-core');
+import puppeteer from 'puppeteer-core';
 
-const GoLogin = require('../gologin');
+import GoLogin from '../gologin';
 
 const delay = ms => new Promise(res => setTimeout(res, ms));
 

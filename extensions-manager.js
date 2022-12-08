@@ -1,12 +1,11 @@
-const path = require('path');
+import { createWriteStream, promises as _promises } from 'fs';
+import { join, sep } from 'path';
 
+import { CHROME_EXTENSIONS_PATH, composeExtractionPromises, USER_EXTENSIONS_PATH } from './common';
+import UserExtensionsManager from './user-extensions-manager';
+
+const { mkdir, readdir, rmdir, unlink } = _promises;
 const request = require('requestretry').defaults({ timeout: 60000 });
-
-const fs = require('fs');
-const { mkdir, readdir, rmdir, unlink } = require('fs').promises;
-
-const { composeExtractionPromises, CHROME_EXTENSIONS_PATH, USER_EXTENSIONS_PATH } = require('./common');
-const UserExtensionsManager = require('./user-extensions-manager');
 
 const EXTENSION_URL = 'https://clients2.google.com/service/update2/crx?response=redirect&acceptformat=crx2,crx3&x=id%3D{ext_id}%26uc&prodversion=97.0.4692.71';
 
@@ -39,7 +38,7 @@ class ExtensionsManager extends UserExtensionsManager {
           this.#existedChromeExtensions = filesList.filter(extPath => !extPath.includes('.zip'));
 
           return filesList.map(fileName => fileName.includes('.zip') ?
-            unlink(path.join(CHROME_EXTENSIONS_PATH, fileName)) :
+            unlink(join(CHROME_EXTENSIONS_PATH, fileName)) :
             Promise.resolve());
         })
         .then(promisesToDelete => Promise.all(promisesToDelete))
@@ -50,7 +49,7 @@ class ExtensionsManager extends UserExtensionsManager {
           this.existedUserExtensions = filesList.filter(extPath => !extPath.includes('.zip'));
 
           return filesList.map(fileName => fileName.includes('.zip') ?
-            unlink(path.join(USER_EXTENSIONS_PATH, fileName)) :
+            unlink(join(USER_EXTENSIONS_PATH, fileName)) :
             Promise.resolve());
         })
         .then((promisesToDelete) => Promise.all(promisesToDelete))
@@ -88,7 +87,7 @@ class ExtensionsManager extends UserExtensionsManager {
     const filteredArchives = downloadedArchives.filter(Boolean);
 
     if (filteredArchives.length) {
-      const [downloadedFolders] = filteredArchives.map(archivePath => archivePath.split(path.sep).reverse());
+      const [downloadedFolders] = filteredArchives.map(archivePath => archivePath.split(sep).reverse());
       this.#existedChromeExtensions = [...this.#existedChromeExtensions, ...downloadedFolders];
 
       const promises = composeExtractionPromises(filteredArchives);
@@ -153,9 +152,9 @@ class ExtensionsManager extends UserExtensionsManager {
         return '';
       }
 
-      const archiveZipPath = path.join(CHROME_EXTENSIONS_PATH, originalId + '@' + extVer + '.zip');
+      const archiveZipPath = join(CHROME_EXTENSIONS_PATH, originalId + '@' + extVer + '.zip');
 
-      const archiveZip = fs.createWriteStream(archiveZipPath);
+      const archiveZip = createWriteStream(archiveZipPath);
       archiveZip.write(zipExt);
       archiveZip.close();
 
@@ -214,7 +213,7 @@ class ExtensionsManager extends UserExtensionsManager {
         return '';
       }
 
-      oldFolders.push(path.join(CHROME_EXTENSIONS_PATH, extension));
+      oldFolders.push(join(CHROME_EXTENSIONS_PATH, extension));
 
       return originalId;
     });
@@ -302,14 +301,14 @@ class ExtensionsManager extends UserExtensionsManager {
 
     const objectEntries = Object.entries(extensionsFromPref);
     const extensionsInPref = objectEntries?.map(([_, settings]) => {
-      const [extFolderName] = settings.path.split(path.sep).reverse();
+      const [extFolderName] = settings.path.split(sep).reverse();
       const [originalId] = extFolderName.split('@');
 
       return originalId;
     }) || [];
 
     return extensionsFromDB.reduce((acc, extension) => {
-      const [extFolderName] = extension.split(path.sep).reverse();
+      const [extFolderName] = extension.split(sep).reverse();
       const [originalId] = extFolderName.split('@');
       if (!extensionsInPref.includes(originalId)) {
         acc.push(extension);
@@ -380,5 +379,5 @@ const getExtVersion = (metadata) => {
   return splitExtName.join('_');
 };
 
-module.exports = ExtensionsManager;
+export default ExtensionsManager;
 

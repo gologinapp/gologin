@@ -1,7 +1,8 @@
-const { access, unlink } = require('fs').promises;
+import decompress from 'decompress';
+import decompressUnzip from 'decompress-unzip';
+import { promises } from 'fs';
 
-const decompress = require('decompress');
-const decompressUnzip = require('decompress-unzip');
+const { access, unlink } = promises;
 
 class ExtensionsExtractor {
   static extractExtension(source, dest) {
@@ -56,4 +57,4 @@ const withRetry = optionsOrUndefined => {
   });
 };
 
-module.exports = ExtensionsExtractor;
+export default ExtensionsExtractor;

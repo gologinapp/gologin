@@ -11,6 +11,9 @@
         "ecmaVersion": "latest",
         "sourceType": "module"
     },
+    "plugins": [
+      "simple-import-sort"
+    ],
     "rules": {
         "padding-line-between-statements": [
           "warn",
@@ -256,6 +259,7 @@
         "max-len": [
           "warn",
           150
-        ]
+        ],
+        "simple-import-sort/imports": "warn"
     }
 }

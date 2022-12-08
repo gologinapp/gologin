@@ -1,6 +1,6 @@
-const puppeteer = require('puppeteer-core');
+import { connect } from 'puppeteer-core';
 
-const GoLogin = require('../gologin');
+import GoLogin from '../gologin';
 
 const delay = (time) => new Promise((resolve) => setTimeout(resolve, time));
 
@@ -12,7 +12,7 @@ const delay = (time) => new Promise((resolve) => setTimeout(resolve, time));
   });
 
   const { status, wsUrl } = await GL.start();
-  const browser = await puppeteer.connect({
+  const browser = await connect({
     browserWSEndpoint: wsUrl.toString(),
     ignoreHTTPSErrors: true,
   });

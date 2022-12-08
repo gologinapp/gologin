@@ -1,6 +1,6 @@
-const puppeteer = require('puppeteer-core');
+import { connect } from 'puppeteer-core';
 
-const GoLogin = require('../gologin');
+import GoLogin from '../gologin';
 
 (async () => {
   const GL = new GoLogin({
@@ -9,7 +9,7 @@ const GoLogin = require('../gologin');
   });
 
   const { status, wsUrl } = await GL.startRemote();
-  const browser = await puppeteer.connect({
+  const browser = await connect({
     browserWSEndpoint: wsUrl,
     ignoreHTTPSErrors: true,
   });

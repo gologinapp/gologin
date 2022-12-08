@@ -1,5 +1,5 @@
-const { open } = require('sqlite');
-const sqlite3 = require('sqlite3');
+import { open } from 'sqlite';
+import { Database, OPEN_READONLY } from 'sqlite3';
 
 const MAX_SQLITE_VARIABLES = 76;
 
@@ -14,11 +14,11 @@ class CookiesManager {
   static getDB(filePath, readOnly = true) {
     const connectionOpts = {
       filename: filePath,
-      driver: sqlite3.Database,
+      driver: Database,
     };
 
     if (readOnly) {
-      connectionOpts.mode = sqlite3.OPEN_READONLY;
+      connectionOpts.mode = OPEN_READONLY;
     }
 
     return open(connectionOpts);
@@ -173,6 +173,6 @@ class CookiesManager {
   }
 }
 
-module.exports = {
+export default {
   CookiesManager,
 };

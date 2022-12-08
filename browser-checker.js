@@ -1,15 +1,15 @@
-const fs = require('fs');
-const https = require('https');
-const os = require('os');
-const path = require('path');
-const readline = require('readline');
-const util = require('util');
-const { access, mkdir, readdir, rmdir, unlink, copyFile, readlink, symlink, lstat } = require('fs').promises;
+import decompress from 'decompress';
+import decompressUnzip from 'decompress-unzip';
+import { createWriteStream, promises as _promises } from 'fs';
+import { get } from 'https';
+import { homedir } from 'os';
+import { join } from 'path';
+import ProgressBar from 'progress';
+import { createInterface } from 'readline';
+import { promisify } from 'util';
 
-const exec = util.promisify(require('child_process').exec);
-const decompress = require('decompress');
-const decompressUnzip = require('decompress-unzip');
-const ProgressBar = require('progress');
+const exec = promisify(require('child_process').exec);
+const { access, mkdir, readdir, rmdir, unlink, copyFile, readlink, symlink, lstat } = _promises;
 
 const PLATFORM = process.platform;
 
@@ -44,14 +44,14 @@ class BrowserChecker {
 
   constructor(skipOrbitaHashChecking) {
     this.#skipOrbitaHashChecking = skipOrbitaHashChecking;
-    this.#homedir = os.homedir();
-    this.#browserPath = path.join(this.#homedir, '.gologin', 'browser');
+    this.#homedir = homedir();
+    this.#browserPath = join(this.#homedir, '.gologin', 'browser');
 
-    let executableFilePath = path.join(this.#browserPath, 'orbita-browser', 'chrome');
+    let executableFilePath = join(this.#browserPath, 'orbita-browser', 'chrome');
     if (PLATFORM === 'darwin') {
-      executableFilePath = path.join(this.#browserPath, 'Orbita-Browser.app', 'Contents', 'MacOS', 'Orbita');
+      executableFilePath = join(this.#browserPath, 'Orbita-Browser.app', 'Contents', 'MacOS', 'Orbita');
     } else if (PLATFORM === 'win32') {
-      executableFilePath = path.join(this.#browserPath, 'orbita-browser', 'chrome.exe');
+      executableFilePath = join(this.#browserPath, 'orbita-browser', 'chrome.exe');
     }
 
     this.#executableFilePath = executableFilePath;
@@ -78,7 +78,7 @@ class BrowserChecker {
     }
 
     return new Promise(resolve => {
-      const rl = readline.createInterface(process.stdin, process.stdout);
+      const rl = createInterface(process.stdin, process.stdout);
       const timeout = setTimeout(() => {
         console.log(`\nContinue with current ${currentVersion} version.`);
         resolve();
@@ -101,7 +101,7 @@ class BrowserChecker {
     await this.deleteOldArchives(true);
     await mkdir(this.#browserPath, { recursive: true });
 
-    const pathStr = path.join(this.#browserPath, BROWSER_ARCHIVE_NAME);
+    const pathStr = join(this.#browserPath, BROWSER_ARCHIVE_NAME);
     let link = DEB_BROWSER_LINK;
     if (PLATFORM === 'win32') {
       link = WIN_BROWSER_LINK;
@@ -121,14 +121,14 @@ class BrowserChecker {
 
   downloadBrowserArchive(link, pathStr) {
     return new Promise((resolve, reject) => {
-      const writableStream = fs.createWriteStream(pathStr);
+      const writableStream = createWriteStream(pathStr);
       writableStream.on('error', async err => {
         await unlink(pathStr);
         reject(err);
       });
       writableStream.on('finish', () => resolve());
 
-      const req = https.get(link, {
+      const req = get(link, {
         timeout: 15 * 1000,
       }, (res) => {
         const len = parseInt(res.headers['content-length'], 10);
@@ -179,9 +179,9 @@ class BrowserChecker {
 
   async extractBrowser() {
     console.log('Extracting Orbita');
-    await mkdir(path.join(this.#browserPath, EXTRACTED_FOLDER), { recursive: true });
+    await mkdir(join(this.#browserPath, EXTRACTED_FOLDER), { recursive: true });
     if (PLATFORM === 'win32') {
-      return decompress(path.join(this.#browserPath, BROWSER_ARCHIVE_NAME), path.join(this.#browserPath, EXTRACTED_FOLDER),
+      return decompress(join(this.#browserPath, BROWSER_ARCHIVE_NAME), join(this.#browserPath, EXTRACTED_FOLDER),
         {
           plugins: [decompressUnzip()],
           filter: file => !file.path.endsWith('/'),
@@ -190,25 +190,25 @@ class BrowserChecker {
     }
 
     return exec(
-      `tar xzf ${path.join(this.#browserPath, BROWSER_ARCHIVE_NAME)} --directory ${path.join(this.#browserPath, EXTRACTED_FOLDER)}`,
+      `tar xzf ${join(this.#browserPath, BROWSER_ARCHIVE_NAME)} --directory ${join(this.#browserPath, EXTRACTED_FOLDER)}`,
     );
   }
 
   async downloadHashFile() {
     let hashLink = DEB_HASHFILE_LINK;
-    let resultPath = path.join(this.#browserPath, DEB_HASH_FILE);
+    let resultPath = join(this.#browserPath, DEB_HASH_FILE);
     if (PLATFORM === 'darwin') {
       hashLink = MAC_HASHFILE_LINK;
-      resultPath = path.join(this.#browserPath, MAC_HASH_FILE);
+      resultPath = join(this.#browserPath, MAC_HASH_FILE);
     }
 
-    const writableStream = fs.createWriteStream(resultPath);
+    const writableStream = createWriteStream(resultPath);
     writableStream.on('error', async (err) => {
       await unlink(resultPath);
       throw err;
     });
 
-    await new Promise(resolve => https.get(hashLink,
+    await new Promise(resolve => get(hashLink,
       {
         timeout: 10 * 1000,
       }, (res) => {
@@ -222,7 +222,7 @@ class BrowserChecker {
       }).on('error', (err) => writableStream.destroy(err)));
 
     const hashFile = PLATFORM === 'darwin' ? MAC_HASH_FILE : DEB_HASH_FILE;
-    const hashFilePath = path.join(this.#browserPath, hashFile);
+    const hashFilePath = join(this.#browserPath, hashFile);
 
     return access(hashFilePath);
   }
@@ -240,7 +240,7 @@ class BrowserChecker {
     await this.downloadHashFile();
     if (PLATFORM === 'darwin') {
       const calculatedHash = await exec(
-        `mtree -p ${path.join(this.#browserPath, EXTRACTED_FOLDER, 'Orbita-Browser.app')} < ${path.join(this.#browserPath, MAC_HASH_FILE)} || echo ${FAIL_SUM_MATCH_MESSAGE}`,
+        `mtree -p ${join(this.#browserPath, EXTRACTED_FOLDER, 'Orbita-Browser.app')} < ${join(this.#browserPath, MAC_HASH_FILE)} || echo ${FAIL_SUM_MATCH_MESSAGE}`,
       );
 
       const checkedRes = (calculatedHash || '').toString().trim();
@@ -251,12 +251,12 @@ class BrowserChecker {
       return;
     }
 
-    const hashFileContent = await exec(`cat ${path.join(this.#browserPath, DEB_HASH_FILE)}`);
+    const hashFileContent = await exec(`cat ${join(this.#browserPath, DEB_HASH_FILE)}`);
     let serverRes = (hashFileContent.stdout || '').toString().trim();
     serverRes = serverRes.split(' ')[0];
 
     const calculateLocalBrowserHash = await exec(
-      `cd ${path.join(this.#browserPath, EXTRACTED_FOLDER)} && find orbita-browser -type f -print0 | sort -z | \
+      `cd ${join(this.#browserPath, EXTRACTED_FOLDER)} && find orbita-browser -type f -print0 | sort -z | \
             xargs -0 sha256sum > ${this.#browserPath}/calculatedFolderSha.txt`,
     );
 
@@ -271,41 +271,41 @@ class BrowserChecker {
   async replaceBrowser() {
     console.log('Copy Orbita to target path');
     if (PLATFORM === 'darwin') {
-      await this.deleteDir(path.join(this.#browserPath, 'Orbita-Browser.app'));
+      await this.deleteDir(join(this.#browserPath, 'Orbita-Browser.app'));
 
-      const files = await readdir(path.join(this.#browserPath, EXTRACTED_FOLDER));
+      const files = await readdir(join(this.#browserPath, EXTRACTED_FOLDER));
       const promises = [];
       files.forEach((filename) => {
         if (filename.match(/.*\.dylib$/)) {
-          promises.push(copyFile(path.join(this.#browserPath, EXTRACTED_FOLDER, filename), path.join(this.#browserPath, filename)));
+          promises.push(copyFile(join(this.#browserPath, EXTRACTED_FOLDER, filename), join(this.#browserPath, filename)));
         }
       });
 
       return Promise.all(promises);
     }
 
-    const targetBrowserPath = path.join(this.#browserPath, 'orbita-browser');
+    const targetBrowserPath = join(this.#browserPath, 'orbita-browser');
     await this.deleteDir(targetBrowserPath);
 
     await this.copyDir(
-      path.join(this.#browserPath, EXTRACTED_FOLDER, 'orbita-browser'),
+      join(this.#browserPath, EXTRACTED_FOLDER, 'orbita-browser'),
       targetBrowserPath,
     );
   }
 
   async deleteOldArchives(deleteCurrentBrowser = false) {
     if (deleteCurrentBrowser) {
-      return this.deleteDir(path.join(this.#browserPath));
+      return this.deleteDir(join(this.#browserPath));
     }
 
-    await this.deleteDir(path.join(this.#browserPath, EXTRACTED_FOLDER));
+    await this.deleteDir(join(this.#browserPath, EXTRACTED_FOLDER));
 
     return readdir(this.#browserPath)
       .then((files) => {
         const promises = [];
         files.forEach((filename) => {
           if (filename.match(/(txt|dylib|mtree)/)) {
-            promises.push(unlink(path.join(this.#browserPath, filename)));
+            promises.push(unlink(join(this.#browserPath, filename)));
           }
         });
 
@@ -322,24 +322,24 @@ class BrowserChecker {
     await mkdir(dest);
     const files = await readdir(src);
     for (let i = 0; i < files.length; i++) {
-      const current = await lstat(path.join(src, files[i]));
+      const current = await lstat(join(src, files[i]));
       if (current.isDirectory()) {
-        await this.copyDir(path.join(src, files[i]), path.join(dest, files[i]));
+        await this.copyDir(join(src, files[i]), join(dest, files[i]));
       } else if (current.isSymbolicLink()) {
-        const symlinkObj = await readlink(path.join(src, files[i]));
-        await symlink(symlinkObj, path.join(dest, files[i]));
+        const symlinkObj = await readlink(join(src, files[i]));
+        await symlink(symlinkObj, join(dest, files[i]));
       } else {
-        await copyFile(path.join(src, files[i]), path.join(dest, files[i]));
+        await copyFile(join(src, files[i]), join(dest, files[i]));
       }
     }
   }
 
   getCurrentVersion() {
-    let command = `if [ -f ${path.join(this.#browserPath, 'orbita-browser', 'version')} ]; then cat ${path.join(this.#browserPath, 'orbita-browser', 'version')}; else echo 0.0.0; fi`;
+    let command = `if [ -f ${join(this.#browserPath, 'orbita-browser', 'version')} ]; then cat ${join(this.#browserPath, 'orbita-browser', 'version')}; else echo 0.0.0; fi`;
     if (PLATFORM === 'win32') {
-      command = `if exist "${path.join(this.#browserPath, 'orbita-browser', 'version')}" (type "${path.join(this.#browserPath, 'orbita-browser', 'version')}") else (echo 0.0.0)`;
+      command = `if exist "${join(this.#browserPath, 'orbita-browser', 'version')}" (type "${join(this.#browserPath, 'orbita-browser', 'version')}") else (echo 0.0.0)`;
     } else if (PLATFORM === 'darwin') {
-      command = `if [ -f ${path.join(this.#browserPath, 'version', VERSION_FILE)} ]; then cat ${path.join(this.#browserPath, 'version', VERSION_FILE)}; else echo 0.0.0; fi`;
+      command = `if [ -f ${join(this.#browserPath, 'version', VERSION_FILE)} ]; then cat ${join(this.#browserPath, 'version', VERSION_FILE)}; else echo 0.0.0; fi`;
     }
 
     return exec(command);
@@ -353,7 +353,7 @@ class BrowserChecker {
       url = MAC_VERSION_FILE_URL;
     }
 
-    return new Promise(resolve => https.get(url,
+    return new Promise(resolve => get(url,
       {
         timeout: 15 * 1000,
         headers: {
@@ -389,4 +389,4 @@ class BrowserChecker {
   }
 }
 
-module.exports = BrowserChecker;
+export default BrowserChecker;
