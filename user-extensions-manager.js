@@ -1,17 +1,17 @@
 import { createWriteStream, promises as _promises } from 'fs';
 import { join, sep } from 'path';
+import request from 'requestretry';
 import zipdir from 'zip-dir';
 
-import { CHROME_EXTENSIONS_PATH, composeExtractionPromises, USER_EXTENSIONS_PATH } from './common';
-import ExtensionsExtractor from './extensions-extractor';
+import { CHROME_EXTENSIONS_PATH, composeExtractionPromises, USER_EXTENSIONS_PATH } from './common.js';
+import { extractExtension } from './extensions-extractor.js';
 
 const { readdir, rmdir, readFile, stat, mkdir, copyFile } = _promises;
-const request = require('requestretry').defaults({ timeout: 60000 });
 
 const MAX_FILE_SIZE = 80 * 1024 * 1024;
 const MAX_FILE_SIZE_MB = MAX_FILE_SIZE / 1024 / 1024;
 
-class UserExtensionsManager {
+export class UserExtensionsManager {
   #existedUserExtensions = [];
   #API_BASE_URL = '';
   #ACCESS_TOKEN = '';
@@ -91,7 +91,7 @@ class UserExtensionsManager {
 
       if (isZip) {
         const pathToExtract = join(USER_EXTENSIONS_PATH, customId);
-        await ExtensionsExtractor.extractExtension(pathToFiles, pathToExtract);
+        await extractExtension(pathToFiles, pathToExtract);
         pathToFiles = pathToExtract;
       }
 

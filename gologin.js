@@ -1,26 +1,28 @@
-import { execFile,spawn } from 'child_process';
+import { exec as execNonPromise, execFile, spawn } from 'child_process';
+import debug from 'debug';
 import decompress from 'decompress';
 import decompressUnzip from 'decompress-unzip';
 import { existsSync, mkdirSync, promises as _promises } from 'fs';
 import { get as _get } from 'https';
-import { get, merge } from 'lodash';
+import pkg from 'lodash';
 import { tmpdir } from 'os';
 import { join, resolve as _resolve,sep } from 'path';
+import requests from 'requestretry';
+import rimraf from 'rimraf';
 import ProxyAgent from 'simple-proxy-agent';
-import { promisify } from 'util';
+import util from 'util';
 import zipdir from 'zip-dir';
 
-import BrowserChecker from './browser-checker';
-import { BrowserUserDataManager } from './browser-user-data-manager';
-import { CookiesManager } from './cookies-manager';
-import ExtensionsManager from './extensions-manager';
-import { filter as _filter } from './fonts';
+import BrowserChecker from './browser-checker.js';
+import { composeFonts, downloadCookies, setExtPathsAndRemoveDeleted, setOriginalExtPaths, uploadCookies } from './browser-user-data-manager.js';
+import { getChunckedInsertValues, getDB, loadCookiesFromFile } from './cookies-manager.js';
+import ExtensionsManager from './extensions-manager.js';
+import { fontsCollection } from './fonts.js';
 
-const debug = require('debug')('gologin');
-const exec = promisify(require('child_process').exec);
-const requests = require('requestretry').defaults({ timeout: 60000 });
+const exec = util.promisify(execNonPromise);
+
 const { access, unlink, writeFile, readFile } = _promises;
-const rimraf = promisify(require('rimraf'));
+const { get, merge } = pkg;
 
 const SEPARATOR = sep;
 const API_URL = 'https://api.gologin.com';
@@ -31,7 +33,7 @@ const OS_PLATFORM = process.platform;
 
 const delay = (time) => new Promise((resolve) => setTimeout(resolve, time));
 
-class GoLogin {
+export class GoLogin {
   constructor(options = {}) {
     this.is_remote = options.remote || false;
     this.access_token = options.token;
@@ -296,7 +298,7 @@ class GoLogin {
   async createBrowserExtension() {
     const that = this;
     debug('start createBrowserExtension');
-    await rimraf(this.orbitaExtensionPath());
+    await rimraf(this.orbitaExtensionPath(), () => null);
     const extPath = this.orbitaExtensionPath();
     debug('extension folder sanitized');
     const extension_source = _resolve(__dirname, 'gologin-browser-ext.zip');
@@ -335,7 +337,7 @@ class GoLogin {
     const profilePath = join(this.tmpdir, `gologin_profile_${this.profile_id}`);
     let profile;
     let profile_folder;
-    await rimraf(profilePath);
+    await rimraf(profilePath, () => null);
     debug('-', profilePath, 'dropped');
     profile = await this.getProfile();
     const { navigator = {}, fonts, os: profileOs  } = profile;
@@ -458,10 +460,10 @@ class GoLogin {
 
       let extSettings;
       if (ExtensionsManagerInst.useLocalExtStorage) {
-        extSettings = await BrowserUserDataManager.setExtPathsAndRemoveDeleted(preferences, profileExtensionsCheckRes, this.profile_id);
+        extSettings = await setExtPathsAndRemoveDeleted(preferences, profileExtensionsCheckRes, this.profile_id);
       } else {
         const originalExtensionsFolder = join(profilePath, 'Default', 'Extensions');
-        extSettings = await BrowserUserDataManager.setOriginalExtPaths(preferences, originalExtensionsFolder);
+        extSettings = await setOriginalExtPaths(preferences, originalExtensionsFolder);
       }
 
       this.extensionPathsToInstall =
@@ -578,7 +580,7 @@ class GoLogin {
       }
 
       try {
-        await BrowserUserDataManager.composeFonts(families, profilePath, this.differentOs);
+        await composeFonts(families, profilePath, this.differentOs);
       } catch (e) {
         console.trace(e);
       }
@@ -905,8 +907,8 @@ class GoLogin {
   }
 
   async clearProfileFiles() {
-    await rimraf(join(this.tmpdir, `gologin_profile_${this.profile_id}`));
-    await rimraf(join(this.tmpdir, `gologin_${this.profile_id}_upload.zip`));
+    await rimraf(join(this.tmpdir, `gologin_profile_${this.profile_id}`), () => null);
+    await rimraf(join(this.tmpdir, `gologin_${this.profile_id}_upload.zip`), () => null);
   }
 
   async stopAndCommit(options, local = false) {
@@ -935,7 +937,7 @@ class GoLogin {
     await this.clearProfileFiles();
 
     if (!local) {
-      await rimraf(join(this.tmpdir, `gologin_${this.profile_id}.zip`));
+      await rimraf(join(this.tmpdir, `gologin_${this.profile_id}.zip`), () => null);
     }
 
     debug(`PROFILE ${this.profile_id} STOPPED AND CLEAR`);
@@ -1205,7 +1207,7 @@ class GoLogin {
       return cookie;
     });
 
-    const response = await BrowserUserDataManager.uploadCookies({
+    const response = await uploadCookies({
       profileId,
       cookies: formattedCookies,
       API_BASE_URL: API_URL,
@@ -1220,7 +1222,7 @@ class GoLogin {
   }
 
   async getCookies(profileId) {
-    const response = await BrowserUserDataManager.downloadCookies({
+    const response = await downloadCookies({
       profileId,
       API_BASE_URL: API_URL,
       ACCESS_TOKEN: this.access_token,
@@ -1239,8 +1241,8 @@ class GoLogin {
 
     let db;
     try {
-      db = await CookiesManager.getDB(this.cookiesFilePath, false);
-      const chunckInsertValues = CookiesManager.getChunckedInsertValues(resultCookies);
+      db = await getDB(this.cookiesFilePath, false);
+      const chunckInsertValues = getChunckedInsertValues(resultCookies);
 
       for (const [query, queryParams] of chunckInsertValues) {
         const insertStmt = await db.prepare(query);
@@ -1255,7 +1257,7 @@ class GoLogin {
   }
 
   async uploadProfileCookiesToServer() {
-    const cookies = await CookiesManager.loadCookiesFromFile(this.cookiesFilePath);
+    const cookies = await loadCookiesFromFile(this.cookiesFilePath);
     if (!cookies.length) {
       return;
     }
@@ -1407,7 +1409,8 @@ class GoLogin {
   }
 
   getAvailableFonts() {
-    return _filter(elem => elem.fileNames)
+    return fontsCollection
+      .filter(elem => elem.fileNames)
       .map(elem => elem.name);
   }
 }

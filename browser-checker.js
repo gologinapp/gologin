@@ -1,3 +1,4 @@
+import { exec as execNonPromise } from 'child_process';
 import decompress from 'decompress';
 import decompressUnzip from 'decompress-unzip';
 import { createWriteStream, promises as _promises } from 'fs';
@@ -6,9 +7,9 @@ import { homedir } from 'os';
 import { join } from 'path';
 import ProgressBar from 'progress';
 import { createInterface } from 'readline';
-import { promisify } from 'util';
+import util from 'util';
 
-const exec = promisify(require('child_process').exec);
+const exec = util.promisify(execNonPromise);
 const { access, mkdir, readdir, rmdir, unlink, copyFile, readlink, symlink, lstat } = _promises;
 
 const PLATFORM = process.platform;
@@ -36,7 +37,7 @@ const WIN_HASHFILE_LINK = `https://orbita-browser-windows-wc.gologin.com/${WIN_H
 const FAIL_SUM_MATCH_MESSAGE = 'hash_sum_not_matched';
 const EXTRACTED_FOLDER = 'extracted-browser';
 
-class BrowserChecker {
+export class BrowserChecker {
   #homedir;
   #browserPath;
   #executableFilePath;

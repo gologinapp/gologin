@@ -1,7 +1,7 @@
 import { homedir } from 'os';
 import { join, sep } from 'path';
 
-import { deleteExtensionArchive,extractExtension } from './extensions-extractor';
+import { deleteExtensionArchive, extractExtension } from './extensions-extractor.js';
 
 const HOMEDIR = homedir();
 const CHROME_EXT_DIR_NAME = 'chrome-extensions';

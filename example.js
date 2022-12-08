@@ -1,6 +1,8 @@
-import { connect } from 'puppeteer-core';
+import pkg from 'puppeteer-core';
 
-import GoLogin from './gologin';
+import GoLogin from './gologin.js';
+
+const { connect } = pkg;
 
 (async () => {
   const GL = new GoLogin({

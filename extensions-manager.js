@@ -1,15 +1,16 @@
 import { createWriteStream, promises as _promises } from 'fs';
 import { join, sep } from 'path';
+import request from 'requestretry';
 
-import { CHROME_EXTENSIONS_PATH, composeExtractionPromises, USER_EXTENSIONS_PATH } from './common';
-import UserExtensionsManager from './user-extensions-manager';
+import { CHROME_EXTENSIONS_PATH, composeExtractionPromises, USER_EXTENSIONS_PATH } from './common.js';
+import UserExtensionsManager from './user-extensions-manager.js';
 
 const { mkdir, readdir, rmdir, unlink } = _promises;
-const request = require('requestretry').defaults({ timeout: 60000 });
+
 
 const EXTENSION_URL = 'https://clients2.google.com/service/update2/crx?response=redirect&acceptformat=crx2,crx3&x=id%3D{ext_id}%26uc&prodversion=97.0.4692.71';
 
-class ExtensionsManager extends UserExtensionsManager {
+export class ExtensionsManager extends UserExtensionsManager {
   #existedChromeExtensions = [];
   #inited = false;
   #useLocalExtStorage = false;
