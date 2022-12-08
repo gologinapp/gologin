@@ -50,7 +50,7 @@ class GoLogin {
     this.differentOs = false;
     this.profileOs = 'lin';
     this.waitWebsocket = true;
-    if(options.waitWebsocket === false){
+    if (options.waitWebsocket === false) {
       this.waitWebsocket = false;
     }
 
@@ -271,7 +271,7 @@ class GoLogin {
       preferences.is_m1 = _.get(preferences, 'isM1');
     }
 
-    if (_.get(preferences, 'os') == 'android'){
+    if (_.get(preferences, 'os') == 'android') {
       const devicePixelRatio = _.get(preferences, 'devicePixelRatio');
       const deviceScaleFactorCeil = Math.ceil(devicePixelRatio || 3.5);
       let deviceScaleFactor = devicePixelRatio;
@@ -389,7 +389,7 @@ class GoLogin {
     try {
       await this.extractProfile(profilePath, this.profile_zip_path);
       debug('extraction done');
-    } catch(e) {
+    } catch (e) {
       console.trace(e);
       profile_folder = await this.emptyProfileFolder();
       await writeFile(this.profile_zip_path, profile_folder);
@@ -539,7 +539,7 @@ class GoLogin {
 
     const audioContext = profile.audioContext || {};
     const { mode: audioCtxMode = 'off', noise: audioCtxNoise } = audioContext;
-    if(profile.timezone.fillBasedOnIp==false){
+    if (profile.timezone.fillBasedOnIp==false) {
       profile.timezone = { id: profile.timezone.timezone };
     } else {
       profile.timezone = { id: this._tz.timezone };
@@ -581,7 +581,7 @@ class GoLogin {
         throw new Error('No fonts list provided');
       }
 
-      try{
+      try {
         await BrowserUserDataManager.composeFonts(families, profilePath, this.differentOs);
       } catch (e) {
         console.trace(e);
@@ -590,7 +590,7 @@ class GoLogin {
 
     const [languages] = this.language.split(';');
 
-    if(preferences.gologin==null){
+    if (preferences.gologin==null) {
       preferences.gologin = {};
     }
 
@@ -677,6 +677,7 @@ class GoLogin {
 
   async getTimeZone(proxy) {
     debug('getting timeZone proxy=', proxy);
+
     if (this.timezone) {
       debug('getTimeZone from options', this.timezone);
       this._tz = this.timezone;
@@ -687,8 +688,8 @@ class GoLogin {
     let data = null;
     if (proxy!==null && proxy.mode !== 'none') {
       if (proxy.mode.includes('socks')) {
-        for(let i=0; i<5; i++){
-          try{
+        for (let i=0; i<5; i++) {
+          try {
             debug('getting timeZone socks try', i+1);
 
             return this.getTimezoneWithSocks(proxy);
@@ -888,7 +889,7 @@ class GoLogin {
       debug('SPAWN CMD', ORBITA_BROWSER, params.join(' '));
     }
 
-    if(this.waitWebsocket){
+    if (this.waitWebsocket) {
       debug('GETTING WS URL FROM BROWSER');
       const data = await requests.get(`http://127.0.0.1:${remote_debugging_port}/json/version`, { json: true });
 
@@ -1361,7 +1362,7 @@ class GoLogin {
 
     debug('profileResponse', profileResponse.statusCode, profileResponse.body);
 
-    if (profileResponse.statusCode === 401){
+    if (profileResponse.statusCode === 401) {
       throw new Error('invalid token');
     }
 
@@ -1388,7 +1389,7 @@ class GoLogin {
     };
 
     const wsUrl = await this.waitDebuggingUrl(delay_ms);
-    if(wsUrl!=''){
+    if (wsUrl!='') {
       return { 'status': 'success', wsUrl };
     }
 

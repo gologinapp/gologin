@@ -31,7 +31,7 @@ const delay = (time) => new Promise((resolve) => setTimeout(resolve, time));
 
   const content = await page.content();
   const matchData = content.match(/'initial': (.*)}/);
-  if(matchData === null || matchData.length === 0){
+  if (matchData === null || matchData.length === 0){
     console.log('no images found');
   } else {
     const data = JSON.parse(matchData[1]);

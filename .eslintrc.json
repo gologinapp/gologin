@@ -106,6 +106,12 @@
             "ignoreRestSiblings": false 
             }
         ],
+        "keyword-spacing": [
+          "error", {
+            "before": true, 
+            "after": true
+            }
+        ],
         "no-empty-function": [
           "warn",
           {

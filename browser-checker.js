@@ -325,7 +325,7 @@ class BrowserChecker {
       const current = await lstat(path.join(src, files[i]));
       if (current.isDirectory()) {
         await this.copyDir(path.join(src, files[i]), path.join(dest, files[i]));
-      } else if(current.isSymbolicLink()) {
+      } else if (current.isSymbolicLink()) {
         const symlinkObj = await readlink(path.join(src, files[i]));
         await symlink(symlinkObj, path.join(dest, files[i]));
       } else {

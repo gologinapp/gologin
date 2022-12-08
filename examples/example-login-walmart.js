@@ -19,7 +19,7 @@ const delay = ms => new Promise(res => setTimeout(res, ms));
 
   const page = await browser.newPage();
   await page.goto('https://www.walmart.com/account/profile');
-  if(await page.evaluate((e) => document.querySelector('#email'))){
+  if (await page.evaluate((e) => document.querySelector('#email'))){
     // need login
     await page.type('#email', 'myemail');
     await page.type('#password', 'mypassword');
