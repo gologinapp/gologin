@@ -36,7 +36,9 @@
   "directories": {
     "example": "examples"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "eslint": "^8.21.0"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   }

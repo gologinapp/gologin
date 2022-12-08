@@ -102,14 +102,14 @@ class CookiesManager {
         cookies.push({
           url: this.buildCookieURL(host_key, is_secure, path),
           domain: host_key,
-          name: name,
+          name,
           value: encrypted_value,
-          path: path,
+          path,
           sameSite: SAME_SITE[samesite],
           secure: Boolean(is_secure),
           httpOnly: Boolean(is_httponly),
           hostOnly: !host_key.startsWith('.'),
-          session: !Boolean(is_persistent),
+          session: !is_persistent,
           expirationDate: this.ldapToUnix(expires_utc),
           creationDate: this.ldapToUnix(creation_utc),
         });
@@ -121,18 +121,24 @@ class CookiesManager {
     }
 
     return cookies;
-  };
+  }
 
   static unixToLDAP(unixtime) {
-    if (unixtime === 0) return unixtime;
+    if (unixtime === 0) {
+      return unixtime;
+    }
+
     const win32filetime = new Date(Date.UTC(1601, 0, 1)).getTime() / 1000;
     const sum = unixtime - win32filetime;
+
     return sum * 1000000;
   }
 
   static ldapToUnix(ldap) {
     const ldapLength = ldap.toString().length;
-    if (ldap === 0 || ldapLength > 18) return ldap;
+    if (ldap === 0 || ldapLength > 18) {
+      return ldap;
+    }
 
     let _ldap = ldap;
     if (ldapLength < 18) {
@@ -140,6 +146,7 @@ class CookiesManager {
     }
 
     const win32filetime = new Date(Date.UTC(1601, 0, 1)).getTime();
+
     return (_ldap / 10000 + win32filetime) / 1000;
   }
 
@@ -154,12 +161,18 @@ class CookiesManager {
 
   static chunk(arr, chunkSize = 1, cache = []) {
     const tmp = [...arr];
-    if (chunkSize <= 0) return cache;
-    while (tmp.length) cache.push(tmp.splice(0, chunkSize));
+    if (chunkSize <= 0) {
+      return cache;
+    }
+
+    while (tmp.length) {
+      cache.push(tmp.splice(0, chunkSize));
+    }
+
     return cache;
   }
 }
 
 module.exports = {
   CookiesManager,
-}
+};
