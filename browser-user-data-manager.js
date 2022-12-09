@@ -104,10 +104,10 @@ export const composeFonts = async (fontsList = [], profilePath, differentOs = fa
   }
 
   await mkdir(pathToFontsDir, { recursive: true });
-  await this.downloadFonts(fontsToDownload, profilePath);
+  await downloadFonts(fontsToDownload, profilePath);
 
   if (OS_PLATFORM === 'linux') {
-    await this.copyFontsConfigFile(profilePath);
+    await copyFontsConfigFile(profilePath);
   }
 };
 

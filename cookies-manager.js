@@ -26,14 +26,14 @@ export const getDB = (filePath, readOnly = true) => {
 
 export const getChunckedInsertValues = (cookiesArr) => {
   const todayUnix = Math.floor(new Date().getTime() / 1000.0);
-  const chunckedCookiesArr = this.chunk(cookiesArr, MAX_SQLITE_VARIABLES);
+  const chunckedCookiesArr = chunk(cookiesArr, MAX_SQLITE_VARIABLES);
 
   return chunckedCookiesArr.map((cookies) => {
     const queryPlaceholders = cookies.map(() => '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').join(', ');
     const query = `insert or replace into cookies (creation_utc, host_key, top_frame_site_key, name, value, encrypted_value, path, expires_utc, is_secure, is_httponly, last_access_utc, has_expires, is_persistent, priority, samesite, source_scheme, source_port, is_same_party, last_update_utc) values ${queryPlaceholders}`;
     const queryParams = cookies.flatMap((cookie) => {
-      const creationDate = cookie.creationDate ? cookie.creationDate : this.unixToLDAP(todayUnix);
-      let expirationDate = cookie.session ? 0 : this.unixToLDAP(cookie.expirationDate);
+      const creationDate = cookie.creationDate ? cookie.creationDate : unixToLDAP(todayUnix);
+      let expirationDate = cookie.session ? 0 : unixToLDAP(cookie.expirationDate);
       const encryptedValue = cookie.value;
       const samesite = Object.keys(SAME_SITE).find((key) => SAME_SITE[key] === (cookie.sameSite || '-1'));
       const isSecure =
@@ -83,7 +83,7 @@ export const loadCookiesFromFile = async (filePath) => {
   const cookies = [];
 
   try {
-    db = await this.getDB(filePath);
+    db = await getDB(filePath);
     const cookiesRows = await db.all('select * from cookies');
     for (const row of cookiesRows) {
       const {
@@ -100,7 +100,7 @@ export const loadCookiesFromFile = async (filePath) => {
       } = row;
 
       cookies.push({
-        url: this.buildCookieURL(host_key, is_secure, path),
+        url: buildCookieURL(host_key, is_secure, path),
         domain: host_key,
         name,
         value: encrypted_value,
@@ -110,8 +110,8 @@ export const loadCookiesFromFile = async (filePath) => {
         httpOnly: Boolean(is_httponly),
         hostOnly: !host_key.startsWith('.'),
         session: !is_persistent,
-        expirationDate: this.ldapToUnix(expires_utc),
-        creationDate: this.ldapToUnix(creation_utc),
+        expirationDate: ldapToUnix(expires_utc),
+        creationDate: ldapToUnix(creation_utc),
       });
     }
   } catch (error) {
