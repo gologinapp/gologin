@@ -193,7 +193,7 @@ export const setExtPathsAndRemoveDeleted = (settings = {}, profileExtensionsChec
 
     const initialExtName = extensionId;
 
-    extensionId = await this.recalculateId({
+    extensionId = await recalculateId({
       localExtObj, extensionId, extensionsSettings, currentExtSettings,
     });
 
