@@ -2,12 +2,11 @@ import { createHash } from 'crypto';
 import { createWriteStream, promises as _promises, rmdirSync } from 'fs';
 import { homedir, tmpdir } from 'os';
 import { join, resolve, sep } from 'path';
-import pkg from 'requestretry';
+import requestretry from 'requestretry';
 
 import { fontsCollection } from './fonts.js';
 
 const { access, readFile, writeFile, mkdir, readdir, copyFile, rename } = _promises;
-const { get, post } = pkg;
 
 const FONTS_URL = 'https://fonts.gologin.com/';
 const FONTS_DIR_NAME = 'fonts';
@@ -21,7 +20,7 @@ const GOLOGIN_TEST_FOLDER_NAME = '.gologin_test';
 const osPlatform = process.platform;
 
 export const downloadCookies = ({ profileId, ACCESS_TOKEN, API_BASE_URL }) =>
-  get(`${API_BASE_URL}/browser/${profileId}/cookies?encrypted=true`, {
+  requestretry.get(`${API_BASE_URL}/browser/${profileId}/cookies`, {
     headers: {
       Authorization: `Bearer ${ACCESS_TOKEN}`,
       'user-agent': 'gologin-api',
@@ -37,7 +36,7 @@ export const downloadCookies = ({ profileId, ACCESS_TOKEN, API_BASE_URL }) =>
   });
 
 export const uploadCookies = ({ cookies = [], profileId, ACCESS_TOKEN, API_BASE_URL }) =>
-  post(`${API_BASE_URL}/browser/${profileId}/cookies?encrypted=true`, {
+  requestretry.post(`${API_BASE_URL}/browser/${profileId}/cookies`, {
     headers: {
       Authorization: `Bearer ${ACCESS_TOKEN}`,
       'User-Agent': 'gologin-api',

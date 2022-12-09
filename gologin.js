@@ -60,6 +60,7 @@ export class GoLogin {
     this.remote_debugging_port = options.remote_debugging_port || 0;
     this.timezone = options.timezone;
     this.extensionPathsToInstall = [];
+    this.restoreLastSession = options.restoreLastSession || false;
 
     if (options.tmpdir) {
       this.tmpdir = options.tmpdir;
@@ -878,6 +879,10 @@ export class GoLogin {
 
       if (Array.isArray(this.extra_params) && this.extra_params.length) {
         params = params.concat(this.extra_params);
+      }
+
+      if (this.restoreLastSession) {
+        params.push('--restore-last-session');
       }
 
       console.log(params);
