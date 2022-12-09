@@ -14,9 +14,6 @@
   "author": "The GoLogin Authors",
   "license": "GPL-3.0",
   "dependencies": {
-    "@types/requestretry": "^1.13.0",
-    "@types/rimraf": "^3.0.2",
-    "@types/util.promisify": "^1.0.4",
     "archiver": "^3.1.1",
     "child_process": "^1.0.2",
     "decompress": "^4.2.1",

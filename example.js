@@ -2,8 +2,6 @@ import puppeteer from 'puppeteer-core';
 
 import GoLogin from './gologin.js';
 
-const { connect } = puppeteer;
-
 (async () => {
   const GL = new GoLogin({
     token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2MzhkZjYwMzEyMWNiM2JjNTU2NWU4OWQiLCJ0eXBlIjoiZGV2Iiwiand0aWQiOiI2MzkyZWM0OTIxOWU2NzViODNmZGE1NDgifQ._Gw5KO7JGO5Fdh5B0UelM9ggR-hYg6ORvHIyZx1OBN8',
@@ -22,7 +20,7 @@ const { connect } = puppeteer;
     return;
   }
 
-  const browser = await connect({
+  const browser = await puppeteer.connect({
     browserWSEndpoint: wsUrl.toString(),
     ignoreHTTPSErrors: true,
   });
