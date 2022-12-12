@@ -1,24 +1,27 @@
-const os = require('os');
-const path = require('path');
+import { homedir } from 'os';
+import { join, sep } from 'path';
 
-const ExtensionsExtractor = require('./extensions-extractor');
+import { deleteExtensionArchive, extractExtension } from './extensions-extractor.js';
 
-const HOMEDIR = os.homedir();
+const HOMEDIR = homedir();
 const CHROME_EXT_DIR_NAME = 'chrome-extensions';
-const EXTENSIONS_PATH = path.join(HOMEDIR, '.gologin', 'extensions');
-const CHROME_EXTENSIONS_PATH = path.join(EXTENSIONS_PATH, CHROME_EXT_DIR_NAME);
-const USER_EXTENSIONS_PATH = path.join(HOMEDIR, '.gologin', 'extensions', 'user-extensions');
+const EXTENSIONS_PATH = join(HOMEDIR, '.gologin', 'extensions');
+const CHROME_EXTENSIONS_PATH = join(EXTENSIONS_PATH, CHROME_EXT_DIR_NAME);
+const USER_EXTENSIONS_PATH = join(HOMEDIR, '.gologin', 'extensions', 'user-extensions');
 
 const composeExtractionPromises = (filteredArchives, destPath = CHROME_EXTENSIONS_PATH) => (
   filteredArchives.map((extArchivePath) => {
-    const [archiveName = ''] = extArchivePath.split(path.sep).reverse();
+    const [archiveName = ''] = extArchivePath.split(sep).reverse();
     const [destFolder] = archiveName.split('.');
 
-    return ExtensionsExtractor.extractExtension(extArchivePath, path.join(destPath, destFolder))
-      .then(() => ExtensionsExtractor.deleteExtensionArchive(extArchivePath));
+    return extractExtension(extArchivePath, join(destPath, destFolder))
+      .then(() => deleteExtensionArchive(extArchivePath));
   })
 );
 
-module.exports.composeExtractionPromises = composeExtractionPromises;
-module.exports.USER_EXTENSIONS_PATH = USER_EXTENSIONS_PATH;
-module.exports.CHROME_EXTENSIONS_PATH = CHROME_EXTENSIONS_PATH;
+const _composeExtractionPromises = composeExtractionPromises;
+export { _composeExtractionPromises as composeExtractionPromises };
+const _USER_EXTENSIONS_PATH = USER_EXTENSIONS_PATH;
+export { _USER_EXTENSIONS_PATH as USER_EXTENSIONS_PATH };
+const _CHROME_EXTENSIONS_PATH = CHROME_EXTENSIONS_PATH;
+export { _CHROME_EXTENSIONS_PATH as CHROME_EXTENSIONS_PATH };

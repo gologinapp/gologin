@@ -10,6 +10,7 @@
   "engines": {
     "node": ">=14.0.0"
   },
+  "type": "module",
   "author": "The GoLogin Authors",
   "license": "GPL-3.0",
   "dependencies": {
@@ -37,7 +38,8 @@
     "example": "examples"
   },
   "devDependencies": {
-    "eslint": "^8.21.0"
+    "eslint": "^8.21.0",
+    "eslint-plugin-simple-import-sort": "^8.0.0"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"

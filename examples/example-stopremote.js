@@ -3,11 +3,11 @@
 
 // your token api (located in the settings, api)
 // https://github.com/gologinapp/gologin#usage
+import GoLogin from '../gologin.js';
+
 const GOLOGIN_API_TOKEN = process.argv[2];
 // your profile id
 const GOLOGIN_PROFILE_ID = process.argv[3];
-
-const GoLogin = require('../gologin');
 
 (async () => {
   const GL = new GoLogin({
