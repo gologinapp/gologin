@@ -1,38 +1,37 @@
-const { access, unlink } = require('fs').promises;
+import decompress from 'decompress';
+import decompressUnzip from 'decompress-unzip';
+import { promises } from 'fs';
 
-const decompress = require('decompress');
-const decompressUnzip = require('decompress-unzip');
+const { access, unlink } = promises;
 
-class ExtensionsExtractor {
-  static extractExtension(source, dest) {
-    if (!(source && dest)) {
-      throw new Error('Missing parameter');
-    }
-
-    return access(source)
-      .then(() =>
-        withRetry({
-          fn() {
-            return decompress(source, dest, {
-              plugins: [decompressUnzip()],
-              filter: file => !file.path.endsWith('/'),
-            });
-          },
-        }),
-      );
+export const extractExtension = (source, dest) => {
+  if (!(source && dest)) {
+    throw new Error('Missing parameter');
   }
 
-  static deleteExtensionArchive(dest) {
-    if (!dest) {
-      throw new Error('Missing parameter');
-    }
+  return access(source)
+    .then(() =>
+      withRetry({
+        fn() {
+          return decompress(source, dest, {
+            plugins: [decompressUnzip()],
+            filter: file => !file.path.endsWith('/'),
+          });
+        },
+      }),
+    );
+}
 
-    return access(dest)
-      .then(
-        () => unlink(dest),
-        () => Promise.resolve(),
-      );
+export const deleteExtensionArchive = (dest) => {
+  if (!dest) {
+    throw new Error('Missing parameter');
   }
+
+  return access(dest)
+    .then(
+      () => unlink(dest),
+      () => Promise.resolve(),
+    );
 }
 
 const withRetry = optionsOrUndefined => {
@@ -55,5 +54,3 @@ const withRetry = optionsOrUndefined => {
     );
   });
 };
-
-module.exports = ExtensionsExtractor;

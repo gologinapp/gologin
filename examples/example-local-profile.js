@@ -1,6 +1,8 @@
-const puppeteer = require('puppeteer-core');
+import pkg from 'puppeteer-core';
 
-const GoLogin = require('../gologin');
+import GoLogin from './gologin.js';
+
+const { connect } = pkg;
 
 (async () => {
   const GL = new GoLogin({
@@ -11,7 +13,7 @@ const GoLogin = require('../gologin');
   });
 
   const wsUrl = await GL.startLocal();
-  const browser = await puppeteer.connect({
+  const browser = await connect({
     browserWSEndpoint: wsUrl.toString(),
     ignoreHTTPSErrors: true,
   });
