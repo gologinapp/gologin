@@ -23,11 +23,11 @@ To have an access to the page below you need <a href="https://app.gologin.com/#/
 ### Example
 
 ```js
-import pkg from 'puppeteer-core';
+import puppeteer from 'puppeteer-core';
 
 import GoLogin from './gologin.js';
 
-const { connect } = pkg;
+const { connect } = puppeteer;
 
 (async () => {
   const GL = new GoLogin({
@@ -128,11 +128,11 @@ stop current browser without removing archived profile
 ### example-local-profile.js
 
 ```js
-import pkg from 'puppeteer-core';
+import puppeteer from 'puppeteer-core';
 
 import GoLogin from './gologin.js';
 
-const { connect } = pkg;
+const { connect } = puppeteer;
 
 (async () => {
   const GL = new GoLogin({

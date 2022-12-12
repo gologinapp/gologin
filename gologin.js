@@ -4,7 +4,7 @@ import decompress from 'decompress';
 import decompressUnzip from 'decompress-unzip';
 import { existsSync, mkdirSync, promises as _promises } from 'fs';
 import { get as _get } from 'https';
-import pkg from 'lodash';
+import lodash from 'lodash';
 import { tmpdir } from 'os';
 import { join, resolve as _resolve,sep } from 'path';
 import requests from 'requestretry';
@@ -22,7 +22,7 @@ import { archiveProfile } from './profile-archiver.js';
 const exec = util.promisify(execNonPromise);
 
 const { access, unlink, writeFile, readFile } = _promises;
-const { get, merge } = pkg;
+const { get, merge } = lodash;
 
 const SEPARATOR = sep;
 const API_URL = 'https://api.gologin.com';
