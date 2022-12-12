@@ -28,8 +28,7 @@
     "rimraf": "^3.0.2",
     "simple-proxy-agent": "^1.1.0",
     "sqlite": "^4.0.23",
-    "sqlite3": "^5.0.2",
-    "zip-dir": "^2.0.0"
+    "sqlite3": "^5.0.2"
   },
   "bugs": {
     "url": "https://github.com/gologinapp/gologin/issues"
