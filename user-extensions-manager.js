@@ -93,8 +93,6 @@ export class UserExtensionsManager {
       },
     }) || [];
 
-    console.log(extensionsToDownloadPaths);
-
     const extensionsToDownloadPathsFiltered =
       extensionsToDownloadPaths.filter(extPath => userChromeExtensions.some(extId => extPath.includes(extId)));
 
