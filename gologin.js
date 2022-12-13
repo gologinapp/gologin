@@ -4,25 +4,25 @@ import decompress from 'decompress';
 import decompressUnzip from 'decompress-unzip';
 import { existsSync, mkdirSync, promises as _promises } from 'fs';
 import { get as _get } from 'https';
-import pkg from 'lodash';
+import lodash from 'lodash';
 import { tmpdir } from 'os';
 import { join, resolve as _resolve,sep } from 'path';
 import requests from 'requestretry';
 import rimraf from 'rimraf';
 import ProxyAgent from 'simple-proxy-agent';
 import util from 'util';
-import zipdir from 'zip-dir';
 
 import BrowserChecker from './browser-checker.js';
 import { composeFonts, downloadCookies, setExtPathsAndRemoveDeleted, setOriginalExtPaths, uploadCookies } from './browser-user-data-manager.js';
 import { getChunckedInsertValues, getDB, loadCookiesFromFile } from './cookies-manager.js';
 import ExtensionsManager from './extensions-manager.js';
 import { fontsCollection } from './fonts.js';
+import { archiveProfile } from './profile-archiver.js';
 
 const exec = util.promisify(execNonPromise);
 
 const { access, unlink, writeFile, readFile } = _promises;
-const { get, merge } = pkg;
+const { get, merge } = lodash;
 
 const SEPARATOR = sep;
 const API_URL = 'https://api.gologin.com';
@@ -1014,20 +1014,7 @@ export class GoLogin {
     debug('profile sanitized');
 
     const profilePath = this.profilePath();
-    const fileBuff = await new Promise((resolve, reject) => zipdir(profilePath,
-      {
-        saveTo: zipPath,
-        filter: (path) => !/RunningChromeVersion/.test(path),
-      }, (err, buffer) => {
-        if (err) {
-          reject(err);
-
-          return;
-        }
-
-        resolve(buffer);
-      }),
-    );
+    const fileBuff = await archiveProfile(profilePath);
 
     debug('PROFILE ZIP CREATED', profilePath, zipPath);
 

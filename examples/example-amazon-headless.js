@@ -1,8 +1,8 @@
-import pkg from 'puppeteer-core';
+import puppeteer from 'puppeteer-core';
 
 import GoLogin from './gologin.js';
 
-const { connect } = pkg;
+const { connect } = puppeteer;
 
 const delay = (time) => new Promise((resolve) => setTimeout(resolve, time));
 

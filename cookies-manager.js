@@ -1,6 +1,6 @@
 import { open } from 'sqlite';
-import pkg from 'sqlite3';
-const { Database, OPEN_READONLY } = pkg;
+import sqlite3 from 'sqlite3';
+const { Database, OPEN_READONLY } = sqlite3;
 
 const MAX_SQLITE_VARIABLES = 76;
 

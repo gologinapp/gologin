@@ -1,15 +1,10 @@
 import { createWriteStream, promises as _promises } from 'fs';
 import { join, sep } from 'path';
 import request from 'requestretry';
-import zipdir from 'zip-dir';
 
 import { CHROME_EXTENSIONS_PATH, composeExtractionPromises, USER_EXTENSIONS_PATH } from './common.js';
-import { extractExtension } from './extensions-extractor.js';
 
-const { readdir, rmdir, readFile, stat, mkdir, copyFile } = _promises;
-
-const MAX_FILE_SIZE = 80 * 1024 * 1024;
-const MAX_FILE_SIZE_MB = MAX_FILE_SIZE / 1024 / 1024;
+const { readdir, readFile, stat, mkdir, copyFile } = _promises;
 
 export class UserExtensionsManager {
   #existedUserExtensions = [];
@@ -76,126 +71,6 @@ export class UserExtensionsManager {
     }
 
     this.#existedUserExtensions = fileList;
-  }
-
-  async addCustomExtension(pathToFiles) {
-    try {
-      const filesSize = await checkFileSizeSync(pathToFiles);
-      const isZip = pathToFiles.endsWith('.zip');
-
-      if (filesSize > MAX_FILE_SIZE) {
-        throw new Error(`The maximum file size is ${MAX_FILE_SIZE_MB}MB`);
-      }
-
-      const customId = this.generateExtensionId();
-
-      if (isZip) {
-        const pathToExtract = join(USER_EXTENSIONS_PATH, customId);
-        await extractExtension(pathToFiles, pathToExtract);
-        pathToFiles = pathToExtract;
-      }
-
-      let fileList = (await readdir(pathToFiles).catch(() => ['cantReadError']))
-        .filter(folderContent => folderContent !== '.DS_Store');
-
-      if (fileList.length === 1 && !fileList.includes('cantReadError')) {
-        const isFolder = (await stat(pathToFiles)).isDirectory();
-        if (isFolder) {
-          const [folderName] = fileList;
-          pathToFiles = join(pathToFiles, folderName);
-          fileList = await readdir(pathToFiles).catch(() => ['cantReadError']);
-        }
-      }
-
-      if (fileList.includes('cantReadError')) {
-        throw new Error('Can\'t access folder');
-      }
-
-      if (!fileList.includes('manifest.json')) {
-        if (isZip) {
-          rmdir(pathToFiles);
-        }
-
-        throw new Error('There is no manifest.json in the extension folder');
-      }
-
-      if (!isZip) {
-        const destPath = join(USER_EXTENSIONS_PATH, customId);
-        await copyFolder(pathToFiles, destPath).catch(() => {
-          throw new Error('Something went wrong coping your folder');
-        });
-      }
-
-      const [nameIconId] = await this.getExtensionsNameAndImage([customId], USER_EXTENSIONS_PATH);
-
-      if (!nameIconId) {
-        throw new Error('Something went wrong. Please try again later');
-      }
-
-      const dbResult = await request(`${this.#API_BASE_URL}/extensions/create_user_extension`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${this.#ACCESS_TOKEN}`,
-          'user-agent': this.#USER_AGENT,
-          'x-two-factor-token': this.#TWO_FA_KEY || '',
-        },
-        body: {
-          extensionInfo: nameIconId,
-        },
-        json: true,
-      });
-
-      // if success - there is no body
-      if (dbResult.body) {
-        throw new Error('Something went wrong inserting your data to database');
-      }
-
-      const fileBuffer = await zipdir(pathToFiles).catch(() => null);
-      if (!fileBuffer) {
-        throw new Error('Something went wrong. Please try again later');
-      }
-
-      const signedUrl = await request.get(`${this.#API_BASE_URL}/extensions/upload_url?extId=${customId}`, {
-        headers: {
-          Authorization: `Bearer ${this.#ACCESS_TOKEN}`,
-          'user-agent': this.#USER_AGENT,
-          'x-two-factor-token': this.#TWO_FA_KEY || '',
-        },
-        maxAttempts: 3,
-        retryDelay: 2000,
-        timeout: 10 * 1000,
-        fullResponse: false,
-      });
-
-      const uploadResponse = await request.put(signedUrl, {
-        headers: {
-          'Content-Type': 'application/zip',
-          'Content-Length': Buffer.byteLength(fileBuffer),
-        },
-        body: fileBuffer,
-        maxBodyLength: Infinity,
-        maxContentLength: Infinity,
-        maxAttempts: 3,
-        retryDelay: 2000,
-        timeout: 30 * 1000,
-        fullResponse: true,
-      });
-
-      // if success - there is no body, in case of error - there will be an error in the body
-      if (uploadResponse.body) {
-        throw new Error('Your extension is added locally but we couldn\'t upload it to the cloud');
-      }
-
-      return {
-        status: 'success',
-        message: nameIconId,
-      };
-    } catch (e) {
-      return {
-        status: 'error',
-        message: e.message,
-      };
-    }
   }
 
   checkLocalUserChromeExtensions = async (userChromeExtensions) => {

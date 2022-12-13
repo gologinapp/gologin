@@ -62,7 +62,7 @@ export const downloadFonts = async (fontsList = [], profilePath) => {
   const files = await readdir(browserFontsPath);
   const fontsToDownload = fontsList.filter(font => !files.includes(font));
 
-  let promises = fontsToDownload.map(font => get(FONTS_URL + font, {
+  let promises = fontsToDownload.map(font => requestretry.get(FONTS_URL + font, {
     maxAttempts: 5,
     retryDelay: 2000,
     timeout: 30 * 1000,
