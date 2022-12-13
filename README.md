@@ -25,7 +25,7 @@ To have an access to the page below you need <a href="https://app.gologin.com/#/
 ```js
 import puppeteer from 'puppeteer-core';
 
-import GoLogin from './gologin.js';
+import GoLogin from './src/gologin.js';
 
 const { connect } = puppeteer;
 
@@ -82,7 +82,7 @@ const { connect } = puppeteer;
     - `skipOrbitaHashChecking` <[boolean]> skip hash checking for Orbita after downloading process (default false)
 
 ```js
-import GoLogin from './gologin.js';
+import GoLogin from './src/gologin.js';
 const GL = new GoLogin({
     token: 'yU0token',
     profile_id: 'yU0Pr0f1leiD',
@@ -130,7 +130,7 @@ stop current browser without removing archived profile
 ```js
 import puppeteer from 'puppeteer-core';
 
-import GoLogin from './gologin.js';
+import GoLogin from './src/gologin.js';
 
 const { connect } = puppeteer;
 
