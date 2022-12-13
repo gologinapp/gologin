@@ -4,7 +4,6 @@
 *.pyc
 .vscode
 package-lock.json
-yarn.lock
 .idea
 *_.js
 *_.py
