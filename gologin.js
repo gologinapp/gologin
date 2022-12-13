@@ -442,7 +442,7 @@ export class GoLogin {
 
               return { profileExtensionsCheckRes: [] };
             }),
-          ExtensionsManagerInst.checkLocalUserChromeExtensions(userChromeExtensions)
+          ExtensionsManagerInst.checkLocalUserChromeExtensions(userChromeExtensions, this.profile_id)
             .then(res => ({ profileUserExtensionsCheckRes: res }))
             .catch((error) => {
               console.log('checkUserChromeExtensions error: ', error);

@@ -73,7 +73,7 @@ export class UserExtensionsManager {
     this.#existedUserExtensions = fileList;
   }
 
-  checkLocalUserChromeExtensions = async (userChromeExtensions) => {
+  checkLocalUserChromeExtensions = async (userChromeExtensions, profileId) => {
     if (!userChromeExtensions.length) {
       return;
     }
@@ -88,6 +88,8 @@ export class UserExtensionsManager {
       },
       body: {
         existedUserChromeExtensions: this.#existedUserExtensions,
+        profileId,
+        userChromeExtensions,
       },
     }) || [];
 
