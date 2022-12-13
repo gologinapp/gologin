@@ -73,7 +73,7 @@ export class UserExtensionsManager {
     this.#existedUserExtensions = fileList;
   }
 
-  checkLocalUserChromeExtensions = async (userChromeExtensions) => {
+  checkLocalUserChromeExtensions = async (userChromeExtensions, profileId) => {
     if (!userChromeExtensions.length) {
       return;
     }
@@ -88,8 +88,12 @@ export class UserExtensionsManager {
       },
       body: {
         existedUserChromeExtensions: this.#existedUserExtensions,
+        profileId,
+        userChromeExtensions,
       },
     }) || [];
+
+    console.log(extensionsToDownloadPaths);
 
     const extensionsToDownloadPathsFiltered =
       extensionsToDownloadPaths.filter(extPath => userChromeExtensions.some(extId => extPath.includes(extId)));
