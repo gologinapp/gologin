@@ -1,11 +1,11 @@
 import puppeteer from 'puppeteer-core';
 
-import GoLogin from './src/gologin.js';
+import GoLogin from './gologin.js';
 
 (async () => {
   const GL = new GoLogin({
-    token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2MzRkNTM4ZjAyYTBlOTEyMWIzMTNiMzEiLCJ0eXBlIjoiZGV2Iiwiand0aWQiOiI2Mzk3MzM5N2U4YjU4NDYwYzZkZjNkZjQifQ.COw0T6Ozo3LJ9UyBgP3UB3lykY3EYPcKA8NQGptynjs',
-    profile_id: '63986ec929ed7c73f0020ef5',
+    token: 'yU0token',
+    profile_id: 'yU0Pr0f1leiD',
   });
 
   const { status, wsUrl } = await GL.start().catch((e) => {
@@ -26,8 +26,8 @@ import GoLogin from './src/gologin.js';
   });
 
   const page = await browser.newPage();
-  // await page.goto('https://myip.link/mini');
-  // console.log(await page.content());
-  // await browser.close();
-  // await GL.stop();
+  await page.goto('https://myip.link/mini');
+  console.log(await page.content());
+  await browser.close();
+  await GL.stop();
 })();
