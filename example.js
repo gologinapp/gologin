@@ -1,6 +1,6 @@
 import puppeteer from 'puppeteer-core';
 
-import GoLogin from './gologin.js';
+import GoLogin from './src/gologin.js';
 
 (async () => {
   const GL = new GoLogin({

@@ -4,7 +4,7 @@ import { homedir, tmpdir } from 'os';
 import { join, resolve, sep } from 'path';
 import requestretry from 'requestretry';
 
-import { fontsCollection } from './fonts.js';
+import { fontsCollection } from '../../fonts.js';
 
 const { access, readFile, writeFile, mkdir, readdir, copyFile, rename } = _promises;
 

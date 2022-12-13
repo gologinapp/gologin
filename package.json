@@ -1,8 +1,8 @@
 {
   "name": "gologin",
-  "version": "2.0.3",
+  "version": "2.0.4",
   "description": "A high-level API to control Orbita browser over GoLogin API",
-  "main": "./gologin.js",
+  "main": "./src/gologin.js",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/gologinapp/gologin.git"
@@ -20,7 +20,6 @@
     "decompress": "^4.2.1",
     "decompress-unzip": "^4.0.1",
     "form-data": "^3.0.0",
-    "lodash": "^4.17.15",
     "progress": "^2.0.3",
     "puppeteer-core": "^2.1.1",
     "request": "^2.88.2",
