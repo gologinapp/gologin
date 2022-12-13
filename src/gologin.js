@@ -4,7 +4,6 @@ import decompress from 'decompress';
 import decompressUnzip from 'decompress-unzip';
 import { existsSync, mkdirSync, promises as _promises } from 'fs';
 import { get as _get } from 'https';
-import lodash from 'lodash';
 import { tmpdir } from 'os';
 import { join, resolve as _resolve,sep } from 'path';
 import requests from 'requestretry';
@@ -18,11 +17,11 @@ import { getChunckedInsertValues, getDB, loadCookiesFromFile } from './cookies-m
 import ExtensionsManager from './extensions-manager.js';
 import { fontsCollection } from './fonts.js';
 import { archiveProfile } from './profile-archiver.js';
+import { get } from './utils/utils.js';
 
 const exec = util.promisify(execNonPromise);
 
 const { access, unlink, writeFile, readFile } = _promises;
-const { get, merge } = lodash;
 
 const SEPARATOR = sep;
 const API_URL = 'https://api.gologin.com';
@@ -596,13 +595,9 @@ export class GoLogin {
     preferences.gologin.langHeader = gologin.language;
     preferences.gologin.languages = languages;
     // debug("convertedPreferences=", preferences.gologin)
-    await writeFile(join(profilePath, 'Default', 'Preferences'), JSON.stringify(merge(preferences, {
+    await writeFile(join(profilePath, 'Default', 'Preferences'), JSON.stringify(Object.assign(preferences, {
       gologin,
     })));
-
-    // console.log('gologin=', _.merge(preferences, {
-    //   gologin
-    // }));
 
     debug('Profile ready. Path: ', profilePath, 'PROXY', JSON.stringify(get(preferences, 'gologin.proxy')));
 

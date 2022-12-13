@@ -7,8 +7,8 @@ import UserExtensionsManager from './user-extensions-manager.js';
 
 const { mkdir, readdir, rmdir, unlink } = _promises;
 
-
-const EXTENSION_URL = 'https://clients2.google.com/service/update2/crx?response=redirect&acceptformat=crx2,crx3&x=id%3D{ext_id}%26uc&prodversion=97.0.4692.71';
+const EXTENSION_URL =
+  'https://clients2.google.com/service/update2/crx?response=redirect&acceptformat=crx2,crx3&x=id%3D{ext_id}%26uc&prodversion=97.0.4692.71';
 
 export class ExtensionsManager extends UserExtensionsManager {
   #existedChromeExtensions = [];
