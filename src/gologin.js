@@ -11,12 +11,13 @@ import rimraf from 'rimraf';
 import ProxyAgent from 'simple-proxy-agent';
 import util from 'util';
 
-import BrowserChecker from './browser-checker.js';
-import { composeFonts, downloadCookies, setExtPathsAndRemoveDeleted, setOriginalExtPaths, uploadCookies } from './browser-user-data-manager.js';
-import { getChunckedInsertValues, getDB, loadCookiesFromFile } from './cookies-manager.js';
-import ExtensionsManager from './extensions-manager.js';
-import { fontsCollection } from './fonts.js';
-import { archiveProfile } from './profile-archiver.js';
+import { fontsCollection } from '../fonts.js';
+import BrowserChecker from './browser/browser-checker.js';
+import { composeFonts, downloadCookies, setExtPathsAndRemoveDeleted, 
+  setOriginalExtPaths, uploadCookies } from './browser/browser-user-data-manager.js';
+import { getChunckedInsertValues, getDB, loadCookiesFromFile } from './cookies/cookies-manager.js';
+import ExtensionsManager from './extensions/extensions-manager.js';
+import { archiveProfile } from './profile/profile-archiver.js';
 import { get } from './utils/utils.js';
 
 const exec = util.promisify(execNonPromise);

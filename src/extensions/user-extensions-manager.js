@@ -2,7 +2,7 @@ import { createWriteStream, promises as _promises } from 'fs';
 import { join, sep } from 'path';
 import request from 'requestretry';
 
-import { CHROME_EXTENSIONS_PATH, composeExtractionPromises, USER_EXTENSIONS_PATH } from './common.js';
+import { CHROME_EXTENSIONS_PATH, composeExtractionPromises, USER_EXTENSIONS_PATH } from '../utils/common.js';
 
 const { readdir, readFile, stat, mkdir, copyFile } = _promises;
 
