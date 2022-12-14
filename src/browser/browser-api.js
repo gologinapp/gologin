@@ -26,24 +26,21 @@ export const updateProfileResolution = (profileId, ACCESS_TOKEN, resolution) =>
 /**
   * @param {string} profileId
   * @param {string} ACCESS_TOKEN
-  * @param {Object} browserData
-  * @param {string} [browserData._id]
-  * @param {'http' | 'socks4' | 'socks5' | 'none'} browserData.mode
-  * @param {string} [browserData.host]
-  * @param {string} [browserData.port]
-  * @param {string} [browserData.username]
-  * @param {string} [browserData.password]
-  * @param {string} [browserData.changeIpUrl]
-  * @param {'us' | 'ca' | 'uk' | 'de' | 'in'} [browserData.autoProxyRegion]
-  * @param {'us' | 'uk' | 'de' | 'fr' | 'eu'} [browserData.torProxyRegion]
+  * @param {Object} browserProxyData
+  * @param {string} [browserProxyData._id]
+  * @param {'http' | 'socks4' | 'socks5' | 'none'} browserProxyData.mode
+  * @param {string} [browserProxyData.host]
+  * @param {string} [browserProxyData.port]
+  * @param {string} [browserProxyData.username]
+  * @param {string} [browserProxyData.password]
 */
-export const updateProfileProxy = (profileId, ACCESS_TOKEN, browserData) =>
+export const updateProfileProxy = (profileId, ACCESS_TOKEN, browserProxyData) =>
   requestretry.patch(`${API_URL}/browser/${profileId}/proxy`, {
     headers: {
       Authorization: `Bearer ${ACCESS_TOKEN}`,
       'user-agent': 'gologin-api',
     },
-    json: browserData,
+    json: browserProxyData,
     maxAttempts: 3,
     retryDelay: 2000,
     timeout: 10 * 1000,
@@ -56,17 +53,15 @@ export const updateProfileProxy = (profileId, ACCESS_TOKEN, browserData) =>
 /**
   * @param {string} profileId
   * @param {string} ACCESS_TOKEN
-  * @param {Object} data
-  * @param {string} data.userAgent
-  * @param {string} [data.updateUALastChosenBrowserV]
+  * @param {string} userAgent
 */
-export const updateProfileUserAgent = (profileId, ACCESS_TOKEN, data) =>
+export const updateProfileUserAgent = (profileId, ACCESS_TOKEN, userAgent) =>
   requestretry.patch(`${API_URL}/browser/${profileId}/ua`, {
     headers: {
       Authorization: `Bearer ${ACCESS_TOKEN}`,
       'user-agent': 'gologin-api',
     },
-    json: data,
+    json: { userAgent },
     maxAttempts: 3,
     retryDelay: 2000,
     timeout: 10 * 1000,
