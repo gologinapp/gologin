@@ -4,7 +4,6 @@ import { join, sep } from 'path';
 import { deleteExtensionArchive, extractExtension } from '../extensions/extensions-extractor.js';
 
 export const API_URL = 'https://api.gologin.com';
-// export const API_URL = 'http://localhost:3002';
 
 const HOMEDIR = homedir();
 const CHROME_EXT_DIR_NAME = 'chrome-extensions';
