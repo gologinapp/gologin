@@ -18,6 +18,7 @@ import { composeFonts, downloadCookies, setExtPathsAndRemoveDeleted,
 import { getChunckedInsertValues, getDB, loadCookiesFromFile } from './cookies/cookies-manager.js';
 import ExtensionsManager from './extensions/extensions-manager.js';
 import { archiveProfile } from './profile/profile-archiver.js';
+import { API_URL } from './utils/common.js';
 import { get } from './utils/utils.js';
 
 const exec = util.promisify(execNonPromise);
@@ -25,8 +26,6 @@ const exec = util.promisify(execNonPromise);
 const { access, unlink, writeFile, readFile } = _promises;
 
 const SEPARATOR = sep;
-const API_URL = 'https://api.gologin.com';
-// const API_URL = 'http://localhost:3002';
 const OS_PLATFORM = process.platform;
 
 // process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
