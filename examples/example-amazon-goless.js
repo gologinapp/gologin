@@ -1,6 +1,6 @@
 import puppeteer from 'puppeteer-core';
 
-import GoLogin from './src/gologin.js';
+import GoLogin from '../src/gologin.js';
 
 const { connect } = puppeteer;
 

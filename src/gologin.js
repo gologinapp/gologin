@@ -1375,7 +1375,7 @@ export class GoLogin {
     };
 
     const wsUrl = await this.waitDebuggingUrl(delay_ms);
-    if (wsUrl!='') {
+    if (wsUrl !== '') {
       return { 'status': 'success', wsUrl };
     }
 
