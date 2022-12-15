@@ -1403,15 +1403,15 @@ export class GoLogin {
   }
 
   async changeProfileResolution(resolution) {
-    await updateProfileResolution(this.profile_id, this.access_token, resolution);
+    return updateProfileResolution(this.profile_id, this.access_token, resolution);
   }
 
   async changeProfileUserAgent(userAgent) {
-    await updateProfileUserAgent(this.profile_id, this.access_token, userAgent);
+    return updateProfileUserAgent(this.profile_id, this.access_token, userAgent);
   }
 
   async changeProfileProxy(proxyData) {
-    await updateProfileProxy(this.profile_id, this.access_token, proxyData);
+    return updateProfileProxy(this.profile_id, this.access_token, proxyData);
   }
 }
 
