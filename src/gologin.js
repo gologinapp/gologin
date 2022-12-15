@@ -20,7 +20,7 @@ import { getChunckedInsertValues, getDB, loadCookiesFromFile } from './cookies/c
 import ExtensionsManager from './extensions/extensions-manager.js';
 import { archiveProfile } from './profile/profile-archiver.js';
 import { API_URL } from './utils/common.js';
-import { get } from './utils/utils.js';
+import { get, isPortReachable } from './utils/utils.js';
 
 const exec = util.promisify(execNonPromise);
 
@@ -643,9 +643,10 @@ export class GoLogin {
   async checkPortAvailable(port) {
     debug('CHECKING PORT AVAILABLE', port);
 
+    const portAvailable = await isPortReachable(port, { host: 'localhost' });
+
     try {
-      const { stdout, stderr } = await exec(`lsof -i:${port}`);
-      if (stdout && stdout.match(/LISTEN/gmi)) {
+      if (!portAvailable) {
         debug(`PORT ${port} IS BUSY`);
 
         return false;
@@ -661,10 +662,10 @@ export class GoLogin {
 
   async getRandomPort() {
     let port = this.getRandomInt(20000, 40000);
-    let port_available = this.checkPortAvailable(port);
-    while (!port_available) {
+    let portAvailable = this.checkPortAvailable(port);
+    while (!portAvailable) {
       port = this.getRandomInt(20000, 40000);
-      port_available = await this.checkPortAvailable(port);
+      portAvailable = await this.checkPortAvailable(port);
     }
 
     return port;
