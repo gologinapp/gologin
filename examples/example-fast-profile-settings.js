@@ -30,9 +30,6 @@ const profile_id = 'yU0Pr0f1leiD';
   });
 
   const page = await browser.newPage();
-  const updatedRes = await updateProfileProxy(profile_id, token, { mode: 'tor', torProxyRegion: 'us' });
-  console.log(updatedRes);
-
   await page.goto('https://myip.link/mini');
   console.log(await page.content());
 
