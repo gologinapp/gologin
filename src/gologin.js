@@ -640,9 +640,8 @@ export class GoLogin {
   async checkPortAvailable(port) {
     debug('CHECKING PORT AVAILABLE', port);
 
-    const portAvailable = await isPortReachable(port, { host: 'localhost' });
-
     try {
+      const portAvailable = await isPortReachable(port, { host: 'localhost' });
       if (!portAvailable) {
         debug(`PORT ${port} IS BUSY`);
 
@@ -650,6 +649,8 @@ export class GoLogin {
       }
     } catch (e) {
       console.log(e);
+
+      return false;
     }
 
     debug(`PORT ${port} IS OPEN`);
