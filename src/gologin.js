@@ -12,6 +12,7 @@ import ProxyAgent from 'simple-proxy-agent';
 import util from 'util';
 
 import { fontsCollection } from '../fonts.js';
+import { updateProfileProxy, updateProfileResolution, updateProfileUserAgent } from './browser/browser-api.js';
 import BrowserChecker from './browser/browser-checker.js';
 import { composeFonts, downloadCookies, setExtPathsAndRemoveDeleted, 
   setOriginalExtPaths, uploadCookies } from './browser/browser-user-data-manager.js';
@@ -1399,6 +1400,18 @@ export class GoLogin {
     return fontsCollection
       .filter(elem => elem.fileNames)
       .map(elem => elem.name);
+  }
+
+  async changeProfileResolution(resolution) {
+    await updateProfileResolution(this.profile_id, this.access_token, resolution);
+  }
+
+  async changeProfileUserAgent(userAgent) {
+    await updateProfileUserAgent(this.profile_id, this.access_token, userAgent);
+  }
+
+  async changeProfileProxy(proxyData) {
+    await updateProfileProxy(this.profile_id, this.access_token, proxyData);
   }
 }
 
