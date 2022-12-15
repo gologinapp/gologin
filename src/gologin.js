@@ -658,7 +658,7 @@ export class GoLogin {
 
   async getRandomPort() {
     let port = this.getRandomInt(20000, 40000);
-    let portAvailable = this.checkPortAvailable(port);
+    let portAvailable = await this.checkPortAvailable(port);
     while (!portAvailable) {
       port = this.getRandomInt(20000, 40000);
       portAvailable = await this.checkPortAvailable(port);
