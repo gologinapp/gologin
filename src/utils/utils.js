@@ -11,34 +11,12 @@ export const get = (value, path, defaultValue) =>
     return acc;
   }, value);
 
-export const isPortReachable = async(port, { host, timeout = 1000 } = {}) => {
-  if (typeof host !== 'string') {
-    throw new TypeError('Specify a `host`');
-  }
+export const isPortReachable = (port) => new Promise(resolve => {
+  const checker = net.createServer()
+    .once('error', () => {
+      resolve(false);
+    })
+    .once('listening', () => checker.once('close', () => resolve(true)).close())
+    .listen(port);
+});
 
-  const promise = new Promise(((resolve, reject) => {
-    const socket = new net.Socket();
-
-    const onError = () => {
-      socket.destroy();
-      reject();
-    };
-
-    socket.setTimeout(timeout);
-    socket.once('error', onError);
-    socket.once('timeout', onError);
-
-    socket.connect(port, host, () => {
-      socket.end();
-      resolve();
-    });
-  }));
-
-  try {
-    await promise;
-
-    return true;
-  } catch {
-    return false;
-  }
-};
