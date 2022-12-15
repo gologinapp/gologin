@@ -642,20 +642,18 @@ export class GoLogin {
 
     try {
       const portAvailable = await isPortReachable(port, { host: 'localhost' });
-      if (!portAvailable) {
-        debug(`PORT ${port} IS BUSY`);
+      if (portAvailable) {
+        debug(`PORT ${port} IS OPEN`);
 
-        return false;
+        return true;
       }
     } catch (e) {
       console.log(e);
-
-      return false;
     }
 
-    debug(`PORT ${port} IS OPEN`);
+    debug(`PORT ${port} IS BUSY`);
 
-    return true;
+    return false;
   }
 
   async getRandomPort() {
