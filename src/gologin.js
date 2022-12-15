@@ -1,4 +1,4 @@
-import { exec as execNonPromise, execFile, spawn } from 'child_process';
+import { execFile, spawn } from 'child_process';
 import debug from 'debug';
 import decompress from 'decompress';
 import decompressUnzip from 'decompress-unzip';
@@ -9,7 +9,6 @@ import { join, resolve as _resolve,sep } from 'path';
 import requests from 'requestretry';
 import rimraf from 'rimraf';
 import ProxyAgent from 'simple-proxy-agent';
-import util from 'util';
 
 import { fontsCollection } from '../fonts.js';
 import BrowserChecker from './browser/browser-checker.js';
@@ -18,9 +17,7 @@ import { composeFonts, downloadCookies, setExtPathsAndRemoveDeleted,
 import { getChunckedInsertValues, getDB, loadCookiesFromFile } from './cookies/cookies-manager.js';
 import ExtensionsManager from './extensions/extensions-manager.js';
 import { archiveProfile } from './profile/profile-archiver.js';
-import { get } from './utils/utils.js';
-
-const exec = util.promisify(execNonPromise);
+import { get, isPortReachable } from './utils/utils.js';
 
 const { access, unlink, writeFile, readFile } = _promises;
 
@@ -643,9 +640,10 @@ export class GoLogin {
   async checkPortAvailable(port) {
     debug('CHECKING PORT AVAILABLE', port);
 
+    const portAvailable = await isPortReachable(port, { host: 'localhost' });
+
     try {
-      const { stdout, stderr } = await exec(`lsof -i:${port}`);
-      if (stdout && stdout.match(/LISTEN/gmi)) {
+      if (!portAvailable) {
         debug(`PORT ${port} IS BUSY`);
 
         return false;
@@ -661,10 +659,10 @@ export class GoLogin {
 
   async getRandomPort() {
     let port = this.getRandomInt(20000, 40000);
-    let port_available = this.checkPortAvailable(port);
-    while (!port_available) {
+    let portAvailable = this.checkPortAvailable(port);
+    while (!portAvailable) {
       port = this.getRandomInt(20000, 40000);
-      port_available = await this.checkPortAvailable(port);
+      portAvailable = await this.checkPortAvailable(port);
     }
 
     return port;
