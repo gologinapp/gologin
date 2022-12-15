@@ -3,8 +3,8 @@ import puppeteer from 'puppeteer-core';
 import { updateProfileProxy, updateProfileResolution, updateProfileUserAgent } from '../src/browser/browser-api.js';
 import GoLogin from '../src/gologin.js';
 
-const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2MzRkNTM4ZjAyYTBlOTEyMWIzMTNiMzEiLCJ0eXBlIjoiZGV2Iiwiand0aWQiOiI2Mzk4OGE2MjcwN2UzM2IxYTQwOTVmY2EifQ.Tj7GG63CCLWOhHnQB3uUnIV_fE3hBf6JFooq--7zpWw';
-const profile_id = '63986ec929ed7c73f0020ef5';
+const token = 'yU0token';
+const profile_id = 'yU0Pr0f1leiD';
 
 (async () => {
   const GL = new GoLogin({
