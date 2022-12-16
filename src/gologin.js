@@ -12,12 +12,14 @@ import ProxyAgent from 'simple-proxy-agent';
 import util from 'util';
 
 import { fontsCollection } from '../fonts.js';
+import { updateProfileProxy, updateProfileResolution, updateProfileUserAgent } from './browser/browser-api.js';
 import BrowserChecker from './browser/browser-checker.js';
 import { composeFonts, downloadCookies, setExtPathsAndRemoveDeleted, 
   setOriginalExtPaths, uploadCookies } from './browser/browser-user-data-manager.js';
 import { getChunckedInsertValues, getDB, loadCookiesFromFile } from './cookies/cookies-manager.js';
 import ExtensionsManager from './extensions/extensions-manager.js';
 import { archiveProfile } from './profile/profile-archiver.js';
+import { API_URL } from './utils/common.js';
 import { get } from './utils/utils.js';
 
 const exec = util.promisify(execNonPromise);
@@ -25,8 +27,6 @@ const exec = util.promisify(execNonPromise);
 const { access, unlink, writeFile, readFile } = _promises;
 
 const SEPARATOR = sep;
-const API_URL = 'https://api.gologin.com';
-// const API_URL = 'http://localhost:3002';
 const OS_PLATFORM = process.platform;
 
 // process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
@@ -1375,7 +1375,7 @@ export class GoLogin {
     };
 
     const wsUrl = await this.waitDebuggingUrl(delay_ms);
-    if (wsUrl!='') {
+    if (wsUrl !== '') {
       return { 'status': 'success', wsUrl };
     }
 
@@ -1400,6 +1400,18 @@ export class GoLogin {
     return fontsCollection
       .filter(elem => elem.fileNames)
       .map(elem => elem.name);
+  }
+
+  async changeProfileResolution(resolution) {
+    return updateProfileResolution(this.profile_id, this.access_token, resolution);
+  }
+
+  async changeProfileUserAgent(userAgent) {
+    return updateProfileUserAgent(this.profile_id, this.access_token, userAgent);
+  }
+
+  async changeProfileProxy(proxyData) {
+    return updateProfileProxy(this.profile_id, this.access_token, proxyData);
   }
 }
 
