@@ -14,7 +14,12 @@ export const archiveProfile = async (profileFolder = '', tryAgain = true) => {
 
   const archive = new AdmZip();
   archive.addLocalFolder(path.join(profileFolder, 'Default'), 'Default');
-  archive.addLocalFile(path.join(profileFolder, 'First Run'));
+  try {
+    archive.addLocalFile(path.join(profileFolder, 'First Run'));
+  } catch(e) {
+    archive.addFile('First Run', Buffer.from(''));
+  }
+
   const dirsToRemove = getDirectoriesForArchiver();
   dirsToRemove.forEach(entry => archive.deleteFile(entry));
 
