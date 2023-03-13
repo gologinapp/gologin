@@ -18,6 +18,10 @@ const delay = ms => new Promise(res => setTimeout(res, ms));
       resolution: '1024x768',
       platform: 'mac',
     },
+    proxyEnabled: false,
+    proxy: {
+      mode: 'none',
+    }
   });
 
   console.log('profile id=', profile_id);
