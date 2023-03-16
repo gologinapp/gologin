@@ -21,8 +21,6 @@ import { archiveProfile } from './profile/profile-archiver.js';
 import { get, isPortReachable } from './utils/utils.js';
 import { API_URL } from './utils/common.js';
 
-const exec = util.promisify(execNonPromise);
-
 const { access, unlink, writeFile, readFile } = _promises;
 
 const SEPARATOR = sep;
