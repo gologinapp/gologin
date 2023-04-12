@@ -584,15 +584,15 @@ export class GoLogin {
       }
     }
 
-    const [languages] = this.language.split(';');
+    const languages = this.language.replace(/;|q=[\d\.]+/img, '')
 
     if (preferences.gologin==null) {
       preferences.gologin = {};
     }
 
     preferences.gologin.langHeader = gologin.language;
-    preferences.gologin.languages = languages;
-    // debug("convertedPreferences=", preferences.gologin)
+    preferences.gologin.language = languages;
+
     await writeFile(join(profilePath, 'Default', 'Preferences'), JSON.stringify(Object.assign(preferences, {
       gologin,
     })));
