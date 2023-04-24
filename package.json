@@ -1,6 +1,6 @@
 {
   "name": "gologin",
-  "version": "2.0.8",
+  "version": "2.0.9",
   "description": "A high-level API to control Orbita browser over GoLogin API",
   "main": "./src/gologin.js",
   "repository": {
