@@ -11,7 +11,7 @@ const DEFAULT_FOLDER_USELESS_FILE = [
   },
   {
     name: 'Service Worker',
-    subs: ['CacheStorage'],
+    subs: ['CacheStorage', 'ScriptCache'],
     isDirectory: true,
   },
   {
