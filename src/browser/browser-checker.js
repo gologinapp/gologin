@@ -9,7 +9,7 @@ import ProgressBar from 'progress';
 import { createInterface } from 'readline';
 import util from 'util';
 
-import { findLatestBrowserVersionDirectory } from '../utils/utils';
+import { findLatestBrowserVersionDirectory } from '../utils/utils.js';
 
 const exec = util.promisify(execNonPromise);
 const { access, mkdir, readdir, rmdir, unlink, copyFile, readlink, symlink, lstat } = _promises;
