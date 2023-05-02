@@ -9,6 +9,8 @@ import ProgressBar from 'progress';
 import { createInterface } from 'readline';
 import util from 'util';
 
+import { findLatestBrowserVersionDirectory } from '../utils/utils.js';
+
 const exec = util.promisify(execNonPromise);
 const { access, mkdir, readdir, rmdir, unlink, copyFile, readlink, symlink, lstat } = _promises;
 
@@ -50,7 +52,12 @@ export class BrowserChecker {
 
     let executableFilePath = join(this.#browserPath, 'orbita-browser', 'chrome');
     if (PLATFORM === 'darwin') {
-      executableFilePath = join(this.#browserPath, 'Orbita-Browser.app', 'Contents', 'MacOS', 'Orbita');
+      const orbitaFolderName = findLatestBrowserVersionDirectory(this.#browserPath);
+      if (orbitaFolderName === 'error') {
+        throw Error('Orbita folder not found in this directory: ' + this.#browserPath);
+      }
+
+      executableFilePath = join(this.#browserPath, orbitaFolderName, 'Orbita-Browser.app', 'Contents', 'MacOS', 'Orbita');
     } else if (PLATFORM === 'win32') {
       executableFilePath = join(this.#browserPath, 'orbita-browser', 'chrome.exe');
     }
