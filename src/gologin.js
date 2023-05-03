@@ -255,8 +255,13 @@ export class GoLogin {
       preferences.hardwareConcurrency = get(preferences, 'navigator.hardwareConcurrency');
     }
 
+    if (get(preferences, 'navigator.deviceMemory')) {
+      preferences.deviceMemory = get(preferences, 'navigator.deviceMemory')*1024;
+    }
+
     if (get(preferences, 'navigator.language')) {
-      preferences.language = get(preferences, 'navigator.language');
+      preferences.langHeader = get(preferences, 'navigator.language');
+      preferences.languages = get(preferences, 'navigator.language').replace(/;|q=[\d\.]+/img, '');
     }
 
     if (get(preferences, 'navigator.maxTouchPoints')) {
