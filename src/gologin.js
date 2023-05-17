@@ -295,6 +295,12 @@ export class GoLogin {
       audioOutputs: preferences.mediaDevices.audioOutputs,
     };
 
+    preferences.webRtc = {
+      ...preferences.webRtc,
+      fill_based_on_ip: !!get(preferences, 'webRTC.fillBasedOnIp'),
+      local_ip_masking: !!get(preferences, 'webRTC.local_ip_masking'),
+    };
+
     return preferences;
   }
 
