@@ -11,15 +11,16 @@ import rimraf from 'rimraf';
 import ProxyAgent from 'simple-proxy-agent';
 
 import { fontsCollection } from '../fonts.js';
-import { updateProfileProxy, updateProfileResolution, updateProfileUserAgent } from './browser/browser-api.js';
+import { getCurrentProfileBookmarks } from './bookmarks/utils.js';
+import { updateProfileBookmarks, updateProfileProxy, updateProfileResolution, updateProfileUserAgent } from './browser/browser-api.js';
 import BrowserChecker from './browser/browser-checker.js';
 import { composeFonts, downloadCookies, setExtPathsAndRemoveDeleted, 
   setOriginalExtPaths, uploadCookies } from './browser/browser-user-data-manager.js';
 import { getChunckedInsertValues, getDB, loadCookiesFromFile } from './cookies/cookies-manager.js';
 import ExtensionsManager from './extensions/extensions-manager.js';
 import { archiveProfile } from './profile/profile-archiver.js';
-import { get, isPortReachable } from './utils/utils.js';
 import { API_URL } from './utils/common.js';
+import { get, isPortReachable } from './utils/utils.js';
 
 const { access, unlink, writeFile, readFile } = _promises;
 
@@ -69,6 +70,7 @@ export class GoLogin {
 
     this.cookiesFilePath = join(this.tmpdir, `gologin_profile_${this.profile_id}`, 'Default', 'Network', 'Cookies');
     this.profile_zip_path = join(this.tmpdir, `gologin_${this.profile_id}.zip`);
+    this.bookmarksFilePath = join(this.tmpdir, `gologin_profile_${this.profile_id}`, 'Default', 'Bookmarks');
     debug('INIT GOLOGIN', this.profile_id);
   }
 
@@ -602,6 +604,11 @@ export class GoLogin {
       gologin,
     })));
 
+    const bookmarksParsedData = await getCurrentProfileBookmarks(this.bookmarksFilePath);
+    const bookmarksFromDb = profile.bookmarks?.bookmark_bar;
+    bookmarksParsedData.roots = bookmarksFromDb ? profile.bookmarks : bookmarksParsedData.roots;
+    await writeFile(this.bookmarksFilePath, JSON.stringify(bookmarksParsedData));
+
     debug('Profile ready. Path: ', profilePath, 'PROXY', JSON.stringify(get(preferences, 'gologin.proxy')));
 
     return profilePath;
@@ -926,6 +933,8 @@ export class GoLogin {
     if (this.uploadCookiesToServer) {
       await this.uploadProfileCookiesToServer();
     }
+
+    await this.saveBookmarksToDb();
 
     this.is_stopping = true;
     await this.sanitizeProfile();
@@ -1253,6 +1262,12 @@ export class GoLogin {
     }
 
     return this.postCookies(this.profile_id, cookies);
+  }
+
+  async saveBookmarksToDb() {
+    const bookmarksData = await getCurrentProfileBookmarks(this.bookmarksFilePath);
+    const bookmarks = bookmarksData.roots || {};
+    await updateProfileBookmarks([this.profile_id], this.access_token, bookmarks);
   }
 
   async start() {
