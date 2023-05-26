@@ -1090,7 +1090,7 @@ export class GoLogin {
       deviceMemory = 1;
     }
 
-    navigator.deviceMemory = deviceMemory*1024;
+    navigator.deviceMemory = deviceMemory;
     webGLMetadata.mode = webGLMetadata.mode === 'noise' ? 'mask' : 'off';
 
     const json = {
