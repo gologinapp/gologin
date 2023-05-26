@@ -69,3 +69,27 @@ export const updateProfileProxy = (profileId, ACCESS_TOKEN, browserProxyData) =>
 
     return { body: [] };
   });
+
+/**
+  * @param {string} profileId
+  * @param {string} ACCESS_TOKEN
+  * @param {Object} bookmarks
+*/
+export const updateProfileBookmarks = async (profileIds, ACCESS_TOKEN, bookmarks) => {
+  const params = {
+    profileIds,
+    bookmarks,
+  };
+
+  return requestretry.patch(`${API_URL}/browser/bookmarks/many`, {
+    headers: {
+      Authorization: `Bearer ${ACCESS_TOKEN}`,
+      'user-agent': 'gologin-api',
+    },
+    json: params,
+    maxAttempts: 3,
+    retryDelay: 2000,
+    timeout: 10 * 1000,
+  }).catch((error) => console.log(error));
+};
+
