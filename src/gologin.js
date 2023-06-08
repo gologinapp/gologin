@@ -19,6 +19,7 @@ import { composeFonts, downloadCookies, setExtPathsAndRemoveDeleted,
 import { getChunckedInsertValues, getDB, loadCookiesFromFile } from './cookies/cookies-manager.js';
 import ExtensionsManager from './extensions/extensions-manager.js';
 import { archiveProfile } from './profile/profile-archiver.js';
+import { checkAutoLang } from './utils/browser.js';
 import { API_URL } from './utils/common.js';
 import { get, isPortReachable } from './utils/utils.js';
 
@@ -33,6 +34,7 @@ const delay = (time) => new Promise((resolve) => setTimeout(resolve, time));
 
 export class GoLogin {
   constructor(options = {}) {
+    this.browserLang = 'en-US';
     this.is_remote = options.remote || false;
     this.access_token = options.token;
     this.profile_id = options.profile_id;
@@ -597,14 +599,22 @@ export class GoLogin {
       }
     }
 
-    const languages = this.language.replace(/;|q=[\d\.]+/img, '')
+    const languages = this.language.replace(/;|q=[\d\.]+/img, '');
 
     if (preferences.gologin==null) {
       preferences.gologin = {};
     }
 
-    preferences.gologin.langHeader = gologin.language;
+    preferences.gologin.langHeader = gologin.navigator.language;
     preferences.gologin.language = languages;
+
+    const [splittedLangs] = gologin.navigator.language.split(';');
+    const [browserLang] = splittedLangs.split(',');
+    gologin.browserLang = browserLang;
+
+    const isMAC = OS_PLATFORM === 'darwin';
+    const checkAutoLangResult = checkAutoLang(gologin, this._tz);
+    this.browserLang = isMAC ? 'en-US' : checkAutoLangResult;
 
     await writeFile(join(profilePath, 'Default', 'Preferences'), JSON.stringify(Object.assign(preferences, {
       gologin,
@@ -838,18 +848,13 @@ export class GoLogin {
         { env },
       );
     } else {
-      const [splittedLangs] = this.language.split(';');
-      let [browserLang] = splittedLangs.split(',');
-      if (process.platform === 'darwin') {
-        browserLang = 'en-US';
-      }
 
       let params = [
         `--remote-debugging-port=${remote_debugging_port}`,
         `--user-data-dir=${profile_path}`,
         '--password-store=basic',
         `--tz=${tz}`,
-        `--lang=${browserLang}`,
+        `--lang=${this.browserLang}`,
       ];
 
       if (this.extensionPathsToInstall.length) {
