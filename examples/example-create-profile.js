@@ -1,4 +1,4 @@
-import GoLogin from '../gologin.js';
+import GoLogin from '../src/gologin.js';
 
 const delay = ms => new Promise(res => setTimeout(res, ms));
 

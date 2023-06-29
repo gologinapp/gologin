@@ -3,7 +3,7 @@
 
 // your token api (located in the settings, api)
 // https://github.com/gologinapp/gologin#usage
-import GoLogin from '../gologin.js';
+import GoLogin from '../src/gologin.js';
 
 const GOLOGIN_API_TOKEN = process.argv[2];
 // your profile id
