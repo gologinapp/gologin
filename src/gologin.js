@@ -1145,6 +1145,29 @@ export class GoLogin {
     return response.body.id;
   }
 
+  async createCustom(options) {
+    debug('createCustomProfile', options);
+    const response = await requests.post(`${API_URL}/browser/custom`, {
+      headers: {
+        'Authorization': `Bearer ${this.access_token}`,
+        'User-Agent': 'gologin-api',
+      },
+      json: options,
+    });
+
+    if (response.statusCode === 400) {
+      throw new Error(`gologin failed account creation with status code, ${response.statusCode} DATA  ${JSON.stringify(response.body.message)}`);
+    }
+
+    if (response.statusCode === 500) {
+      throw new Error(`gologin failed account creation with status code, ${response.statusCode}`);
+    }
+
+    debug(JSON.stringify(response));
+
+    return response.body.id;
+  }
+
   async delete(pid) {
     const profile_id = pid || this.profile_id;
     await requests.delete(`${API_URL}/browser/${profile_id}`, {
