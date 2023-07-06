@@ -1065,7 +1065,12 @@ export class GoLogin {
       os = options.os;
     }
 
-    const fingerprint = await requests.get(`${API_URL}/browser/fingerprint?os=${os}`,{
+    let url = `${API_URL}/browser/fingerprint?os=${os}`;
+    if (options.isM1) {
+      url += '&isM1=true';
+    }
+
+    const fingerprint = await requests.get(url,{
       headers: {
         'Authorization': `Bearer ${this.access_token}`,
         'User-Agent': 'gologin-api',
