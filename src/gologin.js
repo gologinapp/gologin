@@ -1121,12 +1121,18 @@ export class GoLogin {
 
     const user_agent = options.navigator?.userAgent;
     const orig_user_agent = json.navigator.userAgent;
-    Object.keys(options).map((e) => {
-      json[e] = options[e];
+    Object.keys(options).forEach((e) => {
+      if (typeof json[e] === 'object') {
+        json[e] = { ...json[e], ...options[e] };
+      } else {
+        json[e] = options[e];
+      }
     });
+
     if (user_agent === 'random') {
       json.navigator.userAgent = orig_user_agent;
     }
+
     // console.log('profileOptions', json);
 
     const response = await requests.post(`${API_URL}/browser`, {

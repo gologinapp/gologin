@@ -19,13 +19,13 @@ import GoLogin from '../src/gologin.js';
       startUrl: 'https://testurl.com',
       googleServicesEnabled: true,
       lockEnabled: true,
-      proxy: {
-        mode: 'http',
-        host: '123.12.123.12',
-        port: 1234,
-        username: 'user',
-        password: 'password',
-      },
+      // proxy: {
+      //   mode: 'http',
+      //   host: '123.12.123.12',
+      //   port: 1234,
+      //   username: 'user',
+      //   password: 'password',
+      // },
     },
   });
 

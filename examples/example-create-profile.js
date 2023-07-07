@@ -14,10 +14,9 @@ const delay = ms => new Promise(res => setTimeout(res, ms));
     os: 'mac', // 'win', 'lin', 'android'
     // isM1: true, // for Mac M1
     navigator: {
-      language: 'en-US',
+      language: 'en-US,en;q=0.9',
       userAgent: 'random', // get random user agent for selected os
       resolution: '1024x768',
-      platform: 'MacIntel', // 'Win32' for Windows, 'Linux x86_64' for Linux, 'Linux armv81' - for Android
     },
     proxyEnabled: false,
     proxy: {
