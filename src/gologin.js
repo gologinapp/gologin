@@ -1121,14 +1121,14 @@ export class GoLogin {
 
     const user_agent = options.navigator?.userAgent;
     const orig_user_agent = json.navigator.userAgent;
-    Object.keys(options).forEach((e) => {
-      if (typeof json[e] === 'object') {
-        json[e] = { ...json[e], ...options[e] };
+    Object.keys(options).forEach((key) => {
+      if (typeof json[key] === 'object') {
+        json[key] = { ...json[key], ...options[key] };
 
         return;
       }
 
-      json[e] = options[e];
+      json[key] = options[key];
     });
 
     if (user_agent === 'random') {
