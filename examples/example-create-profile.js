@@ -11,7 +11,7 @@ const delay = ms => new Promise(res => setTimeout(res, ms));
 
   const profile_id = await GL.create({
     name: 'profile_mac',
-    os: 'mac',
+    os: 'mac', // 'win', 'lin', 'android'
     // isM1: true, // for Mac M1
     navigator: {
       language: 'en-US',
