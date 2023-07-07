@@ -1124,9 +1124,11 @@ export class GoLogin {
     Object.keys(options).forEach((e) => {
       if (typeof json[e] === 'object') {
         json[e] = { ...json[e], ...options[e] };
-      } else {
-        json[e] = options[e];
+
+        return;
       }
+
+      json[e] = options[e];
     });
 
     if (user_agent === 'random') {
