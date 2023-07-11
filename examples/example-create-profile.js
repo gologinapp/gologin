@@ -11,17 +11,17 @@ const delay = ms => new Promise(res => setTimeout(res, ms));
 
   const profile_id = await GL.create({
     name: 'profile_mac',
-    os: 'mac',
+    os: 'mac', // 'win', 'lin', 'android'
+    // isM1: true, // for Mac M1
     navigator: {
-      language: 'enUS',
+      language: 'en-US,en;q=0.9',
       userAgent: 'random', // get random user agent for selected os
       resolution: '1024x768',
-      platform: 'mac',
     },
     proxyEnabled: false,
     proxy: {
       mode: 'none',
-    }
+    },
   });
 
   console.log('profile id=', profile_id);
