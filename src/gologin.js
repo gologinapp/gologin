@@ -140,16 +140,23 @@ export class GoLogin {
 
     debug('profileResponse', profileResponse.statusCode, profileResponse.body);
 
+    const { body: errorBody = '' } = profileResponse;
+    const backendErrorHeader = 'backend@error::';
+    if (errorBody.includes(backendErrorHeader)) {
+      const errorData =
+      errorBody
+        .replace(backendErrorHeader, '')
+        .slice(1, -1); // убирает кавычки тела ответа
+
+      throw new Error(errorData);
+    }
+
     if (profileResponse.statusCode === 404) {
       throw new Error(JSON.parse(profileResponse.body).message);
     }
 
     if (profileResponse.statusCode === 403) {
       throw new Error(JSON.parse(profileResponse.body).message);
-    }
-
-    if (profileResponse.statusCode === 402) {
-      throw new Error(profileResponse.body);
     }
 
     if (profileResponse.statusCode !== 200) {
