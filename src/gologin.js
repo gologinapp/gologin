@@ -146,7 +146,7 @@ export class GoLogin {
       const errorData =
       errorBody
         .replace(backendErrorHeader, '')
-        .slice(1, -1); // убирает кавычки тела ответа
+        .slice(1, -1);
 
       throw new Error(errorData);
     }
