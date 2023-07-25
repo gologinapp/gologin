@@ -148,6 +148,10 @@ export class GoLogin {
       throw new Error(JSON.parse(profileResponse.body).message);
     }
 
+    if (profileResponse.statusCode === 402) {
+      throw new Error(profileResponse.body);
+    }
+
     if (profileResponse.statusCode !== 200) {
       throw new Error(`Gologin /browser/${id} response error ${profileResponse.statusCode} INVALID TOKEN OR PROFILE NOT FOUND`);
     }
