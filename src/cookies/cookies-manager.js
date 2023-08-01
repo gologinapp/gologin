@@ -117,7 +117,7 @@ export const loadCookiesFromFile = async (filePath) => {
   } catch (error) {
     console.log(error);
   } finally {
-    await db && db.close();
+    db && await db.close();
   }
 
   return cookies;

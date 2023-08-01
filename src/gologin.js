@@ -14,8 +14,9 @@ import { fontsCollection } from '../fonts.js';
 import { getCurrentProfileBookmarks } from './bookmarks/utils.js';
 import { updateProfileBookmarks, updateProfileProxy, updateProfileResolution, updateProfileUserAgent } from './browser/browser-api.js';
 import BrowserChecker from './browser/browser-checker.js';
-import { composeFonts, downloadCookies, setExtPathsAndRemoveDeleted, 
-  setOriginalExtPaths, uploadCookies } from './browser/browser-user-data-manager.js';
+import {
+  composeFonts, downloadCookies, setExtPathsAndRemoveDeleted, setOriginalExtPaths, uploadCookies,
+} from './browser/browser-user-data-manager.js';
 import { getChunckedInsertValues, getDB, loadCookiesFromFile } from './cookies/cookies-manager.js';
 import ExtensionsManager from './extensions/extensions-manager.js';
 import { archiveProfile } from './profile/profile-archiver.js';
