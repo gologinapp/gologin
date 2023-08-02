@@ -17,7 +17,12 @@ import BrowserChecker from './browser/browser-checker.js';
 import {
   composeFonts, downloadCookies, setExtPathsAndRemoveDeleted, setOriginalExtPaths, uploadCookies,
 } from './browser/browser-user-data-manager.js';
-import { getChunckedInsertValues, getDB, loadCookiesFromFile } from './cookies/cookies-manager.js';
+import {
+  getChunckedInsertValues,
+  getDB,
+  loadCookiesFromFile,
+  getCookiesFilePath,
+} from './cookies/cookies-manager.js';
 import ExtensionsManager from './extensions/extensions-manager.js';
 import { archiveProfile } from './profile/profile-archiver.js';
 import { checkAutoLang } from './utils/browser.js';
@@ -57,7 +62,7 @@ export class GoLogin {
     this.autoUpdateBrowser = !!options.autoUpdateBrowser;
     this.browserChecker = new BrowserChecker(options.skipOrbitaHashChecking);
     this.uploadCookiesToServer = options.uploadCookiesToServer || false;
-    this.writeCookesFromServer = options.writeCookesFromServer;
+    this.writeCookiesFromServer = options.writeCookiesFromServer;
     this.remote_debugging_port = options.remote_debugging_port || 0;
     this.timezone = options.timezone;
     this.extensionPathsToInstall = [];
@@ -71,7 +76,6 @@ export class GoLogin {
       }
     }
 
-    this.cookiesFilePath = join(this.tmpdir, `gologin_profile_${this.profile_id}`, 'Default', 'Network', 'Cookies');
     this.profile_zip_path = join(this.tmpdir, `gologin_${this.profile_id}.zip`);
     this.bookmarksFilePath = join(this.tmpdir, `gologin_profile_${this.profile_id}`, 'Default', 'Bookmarks');
     debug('INIT GOLOGIN', this.profile_id);
@@ -83,7 +87,7 @@ export class GoLogin {
 
   async setProfileId(profile_id) {
     this.profile_id = profile_id;
-    this.cookiesFilePath = join(this.tmpdir, `gologin_profile_${this.profile_id}`, 'Default', 'Network', 'Cookies');
+    this.cookiesFilePath = await getCookiesFilePath(profile_id, this.tmpdir);
     this.profile_zip_path = join(this.tmpdir, `gologin_${this.profile_id}.zip`);
   }
 
@@ -582,8 +586,9 @@ export class GoLogin {
     debug(`Writing profile for screenWidth ${profilePath}`, JSON.stringify(gologin));
     gologin.screenWidth = this.resolution.width;
     gologin.screenHeight = this.resolution.height;
-    debug('writeCookesFromServer', this.writeCookesFromServer);
-    if (this.writeCookesFromServer) {
+    debug('writeCookiesFromServer', this.writeCookiesFromServer);
+    this.cookiesFilePath = await getCookiesFilePath(this.profile_id, this.tmpdir);
+    if (this.writeCookiesFromServer) {
       await this.writeCookiesToFile();
     }
 
