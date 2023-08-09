@@ -1285,26 +1285,29 @@ export class GoLogin {
 
   async writeCookiesToFile() {
     const cookies = await this.getCookies(this.profile_id);
-    if (!cookies.length) {
-      return;
-    }
-
     const resultCookies = cookies.map((el) => ({ ...el, value: Buffer.from(el.value) }));
 
     let db;
     try {
       db = await getDB(this.cookiesFilePath, false);
-      const chunckInsertValues = getChunckedInsertValues(resultCookies);
-
-      for (const [query, queryParams] of chunckInsertValues) {
+      if (resultCookies.length) {
+        const chunckInsertValues = getChunckedInsertValues(resultCookies);
+  
+        for (const [query, queryParams] of chunckInsertValues) {
+          const insertStmt = await db.prepare(query);
+          await insertStmt.run(queryParams);
+          await insertStmt.finalize();
+        }
+      } else {
+        const query = 'delete from cookies';
         const insertStmt = await db.prepare(query);
-        await insertStmt.run(queryParams);
+        await insertStmt.run();
         await insertStmt.finalize();
       }
     } catch (error) {
       console.log(error.message);
     } finally {
-      await db && db.close();
+      db && await db.close();
     }
   }
 
