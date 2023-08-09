@@ -1,5 +1,5 @@
 import { execFile, spawn } from 'child_process';
-import debug from 'debug';
+import debugDefault from 'debug';
 import decompress from 'decompress';
 import decompressUnzip from 'decompress-unzip';
 import { existsSync, mkdirSync, promises as _promises } from 'fs';
@@ -36,6 +36,7 @@ const OS_PLATFORM = process.platform;
 
 // process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
 
+const debug = debugDefault('gologin');
 const delay = (time) => new Promise((resolve) => setTimeout(resolve, time));
 
 export class GoLogin {
