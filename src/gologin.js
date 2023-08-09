@@ -58,6 +58,11 @@ export class GoLogin {
       this.waitWebsocket = false;
     }
 
+    this.isNewCloudBrowser = true;
+    if (options.isNewCloudBrowser === false) {
+      this.isNewCloudBrowser = false;
+    }
+
     this.tmpdir = tmpdir();
     this.autoUpdateBrowser = !!options.autoUpdateBrowser;
     this.browserChecker = new BrowserChecker(options.skipOrbitaHashChecking);
@@ -1212,7 +1217,7 @@ export class GoLogin {
     });
 
     debug('update profile', profile);
-    const response = await requests.put(`https://api.gologin.com/browser/${options.id}`,{
+    const response = await requests.put(`${API_URL}/browser/${options.id}`,{
       json: profile,
       headers: {
         'Authorization': `Bearer ${this.access_token}`,
@@ -1370,9 +1375,9 @@ export class GoLogin {
     await this.stopAndCommit(opts, true);
   }
 
-  async waitDebuggingUrl(delay_ms, try_count=0) {
+  async waitDebuggingUrl(delay_ms, try_count=0, remoteOrbitaUrl) {
     await delay(delay_ms);
-    const url = `https://${this.profile_id}.orbita.gologin.com/json/version`;
+    const url = `${remoteOrbitaUrl}/json/version`;
     console.log('try_count=', try_count, 'url=', url);
     const response = await requests.get(url);
     let wsUrl = '';
@@ -1387,13 +1392,14 @@ export class GoLogin {
       wsUrl = parsedBody.webSocketDebuggerUrl;
     } catch (e) {
       if (try_count < 3) {
-        return this.waitDebuggingUrl(delay_ms, try_count+1);
+        return this.waitDebuggingUrl(delay_ms, try_count + 1, remoteOrbitaUrl);
       }
 
       return { 'status': 'failure', wsUrl, 'message': 'Check proxy settings', 'profile_id': this.profile_id };
     }
 
-    wsUrl = wsUrl.replace('ws://', 'wss://').replace('127.0.0.1', `${this.profile_id}.orbita.gologin.com`);
+    const remoteOrbitaUrlWithoutProtocol = remoteOrbitaUrl.replace('https://', '');
+    wsUrl = wsUrl.replace('ws://', 'wss://').replace('127.0.0.1', remoteOrbitaUrlWithoutProtocol);
 
     return wsUrl;
   }
@@ -1410,16 +1416,24 @@ export class GoLogin {
     // if (profileResponse.body === 'ok') {
     const profile = await this.getProfile();
 
-    const profileResponse = await requests.post(`https://api.gologin.com/browser/${this.profile_id}/web`, {
-      headers: {
-        'Authorization': `Bearer ${this.access_token}`,
-      },
+    const profileResponse = await requests.post(`${API_URL}/browser/${this.profile_id}/web`, {
+      headers: { 'Authorization': `Bearer ${this.access_token}` },
+      json: { isNewCloudBrowser: this.isNewCloudBrowser },
     });
 
     debug('profileResponse', profileResponse.statusCode, profileResponse.body);
 
     if (profileResponse.statusCode === 401) {
       throw new Error('invalid token');
+    }
+
+    let remoteOrbitaUrl = `https://${this.profile_id}.orbita.gologin.com`;
+    if (this.isNewCloudBrowser) {
+      if (!profileResponse.body.remoteOrbitaUrl) {
+        throw new Error('Couldn\' start the remote browser');
+      }
+
+      remoteOrbitaUrl = profileResponse.body.remoteOrbitaUrl;
     }
 
     const { navigator = {}, fonts, os: profileOs  } = profile;
@@ -1444,7 +1458,7 @@ export class GoLogin {
       height: parseInt(screenHeight, 10),
     };
 
-    const wsUrl = await this.waitDebuggingUrl(delay_ms);
+    const wsUrl = await this.waitDebuggingUrl(delay_ms, 0, remoteOrbitaUrl);
     if (wsUrl !== '') {
       return { 'status': 'success', wsUrl };
     }
@@ -1454,10 +1468,8 @@ export class GoLogin {
 
   async stopRemote() {
     debug(`stopRemote ${this.profile_id}`);
-    const profileResponse = await requests.delete(`https://api.gologin.com/browser/${this.profile_id}/web`, {
-      headers: {
-        'Authorization': `Bearer ${this.access_token}`,
-      },
+    const profileResponse = await requests.delete(`${API_URL}/browser/${this.profile_id}/web?isNewCloudBrowser=${this.isNewCloudBrowser}`, {
+      headers: { 'Authorization': `Bearer ${this.access_token}` },
     });
 
     console.log(`stopRemote ${profileResponse.body}`);
