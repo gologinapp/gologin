@@ -151,6 +151,17 @@ export class GoLogin {
 
     debug('profileResponse', profileResponse.statusCode, profileResponse.body);
 
+    const { body: errorBody = '' } = profileResponse;
+    const backendErrorHeader = 'backend@error::';
+    if (errorBody.includes(backendErrorHeader)) {
+      const errorData =
+      errorBody
+        .replace(backendErrorHeader, '')
+        .slice(1, -1);
+
+      throw new Error(errorData);
+    }
+
     if (profileResponse.statusCode === 404) {
       throw new Error(JSON.parse(profileResponse.body).message);
     }
