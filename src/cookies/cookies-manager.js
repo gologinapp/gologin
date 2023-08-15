@@ -1,5 +1,9 @@
 import { open } from 'sqlite';
 import sqlite3 from 'sqlite3';
+import { promises as fsPromises } from 'fs';
+import { join } from 'path';
+
+const { access } = fsPromises;
 const { Database, OPEN_READONLY } = sqlite3;
 
 const MAX_SQLITE_VARIABLES = 76;
@@ -117,7 +121,7 @@ export const loadCookiesFromFile = async (filePath) => {
   } catch (error) {
     console.log(error);
   } finally {
-    await db && db.close();
+    db && await db.close();
   }
 
   return cookies;
@@ -170,4 +174,16 @@ export const chunk = (arr, chunkSize = 1, cache = []) => {
   }
 
   return cache;
+}
+
+export const getCookiesFilePath = async (profileId, tmpdir) => {
+  const baseCookiesFilePath = join(tmpdir, `gologin_profile_${profileId}`, 'Default', 'Cookies');
+  const bypassCookiesFilePath = join(tmpdir, `gologin_profile_${profileId}`, 'Default', 'Network', 'Cookies');
+
+  return access(baseCookiesFilePath)
+    .then(() => baseCookiesFilePath)
+    .catch(() => access(bypassCookiesFilePath)
+      .then(() => bypassCookiesFilePath)
+      .catch(() => baseCookiesFilePath)
+    );
 }

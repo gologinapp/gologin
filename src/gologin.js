@@ -1,5 +1,5 @@
 import { execFile, spawn } from 'child_process';
-import debug from 'debug';
+import debugDefault from 'debug';
 import decompress from 'decompress';
 import decompressUnzip from 'decompress-unzip';
 import { existsSync, mkdirSync, promises as _promises } from 'fs';
@@ -14,9 +14,15 @@ import { fontsCollection } from '../fonts.js';
 import { getCurrentProfileBookmarks } from './bookmarks/utils.js';
 import { updateProfileBookmarks, updateProfileProxy, updateProfileResolution, updateProfileUserAgent } from './browser/browser-api.js';
 import BrowserChecker from './browser/browser-checker.js';
-import { composeFonts, downloadCookies, setExtPathsAndRemoveDeleted, 
-  setOriginalExtPaths, uploadCookies } from './browser/browser-user-data-manager.js';
-import { getChunckedInsertValues, getDB, loadCookiesFromFile } from './cookies/cookies-manager.js';
+import {
+  composeFonts, downloadCookies, setExtPathsAndRemoveDeleted, setOriginalExtPaths, uploadCookies,
+} from './browser/browser-user-data-manager.js';
+import {
+  getChunckedInsertValues,
+  getDB,
+  loadCookiesFromFile,
+  getCookiesFilePath,
+} from './cookies/cookies-manager.js';
 import ExtensionsManager from './extensions/extensions-manager.js';
 import { archiveProfile } from './profile/profile-archiver.js';
 import { checkAutoLang } from './utils/browser.js';
@@ -30,6 +36,7 @@ const OS_PLATFORM = process.platform;
 
 // process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
 
+const debug = debugDefault('gologin');
 const delay = (time) => new Promise((resolve) => setTimeout(resolve, time));
 
 export class GoLogin {
@@ -52,11 +59,16 @@ export class GoLogin {
       this.waitWebsocket = false;
     }
 
+    this.isNewCloudBrowser = true;
+    if (options.isNewCloudBrowser === false) {
+      this.isNewCloudBrowser = false;
+    }
+
     this.tmpdir = tmpdir();
     this.autoUpdateBrowser = !!options.autoUpdateBrowser;
     this.browserChecker = new BrowserChecker(options.skipOrbitaHashChecking);
     this.uploadCookiesToServer = options.uploadCookiesToServer || false;
-    this.writeCookesFromServer = options.writeCookesFromServer;
+    this.writeCookiesFromServer = options.writeCookiesFromServer;
     this.remote_debugging_port = options.remote_debugging_port || 0;
     this.timezone = options.timezone;
     this.extensionPathsToInstall = [];
@@ -70,7 +82,6 @@ export class GoLogin {
       }
     }
 
-    this.cookiesFilePath = join(this.tmpdir, `gologin_profile_${this.profile_id}`, 'Default', 'Network', 'Cookies');
     this.profile_zip_path = join(this.tmpdir, `gologin_${this.profile_id}.zip`);
     this.bookmarksFilePath = join(this.tmpdir, `gologin_profile_${this.profile_id}`, 'Default', 'Bookmarks');
     debug('INIT GOLOGIN', this.profile_id);
@@ -82,7 +93,7 @@ export class GoLogin {
 
   async setProfileId(profile_id) {
     this.profile_id = profile_id;
-    this.cookiesFilePath = join(this.tmpdir, `gologin_profile_${this.profile_id}`, 'Default', 'Network', 'Cookies');
+    this.cookiesFilePath = await getCookiesFilePath(profile_id, this.tmpdir);
     this.profile_zip_path = join(this.tmpdir, `gologin_${this.profile_id}.zip`);
   }
 
@@ -592,8 +603,9 @@ export class GoLogin {
     debug(`Writing profile for screenWidth ${profilePath}`, JSON.stringify(gologin));
     gologin.screenWidth = this.resolution.width;
     gologin.screenHeight = this.resolution.height;
-    debug('writeCookesFromServer', this.writeCookesFromServer);
-    if (this.writeCookesFromServer) {
+    debug('writeCookiesFromServer', this.writeCookiesFromServer);
+    this.cookiesFilePath = await getCookiesFilePath(this.profile_id, this.tmpdir);
+    if (this.writeCookiesFromServer) {
       await this.writeCookiesToFile();
     }
 
@@ -1217,7 +1229,7 @@ export class GoLogin {
     });
 
     debug('update profile', profile);
-    const response = await requests.put(`https://api.gologin.com/browser/${options.id}`,{
+    const response = await requests.put(`${API_URL}/browser/${options.id}`,{
       json: profile,
       headers: {
         'Authorization': `Bearer ${this.access_token}`,
@@ -1290,26 +1302,29 @@ export class GoLogin {
 
   async writeCookiesToFile() {
     const cookies = await this.getCookies(this.profile_id);
-    if (!cookies.length) {
-      return;
-    }
-
     const resultCookies = cookies.map((el) => ({ ...el, value: Buffer.from(el.value) }));
 
     let db;
     try {
       db = await getDB(this.cookiesFilePath, false);
-      const chunckInsertValues = getChunckedInsertValues(resultCookies);
-
-      for (const [query, queryParams] of chunckInsertValues) {
+      if (resultCookies.length) {
+        const chunckInsertValues = getChunckedInsertValues(resultCookies);
+  
+        for (const [query, queryParams] of chunckInsertValues) {
+          const insertStmt = await db.prepare(query);
+          await insertStmt.run(queryParams);
+          await insertStmt.finalize();
+        }
+      } else {
+        const query = 'delete from cookies';
         const insertStmt = await db.prepare(query);
-        await insertStmt.run(queryParams);
+        await insertStmt.run();
         await insertStmt.finalize();
       }
     } catch (error) {
       console.log(error.message);
     } finally {
-      await db && db.close();
+      db && await db.close();
     }
   }
 
@@ -1375,9 +1390,9 @@ export class GoLogin {
     await this.stopAndCommit(opts, true);
   }
 
-  async waitDebuggingUrl(delay_ms, try_count=0) {
+  async waitDebuggingUrl(delay_ms, try_count=0, remoteOrbitaUrl) {
     await delay(delay_ms);
-    const url = `https://${this.profile_id}.orbita.gologin.com/json/version`;
+    const url = `${remoteOrbitaUrl}/json/version`;
     console.log('try_count=', try_count, 'url=', url);
     const response = await requests.get(url);
     let wsUrl = '';
@@ -1392,13 +1407,14 @@ export class GoLogin {
       wsUrl = parsedBody.webSocketDebuggerUrl;
     } catch (e) {
       if (try_count < 3) {
-        return this.waitDebuggingUrl(delay_ms, try_count+1);
+        return this.waitDebuggingUrl(delay_ms, try_count + 1, remoteOrbitaUrl);
       }
 
       return { 'status': 'failure', wsUrl, 'message': 'Check proxy settings', 'profile_id': this.profile_id };
     }
 
-    wsUrl = wsUrl.replace('ws://', 'wss://').replace('127.0.0.1', `${this.profile_id}.orbita.gologin.com`);
+    const remoteOrbitaUrlWithoutProtocol = remoteOrbitaUrl.replace('https://', '');
+    wsUrl = wsUrl.replace('ws://', 'wss://').replace('127.0.0.1', remoteOrbitaUrlWithoutProtocol);
 
     return wsUrl;
   }
@@ -1415,16 +1431,24 @@ export class GoLogin {
     // if (profileResponse.body === 'ok') {
     const profile = await this.getProfile();
 
-    const profileResponse = await requests.post(`https://api.gologin.com/browser/${this.profile_id}/web`, {
-      headers: {
-        'Authorization': `Bearer ${this.access_token}`,
-      },
+    const profileResponse = await requests.post(`${API_URL}/browser/${this.profile_id}/web`, {
+      headers: { 'Authorization': `Bearer ${this.access_token}` },
+      json: { isNewCloudBrowser: this.isNewCloudBrowser },
     });
 
     debug('profileResponse', profileResponse.statusCode, profileResponse.body);
 
     if (profileResponse.statusCode === 401) {
       throw new Error('invalid token');
+    }
+
+    let remoteOrbitaUrl = `https://${this.profile_id}.orbita.gologin.com`;
+    if (this.isNewCloudBrowser) {
+      if (!profileResponse.body.remoteOrbitaUrl) {
+        throw new Error('Couldn\' start the remote browser');
+      }
+
+      remoteOrbitaUrl = profileResponse.body.remoteOrbitaUrl;
     }
 
     const { navigator = {}, fonts, os: profileOs  } = profile;
@@ -1449,7 +1473,7 @@ export class GoLogin {
       height: parseInt(screenHeight, 10),
     };
 
-    const wsUrl = await this.waitDebuggingUrl(delay_ms);
+    const wsUrl = await this.waitDebuggingUrl(delay_ms, 0, remoteOrbitaUrl);
     if (wsUrl !== '') {
       return { 'status': 'success', wsUrl };
     }
@@ -1459,10 +1483,8 @@ export class GoLogin {
 
   async stopRemote() {
     debug(`stopRemote ${this.profile_id}`);
-    const profileResponse = await requests.delete(`https://api.gologin.com/browser/${this.profile_id}/web`, {
-      headers: {
-        'Authorization': `Bearer ${this.access_token}`,
-      },
+    const profileResponse = await requests.delete(`${API_URL}/browser/${this.profile_id}/web?isNewCloudBrowser=${this.isNewCloudBrowser}`, {
+      headers: { 'Authorization': `Bearer ${this.access_token}` },
     });
 
     console.log(`stopRemote ${profileResponse.body}`);

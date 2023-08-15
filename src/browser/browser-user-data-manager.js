@@ -40,7 +40,7 @@ export const downloadCookies = ({ profileId, ACCESS_TOKEN, API_BASE_URL }) =>
   });
 
 export const uploadCookies = ({ cookies = [], profileId, ACCESS_TOKEN, API_BASE_URL }) =>
-  requestretry.post(`${API_BASE_URL}/browser/${profileId}/cookies`, {
+  requestretry.post(`${API_BASE_URL}/browser/${profileId}/cookies/?encrypted=true`, {
     headers: {
       Authorization: `Bearer ${ACCESS_TOKEN}`,
       'User-Agent': 'gologin-api',
