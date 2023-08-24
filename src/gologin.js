@@ -193,7 +193,7 @@ export class GoLogin {
     const token = this.access_token;
     debug('getProfileS3 token=', token, 'profile=', this.profile_id, 's3path=', s3path);
 
-    const s3url = `https://gprofiles.gologin.com/${s3path}`.replace(/\s+/mg, '+');
+    const s3url = `https://gprofiles-new.gologin.com/${s3path}`.replace(/\s+/mg, '+');
     debug('loading profile from public s3 bucket, url=', s3url);
     const profileResponse = await requests.get(s3url, {
       encoding: null,
@@ -1309,7 +1309,7 @@ export class GoLogin {
       db = await getDB(this.cookiesFilePath, false);
       if (resultCookies.length) {
         const chunckInsertValues = getChunckedInsertValues(resultCookies);
-  
+
         for (const [query, queryParams] of chunckInsertValues) {
           const insertStmt = await db.prepare(query);
           await insertStmt.run(queryParams);
