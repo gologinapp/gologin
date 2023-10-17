@@ -1,17 +1,22 @@
+// Usage example: in the terminal enter
+// node example-amazon-cloud-browser.js yU0token yU0Pr0f1leiD
+
+// your token api (located in the settings, api)
+// https://github.com/gologinapp/gologin#usage
+
+import GoLogin from 'gologin';
 import puppeteer from 'puppeteer-core';
 
-import GoLogin from '../src/gologin.js';
-
-const { connect } = puppeteer;
+const [_execPath, _filePath, GOLOGIN_API_TOKEN, GOLOGIN_PROFILE_ID] = process.argv;
 
 (async () => {
   const GL = new GoLogin({
-    token: 'yU0token',
-    profile_id: 'yU0Pr0f1leiD',
+    token: GOLOGIN_API_TOKEN,
+    profile_id: GOLOGIN_PROFILE_ID,
   });
 
-  const { status, wsUrl } = await GL.startRemote();
-  const browser = await connect({
+  const { _status, wsUrl } = await GL.startRemote();
+  const browser = await puppeteer.connect({
     browserWSEndpoint: wsUrl,
     ignoreHTTPSErrors: true,
   });

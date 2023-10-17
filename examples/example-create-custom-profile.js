@@ -1,9 +1,15 @@
-import GoLogin from '../src/gologin.js';
+// Usage example: in the terminal enter
+// node example-create-custom-profile.js yU0token
+
+// your token api (located in the settings, api)
+// https://github.com/gologinapp/gologin#usage
+
+import GoLogin from 'gologin';
+
+const [_execPath, _filePath, GOLOGIN_API_TOKEN] = process.argv;
 
 (async () => {
-  const GL = new GoLogin({
-    token: 'yU0token',
-  });
+  const GL = new GoLogin({ token: GOLOGIN_API_TOKEN });
 
   const profileId = await GL.createCustom({
     os: 'win', // required param ('lin', 'mac', 'win', 'android'), for macM1 write (os: 'mac') and add property 'isM1'

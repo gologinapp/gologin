@@ -1,14 +1,17 @@
-import GoLogin from '../src/gologin.js';
+// Usage example: in the terminal enter
+// node example-create-profile.js yU0token
 
-const delay = ms => new Promise(res => setTimeout(res, ms));
+// your token api (located in the settings, api)
+// https://github.com/gologinapp/gologin#usage
+
+import GoLogin from 'gologin';
+
+const [_execPath, _filePath, GOLOGIN_API_TOKEN] = process.argv;
 
 (async () => {
-  const GL = new GoLogin({
-    token: 'yU0token',
-  });
+  const GL = new GoLogin({ token: GOLOGIN_API_TOKEN });
 
-  // next parameters are required for creating
-
+  // the following parameters are required for profile creation
   const profile_id = await GL.create({
     name: 'profile_mac',
     os: 'mac', // 'win', 'lin', 'android'
@@ -25,14 +28,12 @@ const delay = ms => new Promise(res => setTimeout(res, ms));
   });
 
   console.log('profile id=', profile_id);
-
   await GL.update({
     id: profile_id,
     name: 'profile_mac2',
   });
 
   const profile = await GL.getProfile(profile_id);
-
   console.log('new profile name=', profile.name);
 
   // await GL.delete(profile_id);
