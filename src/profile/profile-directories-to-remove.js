@@ -11,11 +11,31 @@ const DEFAULT_FOLDER_USELESS_FILE = [
   },
   {
     name: 'Service Worker',
-    subs: ['CacheStorage', 'ScriptCache'],
+    subs: [],
     isDirectory: true,
   },
   {
     name: 'Code Cache',
+    subs: [],
+    isDirectory: true,
+  },
+  {
+    name: 'Extensions',
+    subs: [],
+    isDirectory: true,
+  },
+  {
+    name: 'IndexedDB',
+    subs: [],
+    isDirectory: true,
+  },
+  {
+    name: 'fonts_config',
+    subs: [],
+    isDirectory: true,
+  },
+  {
+    name: 'DawnCache',
     subs: [],
     isDirectory: true,
   },
