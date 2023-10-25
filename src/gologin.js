@@ -1012,9 +1012,14 @@ export class GoLogin {
   async sanitizeProfile() {
     const remove_dirs = [
       `${SEPARATOR}Default${SEPARATOR}Cache`,
-      `${SEPARATOR}Default${SEPARATOR}Service Worker${SEPARATOR}CacheStorage`,
+      `${SEPARATOR}Default${SEPARATOR}Service Worker`,
       `${SEPARATOR}Default${SEPARATOR}Code Cache`,
       `${SEPARATOR}Default${SEPARATOR}GPUCache`,
+      `${SEPARATOR}Default${SEPARATOR}Extensions`,
+      `${SEPARATOR}Default${SEPARATOR}IndexedDB`,
+      `${SEPARATOR}Default${SEPARATOR}GPUCache`,
+      `${SEPARATOR}Default${SEPARATOR}DawnCache`,
+      `${SEPARATOR}Default${SEPARATOR}fonts_config`,
       `${SEPARATOR}GrShaderCache`,
       `${SEPARATOR}ShaderCache`,
       `${SEPARATOR}biahpgbdmdkfgndcmfiipgcebobojjkp`,
