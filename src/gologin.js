@@ -95,6 +95,7 @@ export class GoLogin {
     this.profile_id = profile_id;
     this.cookiesFilePath = await getCookiesFilePath(profile_id, this.tmpdir);
     this.profile_zip_path = join(this.tmpdir, `gologin_${this.profile_id}.zip`);
+    this.bookmarksFilePath = join(this.tmpdir, `gologin_profile_${this.profile_id}`, 'Default', 'Bookmarks');
   }
 
   async getToken(username, password) {
