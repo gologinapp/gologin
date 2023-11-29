@@ -1,20 +1,25 @@
+// Usage example: in the terminal enter
+// node example-amazon-headless.js yU0token yU0Pr0f1leiD
+
+// your token api (located in the settings, api)
+// https://github.com/gologinapp/gologin#usage
+
+import GoLogin from 'gologin';
 import puppeteer from 'puppeteer-core';
 
-import GoLogin from '../src/gologin.js';
-
-const { connect } = puppeteer;
+const [_execPath, _filePath, GOLOGIN_API_TOKEN, GOLOGIN_PROFILE_ID] = process.argv;
 
 const delay = (time) => new Promise((resolve) => setTimeout(resolve, time));
 
 (async () => {
   const GL = new GoLogin({
-    token: 'yU0token',
-    profile_id: 'yU0Pr0f1leiD',
+    token: GOLOGIN_API_TOKEN,
+    profile_id: GOLOGIN_PROFILE_ID,
     extra_params: ['--headless', '--no-sandbox'],
   });
 
-  const { status, wsUrl } = await GL.start();
-  const browser = await connect({
+  const { _status, wsUrl } = await GL.start();
+  const browser = await puppeteer.connect({
     browserWSEndpoint: wsUrl.toString(),
     ignoreHTTPSErrors: true,
   });
@@ -30,7 +35,6 @@ const delay = (time) => new Promise((resolve) => setTimeout(resolve, time));
   await session.detach();
 
   await page.goto('https://www.amazon.com/-/dp/B0771V1JZX');
-
   const content = await page.content();
   const matchData = content.match(/'initial': (.*)}/);
   if (matchData === null || matchData.length === 0){

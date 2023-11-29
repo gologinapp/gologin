@@ -104,9 +104,10 @@
         ],
         "no-unused-vars": [
           "warn", { 
-            "vars": "all", 
-            "args": "after-used", 
-            "ignoreRestSiblings": false 
+            "vars": "all",
+            "args": "after-used",
+            "ignoreRestSiblings": false,
+            "varsIgnorePattern": "^_"
             }
         ],
         "keyword-spacing": [
