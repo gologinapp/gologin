@@ -73,6 +73,8 @@ export class GoLogin {
     this.timezone = options.timezone;
     this.extensionPathsToInstall = [];
     this.restoreLastSession = options.restoreLastSession || false;
+    this.processSpawned = null;
+    this.processKillTimeout = 1 * 1000;
 
     if (options.tmpdir) {
       this.tmpdir = options.tmpdir;
@@ -926,6 +928,7 @@ export class GoLogin {
 
       console.log(params);
       const child = execFile(ORBITA_BROWSER, params, { env });
+      this.processSpawned = child;
       // const child = spawn(ORBITA_BROWSER, params, { env, shell: true });
       child.stdout.on('data', (data) => debug(data.toString()));
       debug('SPAWN CMD', ORBITA_BROWSER, params.join(' '));
@@ -1007,6 +1010,25 @@ export class GoLogin {
     );
 
     debug('browser killed');
+  }
+
+  killBrowser() {
+    if (!this.processSpawned.pid) {
+      return;
+    }
+
+    try {
+      this.processSpawned.kill();
+      debug('browser killed');
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  async killAndCommit(options, local = false) {
+    this.killBrowser();
+    await delay(this.processKillTimeout);
+    await this.stopAndCommit(options, local).catch(console.error);
   }
 
   async sanitizeProfile() {
