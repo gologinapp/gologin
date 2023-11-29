@@ -747,10 +747,10 @@ export class GoLogin {
       }
 
       const proxyUrl = `${proxy.mode}://${proxy.username}:${proxy.password}@${proxy.host}:${proxy.port}`;
-      debug('getTimeZone start https://time.gologin.com/timezone', proxyUrl);
-      data = await requests.get('https://time.gologin.com/timezone', { proxy: proxyUrl, timeout: 20 * 1000, maxAttempts: 5 });
+      debug('getTimeZone start https://ipgeo.gologin.com', proxyUrl);
+      data = await requests.get('https://ipgeo.gologin.com', { proxy: proxyUrl, timeout: 20 * 1000, maxAttempts: 5 });
     } else {
-      data = await requests.get('https://time.gologin.com/timezone', { timeout: 20 * 1000, maxAttempts: 5 });
+      data = await requests.get('https://ipgeo.gologin.com', { timeout: 20 * 1000, maxAttempts: 5 });
     }
 
     debug('getTimeZone finish', data.body);
@@ -774,7 +774,7 @@ export class GoLogin {
     const agent = new ProxyAgent(proxy, { tunnel: true, timeout: 10000 });
 
     const checkData = await new Promise((resolve, reject) => {
-      _get('https://time.gologin.com/timezone', { agent }, (res) => {
+      _get('https://ipgeo.gologin.com', { agent }, (res) => {
         let resultResponse = '';
         res.on('data', (data) => resultResponse += data);
 
