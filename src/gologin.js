@@ -59,6 +59,7 @@ export class GoLogin {
       this.waitWebsocket = false;
     }
 
+    this.isCloudHeadless = options.isCloudHeadless || true;
     this.isNewCloudBrowser = true;
     if (options.isNewCloudBrowser === false) {
       this.isNewCloudBrowser = false;
@@ -1461,7 +1462,7 @@ export class GoLogin {
 
     const profileResponse = await requests.post(`${API_URL}/browser/${this.profile_id}/web`, {
       headers: { 'Authorization': `Bearer ${this.access_token}` },
-      json: { isNewCloudBrowser: this.isNewCloudBrowser },
+      json: { isNewCloudBrowser: this.isNewCloudBrowser, isHeadless: this.isCloudHeadless },
     });
 
     debug('profileResponse', profileResponse.statusCode, profileResponse.body);
