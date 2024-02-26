@@ -30,10 +30,7 @@
             ]
           }
         ],
-        "linebreak-style": [
-          "warn",
-          "windows"
-        ],
+        "linebreak-style": 0,
         "quotes": [
           "warn",
           "single"
@@ -54,12 +51,6 @@
         "arrow-body-style": [
           "warn",
           "as-needed"
-        ],
-        "camelcase": [
-          "warn",
-          {
-            "ignoreGlobals": true
-          }
         ],
         "curly": [
           "warn",
