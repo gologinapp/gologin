@@ -19,14 +19,15 @@ import {
 } from './browser/browser-user-data-manager.js';
 import {
   getChunckedInsertValues,
+  getCookiesFilePath,
   getDB,
   loadCookiesFromFile,
-  getCookiesFilePath,
 } from './cookies/cookies-manager.js';
 import ExtensionsManager from './extensions/extensions-manager.js';
 import { archiveProfile } from './profile/profile-archiver.js';
 import { checkAutoLang } from './utils/browser.js';
 import { API_URL } from './utils/common.js';
+import { STORAGE_GATEWAY_BASE_URL } from './utils/constants.js';
 import { get, isPortReachable } from './utils/utils.js';
 
 const { access, unlink, writeFile, readFile } = _promises;
@@ -192,15 +193,19 @@ export class GoLogin {
 
     const token = this.access_token;
     debug('getProfileS3 token=', token, 'profile=', this.profile_id, 's3path=', s3path);
+    const downloadURL = `${STORAGE_GATEWAY_BASE_URL}/download`;
 
-    const s3url = `https://gprofiles-new.gologin.com/${s3path}`.replace(/\s+/mg, '+');
-    debug('loading profile from public s3 bucket, url=', s3url);
-    const profileResponse = await requests.get(s3url, {
+    debug('loading profile from public s3 bucket, url=', downloadURL);
+    const profileResponse = await requests.get(downloadURL, {
       encoding: null,
+      headers: {
+        Authorization: `Bearer ${token}`,
+        browserId: this.profile_id,
+      },
     });
 
     if (profileResponse.statusCode !== 200) {
-      debug(`Gologin S3 BUCKET ${s3url} response error ${profileResponse.statusCode}  - use empty`);
+      debug(`Gologin S3 BUCKET ${downloadURL} response error ${profileResponse.statusCode}  - use empty`);
 
       return '';
     }
@@ -211,27 +216,15 @@ export class GoLogin {
   async postFile(fileName, fileBuff) {
     debug('POSTING FILE', fileBuff.length);
     debug('Getting signed URL for S3');
-    const apiUrl = `${API_URL}/browser/${this.profile_id}/storage-signature`;
+    const apiUrl = `${STORAGE_GATEWAY_BASE_URL}/upload`;
 
-    const signedUrl = await requests.get(apiUrl, {
-      headers: {
-        Authorization: `Bearer ${this.access_token}`,
-        'user-agent': 'gologin-api',
-      },
-      maxAttempts: 3,
-      retryDelay: 2000,
-      timeout: 10 * 1000,
-      fullResponse: false,
-    });
-
-    const [uploadedProfileUrl] = signedUrl.split('?');
-
-    console.log('Uploading profile by signed URL to S3');
     const bodyBufferBiteLength = Buffer.byteLength(fileBuff);
     console.log('BUFFER SIZE', bodyBufferBiteLength);
 
-    await requests.put(signedUrl, {
+    await requests.put(apiUrl, {
       headers: {
+        Authorization: `Bearer ${this.access_token}`,
+        browserId: this.profile_id,
         'Content-Type': 'application/zip',
         'Content-Length': bodyBufferBiteLength,
       },
@@ -243,19 +236,6 @@ export class GoLogin {
       timeout: 30 * 1000,
       fullResponse: false,
     });
-
-    const uploadedProfileMetadata = await requests.head(uploadedProfileUrl, {
-      maxAttempts: 3,
-      retryDelay: 2000,
-      timeout: 10 * 1000,
-      fullResponse: true,
-    });
-
-    const uploadedFileLength = +uploadedProfileMetadata.headers['content-length'];
-    if (uploadedFileLength !== bodyBufferBiteLength) {
-      console.log('Uploaded file is incorrect. Retry with China File size:', uploadedFileLength);
-      throw new Error('Uploaded file is incorrect. Retry with China File size: ' + uploadedFileLength);
-    }
 
     console.log('Profile has been uploaded to S3 successfully');
   }
