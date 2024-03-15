@@ -5,7 +5,7 @@ import decompressUnzip from 'decompress-unzip';
 import { existsSync, mkdirSync, promises as _promises } from 'fs';
 import { get as _get } from 'https';
 import { tmpdir } from 'os';
-import { join, resolve as _resolve,sep } from 'path';
+import { dirname, join, resolve as _resolve, sep } from 'path';
 import requests from 'requestretry';
 import rimraf from 'rimraf';
 import ProxyAgent from 'simple-proxy-agent';
@@ -247,7 +247,9 @@ export class GoLogin {
 
   async emptyProfileFolder() {
     debug('get emptyProfileFolder');
-    const profile = await readFile(_resolve(__dirname, 'zero_profile.zip'));
+    const currentDir = dirname(new URL(import.meta.url).pathname);
+    const zeroProfilePath = join(currentDir, '..', 'zero_profile.zip');
+    const profile = await readFile(_resolve(zeroProfilePath));
     debug('emptyProfileFolder LENGTH ::', profile.length);
 
     return profile;
