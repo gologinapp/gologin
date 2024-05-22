@@ -35,8 +35,6 @@ const { access, unlink, writeFile, readFile } = _promises;
 const SEPARATOR = sep;
 const OS_PLATFORM = process.platform;
 
-// process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
-
 const debug = debugDefault('gologin');
 const delay = (time) => new Promise((resolve) => setTimeout(resolve, time));
 
@@ -60,7 +58,7 @@ export class GoLogin {
       this.waitWebsocket = false;
     }
 
-    this.isCloudHeadless = options.isCloudHeadless || true;
+    this.isCloudHeadless = options.isCloudHeadless ?? true;
     this.isNewCloudBrowser = true;
     if (options.isNewCloudBrowser === false) {
       this.isNewCloudBrowser = false;
@@ -1424,7 +1422,7 @@ export class GoLogin {
         return this.waitDebuggingUrl(delay_ms, try_count + 1, remoteOrbitaUrl);
       }
 
-      return { 'status': 'failure', wsUrl, 'message': 'Check proxy settings', 'profile_id': this.profile_id };
+      return { status: 'failure', wsUrl, message: 'Check proxy settings', 'profile_id': this.profile_id };
     }
 
     const remoteOrbitaUrlWithoutProtocol = remoteOrbitaUrl.replace('https://', '');
@@ -1442,18 +1440,25 @@ export class GoLogin {
     }
     */
 
-    // if (profileResponse.body === 'ok') {
     const profile = await this.getProfile();
-
     const profileResponse = await requests.post(`${API_URL}/browser/${this.profile_id}/web`, {
       headers: { 'Authorization': `Bearer ${this.access_token}` },
       json: { isNewCloudBrowser: this.isNewCloudBrowser, isHeadless: this.isCloudHeadless },
-    });
+    }).catch(() => null);
 
-    debug('profileResponse', profileResponse.statusCode, profileResponse.body);
+    if (!profileResponse) {
+      throw new Error('invalid request');
+    }
+
+    const { body, statusCode } = profileResponse;
+    debug('profileResponse', statusCode, body);
 
     if (profileResponse.statusCode === 401) {
       throw new Error('invalid token');
+    }
+
+    if (body.status === 'profileStatuses.pending') {
+      return { status: 'pending', message: 'remote browser is being prepared, please try in 1 minute.' };
     }
 
     let remoteOrbitaUrl = `https://${this.profile_id}.orbita.gologin.com`;
@@ -1489,10 +1494,10 @@ export class GoLogin {
 
     const wsUrl = await this.waitDebuggingUrl(delay_ms, 0, remoteOrbitaUrl);
     if (wsUrl !== '') {
-      return { 'status': 'success', wsUrl };
+      return { status: 'success', wsUrl };
     }
 
-    return { 'status': 'failure', 'message': profileResponse.body };
+    return { status: 'failure', message: body };
   }
 
   async stopRemote() {
