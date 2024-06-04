@@ -8,7 +8,7 @@ import { tmpdir } from 'os';
 import { dirname, join, resolve as _resolve, sep } from 'path';
 import requests from 'requestretry';
 import rimraf from 'rimraf';
-import ProxyAgent from 'simple-proxy-agent';
+import { SocksProxyAgent } from 'socks-proxy-agent';
 
 import { fontsCollection } from '../fonts.js';
 import { getCurrentProfileBookmarks } from './bookmarks/utils.js';
@@ -34,6 +34,8 @@ const { access, unlink, writeFile, readFile } = _promises;
 
 const SEPARATOR = sep;
 const OS_PLATFORM = process.platform;
+const TIMEZONE_URL = 'https://geo.myip.link';
+const PROXY_NONE = 'none';
 
 const debug = debugDefault('gologin');
 const delay = (time) => new Promise((resolve) => setTimeout(resolve, time));
@@ -519,7 +521,7 @@ export class GoLogin {
       proxy.mode = 'http';
     }
 
-    if (proxy.mode === 'none') {
+    if (proxy.mode === PROXY_NONE) {
       proxy = null;
     }
 
@@ -714,11 +716,11 @@ export class GoLogin {
     }
 
     let data = null;
-    if (proxy!==null && proxy.mode !== 'none') {
+    if (proxy && proxy.mode !== PROXY_NONE) {
       if (proxy.mode.includes('socks')) {
-        for (let i=0; i<5; i++) {
+        for (let i = 0; i < 5; i++) {
           try {
-            debug('getting timeZone socks try', i+1);
+            debug('getting timeZone socks try', i + 1);
 
             return this.getTimezoneWithSocks(proxy);
           } catch (e) {
@@ -729,10 +731,10 @@ export class GoLogin {
       }
 
       const proxyUrl = `${proxy.mode}://${proxy.username}:${proxy.password}@${proxy.host}:${proxy.port}`;
-      debug('getTimeZone start https://ipgeo.gologin.com', proxyUrl);
-      data = await requests.get('https://ipgeo.gologin.com', { proxy: proxyUrl, timeout: 20 * 1000, maxAttempts: 5 });
+      debug(`getTimeZone start ${TIMEZONE_URL}`, proxyUrl);
+      data = await requests.get(TIMEZONE_URL, { proxy: proxyUrl, timeout: 20 * 1000, maxAttempts: 5 });
     } else {
-      data = await requests.get('https://ipgeo.gologin.com', { timeout: 20 * 1000, maxAttempts: 5 });
+      data = await requests.get(TIMEZONE_URL, { timeout: 20 * 1000, maxAttempts: 5 });
     }
 
     debug('getTimeZone finish', data.body);
@@ -742,21 +744,19 @@ export class GoLogin {
   }
 
   async getTimezoneWithSocks(params) {
-    const { mode = 'http', host, port, username = '', password = '' } = params;
+    const { host, port, username = '', password = '' } = params;
     let body;
 
-    let proxy = mode + '://';
+    let proxy = 'socks://';
     if (username) {
       const resultPassword = password ? ':' + password + '@' : '@';
       proxy += username + resultPassword;
     }
 
     proxy += host + ':' + port;
-
-    const agent = new ProxyAgent(proxy, { tunnel: true, timeout: 10000 });
-
+    const agent = new SocksProxyAgent(proxy);
     const checkData = await new Promise((resolve, reject) => {
-      _get('https://ipgeo.gologin.com', { agent }, (res) => {
+      _get(TIMEZONE_URL, { agent, timeout: 10000 }, (res) => {
         let resultResponse = '';
         res.on('data', (data) => resultResponse += data);
 
