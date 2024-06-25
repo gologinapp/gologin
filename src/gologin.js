@@ -433,6 +433,7 @@ export class GoLogin {
       profile_folder = await this.emptyProfileFolder();
       await writeFile(this.profile_zip_path, profile_folder);
       await this.extractProfile(profilePath, this.profile_zip_path);
+      await writeFile(pref_file_name, '{}');
     }
 
     const preferences_raw = await readFile(pref_file_name);
