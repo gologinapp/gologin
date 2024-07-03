@@ -10,6 +10,7 @@ import { createInterface } from 'readline';
 import util from 'util';
 
 import { findLatestBrowserVersionDirectory } from '../utils/utils.js';
+import { API_URL, getOS } from '../utils/common.js';
 
 const exec = util.promisify(execNonPromise);
 const { access, mkdir, readdir, rmdir, unlink, copyFile, readlink, symlink, lstat, rename, writeFile } = _promises;
@@ -18,19 +19,11 @@ const PLATFORM = process.platform;
 const ARCH = process.arch;
 
 const VERSION_FILE = 'latest-version.txt';
-const MAC_VERSION_FILE_URL = `https://orbita-browser-mac.gologin.com/${VERSION_FILE}`;
-const DEB_VERSION_FILE_URL = `https://orbita-browser-linux.gologin.com/${VERSION_FILE}`;
-const WIN_VERSION_FILE_URL = `https://orbita-browser-windows.gologin.com/${VERSION_FILE}`;
-const MAC_ARM_VERSION_FILE_URL = `https://orbita-browser-mac-arm.gologin.com/${VERSION_FILE}`;
 
 const WIN_FOLDERSIZE_FILE = 'foldersize.txt';
 const WIN_FOLDERSIZE_FILE_LINK = `https://orbita-browser-windows.gologin.com/${WIN_FOLDERSIZE_FILE}`;
 
 const BROWSER_ARCHIVE_NAME = `orbita-browser-latest.${PLATFORM === 'win32' ? 'zip' : 'tar.gz'}`;
-const MAC_BROWSER_LINK = `https://orbita-browser-mac.gologin.com/${BROWSER_ARCHIVE_NAME}`;
-const DEB_BROWSER_LINK = `https://orbita-browser-linux.gologin.com/${BROWSER_ARCHIVE_NAME}`;
-const WIN_BROWSER_LINK = `https://orbita-browser-windows.gologin.com/${BROWSER_ARCHIVE_NAME}`;
-const MAC_ARM_BROWSER_LINK = `https://orbita-browser-mac-arm.gologin.com/${BROWSER_ARCHIVE_NAME}`;
 
 const MAC_HASH_FILE = 'hashfile.mtree';
 const DEB_HASH_FILE = 'hashfile.txt';
@@ -73,11 +66,11 @@ export class BrowserChecker {
   async checkBrowser(autoUpdateBrowser = false) {
     const browserFolderExists = await access(this.#executableFilePath).then(() => true).catch(() => false);
 
-    const browserLatestVersion = await this.getLatestBrowserVersion();
-    if (!browserFolderExists) {
-      return this.downloadBrowser(browserLatestVersion);
-    }
+    const { latestVersion: browserLatestVersion, browserDownloadUrl } = await this.getLatestBrowserVersion();
 
+    if (!browserFolderExists) {
+      return this.downloadBrowser(browserLatestVersion, browserDownloadUrl);
+    }
 
     const currentVersionReq = await this.getCurrentVersion();
     const currentVersion = (currentVersionReq?.stdout || '').replace(/(\r\n|\n|\r)/gm, '');
@@ -87,7 +80,7 @@ export class BrowserChecker {
     }
 
     if (autoUpdateBrowser) {
-      return this.downloadBrowser(browserLatestVersion);
+      return this.downloadBrowser(browserLatestVersion, browserDownloadUrl);
     }
 
     return new Promise(resolve => {
@@ -101,7 +94,7 @@ export class BrowserChecker {
         clearTimeout(timeout);
         rl.close();
         if (answer && answer[0].toString().toLowerCase() === 'y') {
-          return this.downloadBrowser(browserLatestVersion).then(() => resolve());
+          return this.downloadBrowser(browserLatestVersion, browserDownloadUrl).then(() => resolve());
         }
 
         console.log(`Continue with current ${currentVersion} version.`);
@@ -110,26 +103,16 @@ export class BrowserChecker {
     });
   }
 
-  async downloadBrowser(latestVersion) {
+  async downloadBrowser(latestVersion, browserDownloadUrl) {
     await this.deleteOldArchives(true);
     await mkdir(this.#browserPath, { recursive: true });
 
     const pathStr = join(this.#browserPath, BROWSER_ARCHIVE_NAME);
-    let link = DEB_BROWSER_LINK;
-    if (PLATFORM === 'win32') {
-      link = WIN_BROWSER_LINK;
-    } else if (PLATFORM === 'darwin') {
-      link = MAC_BROWSER_LINK;
 
-      if (ARCH === 'arm64') {
-        link = MAC_ARM_BROWSER_LINK;
-      }
-    }
-
-    await this.downloadBrowserArchive(link, pathStr);
+    await this.downloadBrowserArchive(browserDownloadUrl, pathStr);
     await this.checkBrowserArchive(pathStr);
     await this.extractBrowser();
-    await this.checkBrowserSum();
+    await this.checkBrowserSum(latestVersion);
     console.log('Orbita hash checked successfully');
     await this.replaceBrowser();
     await this.addLatestVersion(latestVersion).catch(() => null);
@@ -217,7 +200,7 @@ export class BrowserChecker {
     );
   }
 
-  async downloadHashFile() {
+  async downloadHashFile(latestVersion) {
     let hashLink = DEB_HASHFILE_LINK;
     let resultPath = join(this.#browserPath, DEB_HASH_FILE);
     if (PLATFORM === 'darwin') {
@@ -226,6 +209,11 @@ export class BrowserChecker {
         hashLink = MAC_ARM_HASHFILE_LINK;
       }
       resultPath = join(this.#browserPath, MAC_HASH_FILE);
+    }
+
+    if (latestVersion) {
+      const [majorVer] = latestVersion.split('.');
+      hashLink = hashLink.replace('hashfile.', `hashfile-${majorVer}.`);
     }
 
     const writableStream = createWriteStream(resultPath);
@@ -253,7 +241,7 @@ export class BrowserChecker {
     return access(hashFilePath);
   }
 
-  async checkBrowserSum() {
+  async checkBrowserSum(latestVersion) {
     if (this.#skipOrbitaHashChecking) {
       return Promise.resolve();
     }
@@ -263,7 +251,7 @@ export class BrowserChecker {
       return Promise.resolve();
     }
 
-    await this.downloadHashFile();
+    await this.downloadHashFile(latestVersion);
     if (PLATFORM === 'darwin') {
       const calculatedHash = await exec(
         `mtree -p ${join(this.#browserPath, EXTRACTED_FOLDER, 'Orbita-Browser.app')} < ${join(this.#browserPath, MAC_HASH_FILE)} || echo ${FAIL_SUM_MATCH_MESSAGE}`,
@@ -362,22 +350,13 @@ export class BrowserChecker {
   }
 
   getLatestBrowserVersion() {
-    let url = DEB_VERSION_FILE_URL;
-    if (PLATFORM === 'win32') {
-      url = WIN_VERSION_FILE_URL;
-    } else if (PLATFORM === 'darwin') {
-      url = MAC_VERSION_FILE_URL;
+    const userOs = getOS();
 
-      if (ARCH === 'arm64') {
-        url = MAC_ARM_VERSION_FILE_URL;
-      }
-    }
-
-    return new Promise(resolve => get(url,
+    return new Promise(resolve => get(`${API_URL}/gologin-global-settings/latest-browser-info?os=${userOs}`,
       {
         timeout: 15 * 1000,
         headers: {
-          'Content-Type': 'text/plain',
+          'Content-Type': 'application/json',
         },
       }, (res) => {
         res.setEncoding('utf8');
@@ -386,7 +365,7 @@ export class BrowserChecker {
         res.on('data', (data) => resultResponse += data);
 
         res.on('end', () => {
-          resolve(resultResponse.trim());
+          resolve(JSON.parse(resultResponse.trim()));
         });
       }).on('error', (err) => resolve('')));
   }
