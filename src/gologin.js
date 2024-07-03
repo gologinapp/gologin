@@ -29,6 +29,7 @@ import { checkAutoLang } from './utils/browser.js';
 import { API_URL } from './utils/common.js';
 import { STORAGE_GATEWAY_BASE_URL } from './utils/constants.js';
 import { get, isPortReachable } from './utils/utils.js';
+export { GologinApi } from './gologin-api.js';
 
 const { access, unlink, writeFile, readFile } = _promises;
 
