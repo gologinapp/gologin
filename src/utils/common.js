@@ -21,8 +21,22 @@ const composeExtractionPromises = (filteredArchives, destPath = CHROME_EXTENSION
   })
 );
 
+const getOS = () => {
+  if (process.platform === 'win32') {
+    return 'win';
+  }
+
+  if (process.platform === 'darwin') {
+    return process.arch === 'arm64' ? 'macM1' : 'mac';
+  }
+
+  return 'lin';
+};
+
 const _composeExtractionPromises = composeExtractionPromises;
 export { _composeExtractionPromises as composeExtractionPromises };
+const _getOS = getOS;
+export { _getOS as getOS };
 const _USER_EXTENSIONS_PATH = USER_EXTENSIONS_PATH;
 export { _USER_EXTENSIONS_PATH as USER_EXTENSIONS_PATH };
 const _CHROME_EXTENSIONS_PATH = CHROME_EXTENSIONS_PATH;
