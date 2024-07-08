@@ -44,6 +44,6 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "format": "npx prettier --single-quote src/* --write",
-    "iphey": "PROFILE_ID=65817ea08b2308834d2adafe TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2NTgxN2VhMDhiMjMwODgzNGQyYWRhYjUiLCJ0eXBlIjoiZGV2Iiwiand0aWQiOiI2NjcxMWVlNjY0ZDQyYzMyNTNlMzcxN2UifQ.ew557PrIrv8GOqrOEmdzUsyjI3WU_wRCslwEmLUE5cA\" node index "
+    "iphey": "PROFILE_ID= TOKEN= node index "
   }
 }
