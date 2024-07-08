@@ -23,8 +23,8 @@ export function GologinApi({ token }) {
   if (!token) {
     throw new Error('GoLogin API token is missing');
   }
-  let browsers = [];
-  let legacyGls = [];
+  const browsers = [];
+  const legacyGls = [];
 
   const launchLocal = async (params) => {
     console.log('launchExistingProfile', params);
@@ -64,10 +64,7 @@ export function GologinApi({ token }) {
       if (params.cloud) {
         return await launchCloudProfile(params);
       }
-      if (params.profile_id) {
-        return await launchLocal(params);
-      }
-      if (params.geolocation) {
+      if (params.profile_id || params.geolocation) {
         return await launchLocal(params);
       }
     },
