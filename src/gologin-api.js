@@ -36,7 +36,8 @@ export function GologinApi({ token }) {
       ignoreHTTPSErrors: true,
     });
     browsers.push(browser);
-    return browser;
+    legacyGls.push(legacyGologin);
+    return { browser };
   };
 
   const launchCloudProfile = async (params) => {
@@ -54,16 +55,10 @@ export function GologinApi({ token }) {
       ignoreHTTPSErrors: true,
     });
     browsers.push(browser);
-    return browser;
+    return { browser };
   };
 
   return {
-    /**
-     * @param params
-     * @param {boolean} params.headless default false
-     * @param {boolean} params.cloud default false
-     * @returns browser
-     */
     async launch(params = {}) {
       console.log('launch', params);
       if (params.cloud) {
@@ -75,13 +70,6 @@ export function GologinApi({ token }) {
       if (params.geolocation) {
         return await launchLocal(params);
       }
-    },
-
-    async page(url, params) {
-      let browser = await this.launch();
-      const page = await browser.newPage();
-      await page.goto(url, { waitUntil: 'networkidle2' });
-      return { page, browser, session };
     },
 
     async exit(status = 0) {
