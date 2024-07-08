@@ -1,6 +1,6 @@
-import GologinApi from '../src/gologin-api.js';
+import { GologinApi } from '../src/gologin-api.js';
 
-const token = ''; // get token https://app.gologin.com/personalArea/TokenApi
+const token = process.env.GL_API_TOKEN; // get token https://app.gologin.com/personalArea/TokenApi
 const gologin = GologinApi({ token });
 
 async function main() {
