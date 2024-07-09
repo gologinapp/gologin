@@ -68,6 +68,7 @@ export class GoLogin {
 
     this.tmpdir = tmpdir();
     this.autoUpdateBrowser = !!options.autoUpdateBrowser;
+    this.checkBrowserUpdate = options.checkBrowserUpdate ?? true;
     this.browserChecker = new BrowserChecker(options.skipOrbitaHashChecking);
     this.uploadCookiesToServer = options.uploadCookiesToServer || false;
     this.writeCookiesFromServer = options.writeCookiesFromServer;
@@ -93,7 +94,7 @@ export class GoLogin {
   }
 
   async checkBrowser() {
-    return this.browserChecker.checkBrowser(this.autoUpdateBrowser);
+    return this.browserChecker.checkBrowser(this.autoUpdateBrowser, this.checkBrowserUpdate);
   }
 
   async setProfileId(profile_id) {

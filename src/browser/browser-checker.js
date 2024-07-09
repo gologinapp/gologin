@@ -63,7 +63,7 @@ export class BrowserChecker {
     // console.log('executableFilePath:', executableFilePath);
   }
 
-  async checkBrowser(autoUpdateBrowser = false) {
+  async checkBrowser(autoUpdateBrowser = false, checkBrowserUpdate = true) {
     const browserFolderExists = await access(this.#executableFilePath).then(() => true).catch(() => false);
 
     const { latestVersion: browserLatestVersion, browserDownloadUrl } = await this.getLatestBrowserVersion();
@@ -75,7 +75,7 @@ export class BrowserChecker {
     const currentVersionReq = await this.getCurrentVersion();
     const currentVersion = (currentVersionReq?.stdout || '').replace(/(\r\n|\n|\r)/gm, '');
 
-    if (browserLatestVersion === currentVersion) {
+    if (browserLatestVersion === currentVersion || !checkBrowserUpdate) {
       return;
     }
 
