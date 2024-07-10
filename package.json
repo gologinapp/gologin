@@ -44,6 +44,6 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "format": "npx prettier --single-quote src/* --write",
-    "iphey": "PROFILE_ID= GOLOGIN_API_TOKEN= node examples/example-iphey "
+    "iphey": "GOLOGIN_PROFILE_ID= GOLOGIN_API_TOKEN= node examples/example-iphey "
   }
 }
