@@ -3,9 +3,9 @@ import GoLogin from './gologin.js';
 
 export function getDefaultParams() {
   return {
-    token: process.env.GL_API_TOKEN,
-    profile_id: process.env.GL_PROFILE_ID,
-    executablePath: process.env.GL_EXECUTABLE_PATH,
+    token: process.env.GOLOGIN_API_TOKEN,
+    profile_id: process.env.GOLOGIN_PROFILE_ID,
+    executablePath: process.env.GOLOGIN_EXECUTABLE_PATH,
   };
 }
 
