@@ -17,6 +17,8 @@ const createLegacyGologin = (params) => {
   });
 };
 
+const createdApis = [];
+
 export const delay = (ms = 250) => new Promise((res) => setTimeout(res, ms));
 
 export function GologinApi({ token }) {
@@ -54,7 +56,7 @@ export function GologinApi({ token }) {
     return { browser };
   };
 
-  return {
+  const api = {
     async launch(params = {}) {
       if (params.cloud) {
         return await launchCloudProfile(params);
@@ -74,4 +76,12 @@ export function GologinApi({ token }) {
 
     delay,
   };
+
+  createdApis.push(api)
+
+  return api;
+}
+
+export const exitAll = () => {
+  Promise.allSettled(createdApis.map((api) => api.exit()));
 }

@@ -1,4 +1,4 @@
-import { GologinApi } from '../src/gologin-api.js';
+import { GologinApi, exitAll } from '../src/gologin-api.js';
 
 const token = process.env.GL_API_TOKEN; // get token https://app.gologin.com/personalArea/TokenApi
 const gologin = GologinApi({ token });
@@ -14,4 +14,4 @@ async function main() {
   return status; // Expecting 'Trustworthy'
 }
 
-main().catch(console.error).then(console.info).finally(gologin.exit);
+main().catch(console.error).then(console.info).finally(exitAll);
