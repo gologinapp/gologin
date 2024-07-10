@@ -1,12 +1,12 @@
 import { type Browser } from 'puppeteer-core/lib/Browser';
 
-export const OSES = {
+export const OPERATING_SYSTEMS = {
   win: 'win',
   lin: 'lin',
   mac: 'mac',
   android: 'android',
 } as const;
-export type OsType = (typeof OSES)[keyof typeof OSES];
+export type OsType = (typeof OPERATING_SYSTEMS)[keyof typeof OPERATING_SYSTEMS];
 
 type CloudLaunchParams = {
   cloud: true;
