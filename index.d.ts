@@ -22,7 +22,7 @@ type LocalLaunchParams = {
 };
 
 type ExistingProfileLaunchParams = {
-  profile_id: string;
+  profileId: string;
 };
 type NewProfileLaunchParams = {
   proxyGeolocation: string;

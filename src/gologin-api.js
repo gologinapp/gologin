@@ -9,12 +9,16 @@ export function getDefaultParams() {
   };
 }
 
-const createLegacyGologin = (params) => {
+const createLegacyGologin = ({ profileId, ...params }) => {
   const defaults = getDefaultParams();
-  return new GoLogin({
+  const mergedParams = {
     ...defaults,
     ...params,
-  });
+  }
+  mergedParams.profile_id = profileId ?? mergedParams.profile_id
+
+  console.log({ mergedParams });
+  return new GoLogin(mergedParams);
 };
 
 const createdApis = [];
@@ -29,7 +33,10 @@ export function GologinApi({ token }) {
   const legacyGls = [];
 
   const launchLocal = async (params) => {
-    const legacyGologin = createLegacyGologin(params);
+    const legacyGologin = createLegacyGologin({
+      ...params,
+      token
+    });
     const started = await legacyGologin.startLocal();
     const browser = await puppeteer.connect({
       browserWSEndpoint: started.wsUrl,
@@ -41,8 +48,8 @@ export function GologinApi({ token }) {
   };
 
   const launchCloudProfile = async (params) => {
-    const profileParam = params.profile_id
-      ? `&profile=${params.profile_id}`
+    const profileParam = params.profileId
+      ? `&profile=${params.profileId}`
       : '';
     const geolocationParam = params.geolocation
       ? `&geolocation=${params.geolocation}`
@@ -61,7 +68,7 @@ export function GologinApi({ token }) {
       if (params.cloud) {
         return await launchCloudProfile(params);
       }
-      if (params.profile_id || params.geolocation) {
+      if (params.profileId || params.geolocation) {
         return await launchLocal(params);
       }
     },
@@ -77,7 +84,7 @@ export function GologinApi({ token }) {
     delay,
   };
 
-  createdApis.push(api)
+  createdApis.push(api);
 
   return api;
 }
