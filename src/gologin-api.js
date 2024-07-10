@@ -27,10 +27,8 @@ export function GologinApi({ token }) {
   const legacyGls = [];
 
   const launchLocal = async (params) => {
-    console.log('launchExistingProfile', params);
     const legacyGologin = createLegacyGologin(params);
     const started = await legacyGologin.startLocal();
-    console.debug({ started });
     const browser = await puppeteer.connect({
       browserWSEndpoint: started.wsUrl,
       ignoreHTTPSErrors: true,
@@ -41,7 +39,6 @@ export function GologinApi({ token }) {
   };
 
   const launchCloudProfile = async (params) => {
-    console.log('launchCloudProfile', params);
     const profileParam = params.profile_id
       ? `&profile=${params.profile_id}`
       : '';
@@ -49,7 +46,6 @@ export function GologinApi({ token }) {
       ? `&geolocation=${params.geolocation}`
       : '';
     const browserWSEndpoint = `https://cloud.gologin.com/connect?token=${token}${profileParam}${geolocationParam}`;
-    console.debug(browserWSEndpoint);
     const browser = await puppeteer.connect({
       browserWSEndpoint,
       ignoreHTTPSErrors: true,
@@ -60,7 +56,6 @@ export function GologinApi({ token }) {
 
   return {
     async launch(params = {}) {
-      console.log('launch', params);
       if (params.cloud) {
         return await launchCloudProfile(params);
       }
