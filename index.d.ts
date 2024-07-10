@@ -34,16 +34,16 @@ type LaunchParams =
   | ExistingProfileLaunchParams
   | NewProfileLaunchParams
   | {
-      /**
-       * default delay, 250
-       */
-      defaultDelay: number;
+    /**
+     * default delay, 250
+     */
+    defaultDelay: number;
 
-      /**
-       * Operating system
-       */
-      os: OsType;
-    };
+    /**
+     * Operating system
+     */
+    os: OsType;
+  };
 
 type LaunchFn = (params?: LaunchParams) => Promise<{ browser: Browser }>;
 
@@ -58,3 +58,4 @@ type GologinApiParams = {
 };
 
 export declare function GologinApi(params: GologinApiParams): GologinApiType;
+export declare function exitAll(): Promise<void>;

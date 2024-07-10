@@ -89,6 +89,6 @@ export function GologinApi({ token }) {
   return api;
 }
 
-export const exitAll = () => {
+export function exitAll() {
   Promise.allSettled(createdApis.map((api) => api.exit()));
 }
