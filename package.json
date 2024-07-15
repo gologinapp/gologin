@@ -1,7 +1,8 @@
 {
   "name": "gologin",
-  "version": "2.0.31",
+  "version": "2.1.1",
   "description": "A high-level API to control Orbita browser over GoLogin API",
+  "types": "./index.d.ts",
   "main": "./src/gologin.js",
   "repository": {
     "type": "git",
@@ -41,6 +42,8 @@
     "eslint-plugin-simple-import-sort": "^8.0.0"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "format": "npx prettier --single-quote src/* --write",
+    "iphey": "GOLOGIN_PROFILE_ID= GOLOGIN_API_TOKEN= node examples/example-iphey "
   }
 }
