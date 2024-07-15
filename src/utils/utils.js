@@ -3,9 +3,9 @@ import net from 'node:net';
 import { join } from 'node:path';
 
 export const get = (value, path, defaultValue) =>
-  String(path).split('.').reduce((acc, v) => {
+  String(path).split('.').reduce((acc, val) => {
     try {
-      acc = acc[v] ? acc[v] : defaultValue;
+      acc = acc[val] ? acc[val] : defaultValue;
     } catch (e) {
       return defaultValue;
     }

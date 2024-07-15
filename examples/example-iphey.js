@@ -1,4 +1,4 @@
-import { GologinApi, exitAll } from '../src/gologin-api.js';
+import { exitAll, GologinApi } from '../src/gologin-api.js';
 
 const token = process.env.GOLOGIN_API_TOKEN; // get token https://app.gologin.com/personalArea/TokenApi
 const gologin = GologinApi({ token });

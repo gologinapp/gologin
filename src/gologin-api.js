@@ -1,4 +1,5 @@
 import puppeteer from 'puppeteer-core';
+
 import GoLogin from './gologin.js';
 
 export function getDefaultParams() {
@@ -6,6 +7,7 @@ export function getDefaultParams() {
     token: process.env.GOLOGIN_API_TOKEN,
     profile_id: process.env.GOLOGIN_PROFILE_ID,
     executablePath: process.env.GOLOGIN_EXECUTABLE_PATH,
+    autoUpdateBrowser: true,
   };
 }
 
@@ -14,10 +16,12 @@ const createLegacyGologin = ({ profileId, ...params }) => {
   const mergedParams = {
     ...defaults,
     ...params,
-  }
-  mergedParams.profile_id = profileId ?? mergedParams.profile_id
+  };
+
+  mergedParams.profile_id = profileId ?? mergedParams.profile_id;
 
   console.log({ mergedParams });
+
   return new GoLogin(mergedParams);
 };
 
@@ -29,21 +33,30 @@ export function GologinApi({ token }) {
   if (!token) {
     throw new Error('GoLogin API token is missing');
   }
+
   const browsers = [];
   const legacyGls = [];
 
   const launchLocal = async (params) => {
     const legacyGologin = createLegacyGologin({
       ...params,
-      token
+      token,
     });
-    const started = await legacyGologin.startLocal();
+
+    if (!params.profileId) {
+      const { id } = await legacyGologin.quickCreateProfile();
+      await legacyGologin.setProfileId(id);
+    }
+
+    const started = await legacyGologin.start();
     const browser = await puppeteer.connect({
       browserWSEndpoint: started.wsUrl,
       ignoreHTTPSErrors: true,
     });
+
     browsers.push(browser);
     legacyGls.push(legacyGologin);
+
     return { browser };
   };
 
@@ -51,26 +64,29 @@ export function GologinApi({ token }) {
     const profileParam = params.profileId
       ? `&profile=${params.profileId}`
       : '';
+
     const geolocationParam = params.geolocation
       ? `&geolocation=${params.geolocation}`
       : '';
+
     const browserWSEndpoint = `https://cloud.gologin.com/connect?token=${token}${profileParam}${geolocationParam}`;
     const browser = await puppeteer.connect({
       browserWSEndpoint,
       ignoreHTTPSErrors: true,
     });
+
     browsers.push(browser);
+
     return { browser };
   };
 
   const api = {
     async launch(params = {}) {
       if (params.cloud) {
-        return await launchCloudProfile(params);
+        return launchCloudProfile(params);
       }
-      if (params.profileId || params.geolocation) {
-        return await launchLocal(params);
-      }
+
+      return launchLocal(params);
     },
 
     async exit(status = 0) {

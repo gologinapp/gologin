@@ -357,6 +357,7 @@ export class BrowserChecker {
         timeout: 15 * 1000,
         headers: {
           'Content-Type': 'application/json',
+          'User-Agent': 'gologin-api',
         },
       }, (res) => {
         res.setEncoding('utf8');
