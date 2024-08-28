@@ -2,8 +2,8 @@ import puppeteer from 'puppeteer-core';
 
 import GoLogin from './src/gologin.js';
 
-const token = 'yU0token';
-const profile_id = 'yU0Pr0f1leiD';
+const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2NmNlYmRmZTZiMjRjN2Q3NDE0MmU4NDIiLCJ0eXBlIjoiZGV2Iiwiand0aWQiOiI2NmNlYmUxYjI4ODY5MzhmNGNhOWMxZjIifQ.cqTFBtIuyC8QVQwb3d-VgzJObYu7BB7uS_n-enNxWw4';
+const profile_id = 'damp-snowflake';
 
 (async () => {
   const GL = new GoLogin({
