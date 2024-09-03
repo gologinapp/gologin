@@ -526,7 +526,7 @@ export class GoLogin {
 
     await this.getTimeZone(proxy).catch((e) => {
       console.error('Proxy Error. Check it and try again.');
-      throw e;
+      throw new Error(`Proxy Error. ${e.message}`);
     });
 
     const [latitude, longitude] = this._tz.ll;
@@ -1458,7 +1458,7 @@ export class GoLogin {
 
     const profile = await this.getProfile();
     const profileResponse = await requests.post(`${API_URL}/browser/${this.profile_id}/web`, {
-      headers: { 'Authorization': `Bearer ${this.access_token}`, 'User-Agent': 'gologin-api', },
+      headers: { 'Authorization': `Bearer ${this.access_token}`, 'User-Agent': 'gologin-api' },
       json: { isNewCloudBrowser: this.isNewCloudBrowser, isHeadless: this.isCloudHeadless },
     }).catch(() => null);
 
