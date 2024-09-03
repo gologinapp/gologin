@@ -1,9 +1,9 @@
 import { createHash } from 'crypto';
 import { createWriteStream, promises as _promises, rmdirSync } from 'fs';
 import { homedir, tmpdir } from 'os';
-import { join, resolve, sep, dirname } from 'path';
-import { fileURLToPath } from 'url';
+import { dirname, join, resolve, sep } from 'path';
 import requestretry from 'requestretry';
+import { fileURLToPath } from 'url';
 
 import { fontsCollection } from '../../fonts.js';
 
@@ -40,7 +40,7 @@ export const downloadCookies = ({ profileId, ACCESS_TOKEN, API_BASE_URL }) =>
   });
 
 export const uploadCookies = ({ cookies = [], profileId, ACCESS_TOKEN, API_BASE_URL }) =>
-  requestretry.post(`${API_BASE_URL}/browser/${profileId}/cookies/?encrypted=true`, {
+  requestretry.post(`${API_BASE_URL}/browser/${profileId}/cookies?encrypted=true`, {
     headers: {
       Authorization: `Bearer ${ACCESS_TOKEN}`,
       'User-Agent': 'gologin-api',
