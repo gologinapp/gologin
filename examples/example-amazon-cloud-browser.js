@@ -15,19 +15,12 @@ const [_execPath, _filePath, GOLOGIN_API_TOKEN, GOLOGIN_PROFILE_ID] = process.ar
     profile_id: GOLOGIN_PROFILE_ID,
   });
 
-  const { _status, wsUrl } = await GL.startRemote();
   const browser = await puppeteer.connect({
-    browserWSEndpoint: wsUrl,
+    browserWSEndpoint: `https://cloudbrowser.gologin.com/connect?token=${GOLOGIN_API_TOKEN}&profile=${GOLOGIN_PROFILE_ID}`,
     ignoreHTTPSErrors: true,
   });
 
   const page = await browser.newPage();
-  const viewPort = GL.getViewPort();
-  await page.setViewport({ width: Math.round(viewPort.width * 0.994), height: Math.round(viewPort.height * 0.92) });
-  const session = await page.target().createCDPSession();
-  const { windowId } = await session.send('Browser.getWindowForTarget');
-  await session.send('Browser.setWindowBounds', { windowId, bounds: viewPort });
-  await session.detach();
 
   await page.goto('https://www.amazon.com/-/dp/B0771V1JZX');
   const content = await page.content();

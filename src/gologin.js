@@ -44,7 +44,6 @@ const delay = (time) => new Promise((resolve) => setTimeout(resolve, time));
 export class GoLogin {
   constructor(options = {}) {
     this.browserLang = 'en-US';
-    this.is_remote = options.remote || false;
     this.access_token = options.token;
     this.profile_id = options.profile_id;
     this.password = options.password;
@@ -59,7 +58,6 @@ export class GoLogin {
     this.waitWebsocket = options.waitWebsocket ?? true;
 
     this.isCloudHeadless = options.isCloudHeadless ?? true;
-    this.isNewCloudBrowser = options.isNewCloudBrowser ?? true;
 
     this.tmpdir = tmpdir();
     this.autoUpdateBrowser = !!options.autoUpdateBrowser;
@@ -1372,10 +1370,6 @@ export class GoLogin {
   }
 
   async start() {
-    if (this.is_remote) {
-      return this.startRemote();
-    }
-
     if (!this.executablePath) {
       await this.checkBrowser();
     }
@@ -1406,9 +1400,6 @@ export class GoLogin {
 
   async stop() {
     await new Promise(resolve => setTimeout(resolve, 500));
-    if (this.is_remote) {
-      return this.stopRemote();
-    }
 
     await this.stopAndCommit({ posting: true }, false);
   }
@@ -1447,78 +1438,9 @@ export class GoLogin {
     return wsUrl;
   }
 
-  async startRemote(delay_ms = 10000) {
-    debug(`startRemote ${this.profile_id}`);
-
-    /*
-    if (profileResponse.statusCode !== 202) {
-      return {'status': 'failure', 'code':  profileResponse.statusCode};
-    }
-    */
-
-    const profile = await this.getProfile();
-    const profileResponse = await requests.post(`${API_URL}/browser/${this.profile_id}/web`, {
-      headers: { 'Authorization': `Bearer ${this.access_token}`, 'User-Agent': 'gologin-api' },
-      json: { isNewCloudBrowser: this.isNewCloudBrowser, isHeadless: this.isCloudHeadless },
-    }).catch(() => null);
-
-    if (!profileResponse) {
-      throw new Error('invalid request');
-    }
-
-    const { body, statusCode } = profileResponse;
-    debug('profileResponse', statusCode, body);
-
-    if (profileResponse.statusCode === 401) {
-      throw new Error('invalid token');
-    }
-
-    if (body.status === 'profileStatuses.pending') {
-      return { status: 'pending', message: 'remote browser is being prepared, please try in 1 minute.' };
-    }
-
-    let remoteOrbitaUrl = `https://${this.profile_id}.orbita.gologin.com`;
-    if (this.isNewCloudBrowser) {
-      if (!profileResponse.body.remoteOrbitaUrl) {
-        throw new Error('Couldn\' start the remote browser');
-      }
-
-      remoteOrbitaUrl = profileResponse.body.remoteOrbitaUrl;
-    }
-
-    const { navigator = {}, fonts, os: profileOs } = profile;
-    this.fontsMasking = fonts?.enableMasking;
-    this.profileOs = profileOs;
-    this.differentOs =
-      profileOs !== 'android' && (
-        OS_PLATFORM === 'win32' && profileOs !== 'win' ||
-        OS_PLATFORM === 'darwin' && profileOs !== 'mac' ||
-        OS_PLATFORM === 'linux' && profileOs !== 'lin'
-      );
-
-    const {
-      resolution = '1920x1080',
-      language = 'en-US,en;q=0.9',
-    } = navigator;
-
-    this.language = language;
-    const [screenWidth, screenHeight] = resolution.split('x');
-    this.resolution = {
-      width: parseInt(screenWidth, 10),
-      height: parseInt(screenHeight, 10),
-    };
-
-    const wsUrl = await this.waitDebuggingUrl(delay_ms, 0, remoteOrbitaUrl);
-    if (wsUrl !== '') {
-      return { status: 'success', wsUrl };
-    }
-
-    return { status: 'failure', message: body };
-  }
-
   async stopRemote() {
     debug(`stopRemote ${this.profile_id}`);
-    const profileResponse = await requests.delete(`${API_URL}/browser/${this.profile_id}/web?isNewCloudBrowser=${this.isNewCloudBrowser}`, {
+    const profileResponse = await requests.delete(`${API_URL}/browser/${this.profile_id}/web`, {
       headers: {
         'Authorization': `Bearer ${this.access_token}`,
         'User-Agent': 'gologin-api',
