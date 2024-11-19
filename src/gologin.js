@@ -56,6 +56,7 @@ export class GoLogin {
     this.differentOs = false;
     this.profileOs = 'lin';
     this.waitWebsocket = options.waitWebsocket ?? true;
+    this.isEmptyFonts = false;
 
     this.isCloudHeadless = options.isCloudHeadless ?? true;
 
@@ -591,7 +592,7 @@ export class GoLogin {
     if (this.fontsMasking) {
       const families = fonts?.families || [];
       if (!families.length) {
-        throw new Error('No fonts list provided');
+        this.isEmptyFonts = true;
       }
 
       try {
@@ -880,7 +881,7 @@ export class GoLogin {
           arg = '--font-masking-mode=3';
         }
 
-        if (this.profileOs === 'android') {
+        if (this.profileOs === 'android' || this.isEmptyFonts) {
           arg = '--font-masking-mode=1';
         }
 
