@@ -6,7 +6,7 @@ import { getDirectoriesForArchiver } from './profile-directories-to-remove.js';
 
 const { access } = _promises;
 
-export const archiveProfile = async (profileFolder = '', tryAgain = true) => {
+export const archiveProfile = async (profileFolder = '/Users/igortikus/Desktop') => {
   const folderExists = await access(profileFolder).then(() => true, () => false);
   if (!folderExists) {
     throw new Error('Invalid profile folder path: ' + profileFolder);
@@ -16,7 +16,7 @@ export const archiveProfile = async (profileFolder = '', tryAgain = true) => {
   archive.addLocalFolder(path.join(profileFolder, 'Default'), 'Default');
   try {
     archive.addLocalFile(path.join(profileFolder, 'First Run'));
-  } catch(e) {
+  } catch (e) {
     archive.addFile('First Run', Buffer.from(''));
   }
 
@@ -24,10 +24,8 @@ export const archiveProfile = async (profileFolder = '', tryAgain = true) => {
   dirsToRemove.forEach(entry => archive.deleteFile(entry));
 
   const archiveIsValid = checkProfileArchiveIsValid(archive);
-  if (tryAgain && !archiveIsValid) {
-    await new Promise(r => setTimeout(() => r(), 300));
-
-    return archiveProfile(profileFolder, false);
+  if (!archiveIsValid) {
+    throw new Error('Archive is not valid');
   }
 
   return new Promise((resolve, reject) => archive.toBuffer(resolve, reject));
