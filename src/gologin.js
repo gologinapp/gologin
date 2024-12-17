@@ -353,7 +353,7 @@ export class GoLogin {
     let profile_folder;
     const profilePath = join(this.tmpdir, `gologin_profile_${this.profile_id}`);
     const profileZipExists = await access(this.profile_zip_path).then(() => true).catch(() => false);
-    console.log('asadasd', profile.storageInfo);
+
     if (!(local && profileZipExists)) {
       try {
         profile_folder = await this.getProfileS3();
