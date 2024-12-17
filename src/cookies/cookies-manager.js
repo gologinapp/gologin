@@ -67,7 +67,6 @@ export const getChunckedInsertValues = (cookiesArr) => {
     const queryParams = cookies.flatMap((cookie) => {
       const creationDate = cookie.creationDate ? cookie.creationDate : unixToLDAP(todayUnix);
       let expirationDate = cookie.session ? 0 : unixToLDAP(cookie.expirationDate);
-      // console.log('cookie.value', cookie.value);
       const encryptedValue = cookie.value;
       const samesite = Object.keys(SAME_SITE).find((key) => SAME_SITE[key] === (cookie.sameSite || '-1'));
       const isSecure =

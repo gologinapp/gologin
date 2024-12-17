@@ -414,7 +414,6 @@ export class GoLogin {
 
   async createStartup(local = false) {
     const profilePath = join(this.tmpdir, `gologin_profile_${this.profile_id}`);
-    // let profile_folder;
     await rimraf(profilePath, () => null);
     debug('-', profilePath, 'dropped');
     const profile = await this.getProfile();
@@ -1365,7 +1364,7 @@ export class GoLogin {
       db = await getDB(cookiesFilePath, false);
       if (resultCookies.length) {
         const chunckInsertValues = getChunckedInsertValues(resultCookies);
-        // console.log('chunckInsertValues', chunckInsertValues);
+
         for (const [query, queryParams] of chunckInsertValues) {
           const insertStmt = await db.prepare(query);
           await insertStmt.run(queryParams);

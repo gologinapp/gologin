@@ -6,7 +6,7 @@ import { getDirectoriesForArchiver } from './profile-directories-to-remove.js';
 
 const { access } = _promises;
 
-export const archiveProfile = async (profileFolder = '/Users/igortikus/Desktop') => {
+export const archiveProfile = async (profileFolder = '') => {
   const folderExists = await access(profileFolder).then(() => true, () => false);
   if (!folderExists) {
     throw new Error('Invalid profile folder path: ' + profileFolder);
