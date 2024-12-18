@@ -1,7 +1,7 @@
-import { open } from 'sqlite';
-import sqlite3 from 'sqlite3';
 import { promises as fsPromises } from 'fs';
 import { join } from 'path';
+import { open } from 'sqlite';
+import sqlite3 from 'sqlite3';
 
 const { access } = fsPromises;
 const { Database, OPEN_READONLY } = sqlite3;
@@ -26,7 +26,36 @@ export const getDB = (filePath, readOnly = true) => {
   }
 
   return open(connectionOpts);
-}
+};
+
+export const createDBFile = async ({
+  cookiesFilePath,
+  cookiesFileSecondPath,
+  createCookiesTableQuery,
+}) => {
+  await fsPromises.writeFile(cookiesFilePath, '', { mode: 0o666 });
+
+  await new Promise((resolve, reject) => {
+    new sqlite3.Database(cookiesFilePath, (error) => {
+      if (error) {
+        reject(error);
+      }
+
+      resolve(null);
+    });
+  });
+
+  const connectionOpts = {
+    filename: cookiesFilePath,
+    driver: sqlite3.Database,
+  };
+
+  const db = await open(connectionOpts);
+  await db.run(createCookiesTableQuery);
+  await db.close();
+
+  cookiesFileSecondPath && await fsPromises.copyFile(cookiesFilePath, cookiesFileSecondPath).catch(console.log);
+};
 
 export const getChunckedInsertValues = (cookiesArr) => {
   const todayUnix = Math.floor(new Date().getTime() / 1000.0);
@@ -80,7 +109,7 @@ export const getChunckedInsertValues = (cookiesArr) => {
 
     return [query, queryParams];
   });
-}
+};
 
 export const loadCookiesFromFile = async (filePath) => {
   let db;
@@ -125,7 +154,7 @@ export const loadCookiesFromFile = async (filePath) => {
   }
 
   return cookies;
-}
+};
 
 export const unixToLDAP = (unixtime) => {
   if (unixtime === 0) {
@@ -136,7 +165,7 @@ export const unixToLDAP = (unixtime) => {
   const sum = unixtime - win32filetime;
 
   return sum * 1000000;
-}
+};
 
 export const ldapToUnix = (ldap) => {
   const ldapLength = ldap.toString().length;
@@ -152,7 +181,7 @@ export const ldapToUnix = (ldap) => {
   const win32filetime = new Date(Date.UTC(1601, 0, 1)).getTime();
 
   return (_ldap / 10000 + win32filetime) / 1000;
-}
+};
 
 export const buildCookieURL = (domain, secure, path) => {
   let domainWithoutDot = domain;
@@ -161,7 +190,7 @@ export const buildCookieURL = (domain, secure, path) => {
   }
 
   return 'http' + (secure ? 's' : '') + '://' + domainWithoutDot + path;
-}
+};
 
 export const chunk = (arr, chunkSize = 1, cache = []) => {
   const tmp = [...arr];
@@ -174,7 +203,7 @@ export const chunk = (arr, chunkSize = 1, cache = []) => {
   }
 
   return cache;
-}
+};
 
 export const getCookiesFilePath = async (profileId, tmpdir) => {
   const baseCookiesFilePath = join(tmpdir, `gologin_profile_${profileId}`, 'Default', 'Cookies');
@@ -184,6 +213,6 @@ export const getCookiesFilePath = async (profileId, tmpdir) => {
     .then(() => baseCookiesFilePath)
     .catch(() => access(bypassCookiesFilePath)
       .then(() => bypassCookiesFilePath)
-      .catch(() => baseCookiesFilePath)
+      .catch(() => baseCookiesFilePath),
     );
-}
+};
