@@ -1353,6 +1353,10 @@ export class GoLogin {
       cookies = await this.getCookies(this.profile_id);
     }
 
+    if (!cookies?.length) {
+      return;
+    }
+
     const resultCookies = cookies.map((el) => ({ ...el, value: Buffer.from(el.value) }));
     let db;
     const profilePath = join(this.tmpdir, `gologin_profile_${this.profile_id}`);
