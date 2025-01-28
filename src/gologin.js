@@ -398,7 +398,7 @@ export class GoLogin {
     const preferencesFilePath = _resolve(defaultFilePath, 'Preferences');
     const bookmarksFilePath = _resolve(defaultFilePath, 'Bookmarks');
     const cookiesFilePath = _resolve(defaultFilePath, 'Network', 'Cookies');
-    const secondCookiesFilePath = _resolve(defaultFilePath, 'Cookies');
+    const cookiesFileSecondPath = _resolve(defaultFilePath, 'Cookies');
 
     await mkdir(_resolve(defaultFilePath, 'Network'), { recursive: true }).catch(console.log);
 
@@ -407,7 +407,7 @@ export class GoLogin {
       writeFile(bookmarksFilePath, JSON.stringify(zeroProfileBookmarks), { mode: 0o666 }),
       createDBFile({
         cookiesFilePath,
-        secondCookiesFilePath,
+        cookiesFileSecondPath,
         createCookiesTableQuery,
       }),
     ]);
@@ -610,6 +610,7 @@ export class GoLogin {
     gologin.screenHeight = this.resolution.height;
     debug('writeCookiesFromServer', this.writeCookiesFromServer);
     this.cookiesFilePath = await getCookiesFilePath(this.profile_id, this.tmpdir);
+
     if (this.writeCookiesFromServer) {
       await this.writeCookiesToFile(profile.cookies?.cookies);
     }
@@ -1368,8 +1369,10 @@ export class GoLogin {
     try {
       db = await getDB(cookiesFilePath, false);
       const cookiesToInsert = await getUniqueCookies(resultCookies, cookiesFilePath);
+      // console.log('cookiesToInsert', cookiesToInsert);
       if (cookiesToInsert.length) {
         const chunckInsertValues = getChunckedInsertValues(cookiesToInsert);
+        console.log('chunckInsertValues', chunckInsertValues);
         for (const [query, queryParams] of chunckInsertValues) {
           const insertStmt = await db.prepare(query);
           await insertStmt.run(queryParams);
