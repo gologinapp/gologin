@@ -57,6 +57,13 @@ export const createDBFile = async ({
   cookiesFileSecondPath && await fsPromises.copyFile(cookiesFilePath, cookiesFileSecondPath).catch(console.log);
 };
 
+export const getUniqueCookies = async (cookiesArr, cookiesFilePath) => {
+  const cookiesInFile = await loadCookiesFromFile(cookiesFilePath);
+  const existingCookieNames = new Set(cookiesInFile.map(c => `${c.name}-${c.value.toString('base64')}`));
+
+  return cookiesArr.filter(cookie => !existingCookieNames.has(`${cookie.name}-${cookie.value.toString('base64')}`));
+};
+
 export const getChunckedInsertValues = (cookiesArr) => {
   const todayUnix = Math.floor(new Date().getTime() / 1000.0);
   const chunckedCookiesArr = chunk(cookiesArr, MAX_SQLITE_VARIABLES);

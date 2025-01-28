@@ -22,6 +22,7 @@ import {
   getChunckedInsertValues,
   getCookiesFilePath,
   getDB,
+  getUniqueCookies,
   loadCookiesFromFile,
 } from './cookies/cookies-manager.js';
 import ExtensionsManager from './extensions/extensions-manager.js';
@@ -1360,25 +1361,20 @@ export class GoLogin {
     const resultCookies = cookies.map((el) => ({ ...el, value: Buffer.from(el.value) }));
     let db;
     const profilePath = join(this.tmpdir, `gologin_profile_${this.profile_id}`);
-    console.log('profilePath', profilePath);
+
     const defaultFilePath = _resolve(profilePath, 'Default');
-    const cookiesFilePath = _resolve(defaultFilePath, 'Network', 'Cookies');
-    const secondCookiesFilePath = _resolve(defaultFilePath, 'Cookies');
+    const cookiesFilePath = _resolve(defaultFilePath, 'Cookies');
+    const secondCookiesFilePath = _resolve(defaultFilePath, 'Network', 'Cookies');
     try {
       db = await getDB(cookiesFilePath, false);
-      if (resultCookies.length) {
-        const chunckInsertValues = getChunckedInsertValues(resultCookies);
-
+      const cookiesToInsert = await getUniqueCookies(resultCookies, cookiesFilePath);
+      if (cookiesToInsert.length) {
+        const chunckInsertValues = getChunckedInsertValues(cookiesToInsert);
         for (const [query, queryParams] of chunckInsertValues) {
           const insertStmt = await db.prepare(query);
           await insertStmt.run(queryParams);
           await insertStmt.finalize();
         }
-      } else {
-        const query = 'delete from cookies';
-        const insertStmt = await db.prepare(query);
-        await insertStmt.run();
-        await insertStmt.finalize();
       }
     } catch (error) {
       console.log(error.message);
