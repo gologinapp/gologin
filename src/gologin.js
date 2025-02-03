@@ -194,23 +194,24 @@ export class GoLogin {
     const token = this.access_token;
     debug('getProfileS3 token=', token, 'profile=', this.profile_id);
     const downloadURL = `${STORAGE_GATEWAY_BASE_URL}/download`;
-
     debug('loading profile from public s3 bucket, url=', downloadURL);
-    const profileResponse = await requests.get(downloadURL, {
-      encoding: null,
+
+    const profileResponse = await fetch(downloadURL, {
       headers: {
         Authorization: `Bearer ${token}`,
         browserId: this.profile_id,
       },
     });
 
-    if (profileResponse.statusCode !== 200) {
+    const profileResponseBody = await profileResponse.arrayBuffer();
+
+    if (profileResponse.status !== 200) {
       debug(`Gologin S3 BUCKET ${downloadURL} response error ${profileResponse.statusCode}  - use empty`);
 
       return '';
     }
 
-    return Buffer.from(profileResponse.body);
+    return Buffer.from(profileResponseBody);
   }
 
   async postFile(fileName, fileBuff) {
@@ -1352,6 +1353,18 @@ export class GoLogin {
     return response.body;
   }
 
+  getCookiePath(defaultFilePath) {
+    let primary = join(defaultFilePath, 'Cookies');
+    let secondary = join(defaultFilePath, 'Network', 'Cookies');
+
+    if (!existsSync(primary)) {
+      primary = join(defaultFilePath, 'Network', 'Cookies');
+      secondary = join(defaultFilePath, 'Cookies');
+    }
+
+    return { primary, secondary };
+  }
+
   async writeCookiesToFile(cookies) {
     if (!cookies) {
       cookies = await this.getCookies(this.profile_id);
@@ -1366,15 +1379,12 @@ export class GoLogin {
     const profilePath = join(this.tmpdir, `gologin_profile_${this.profile_id}`);
 
     const defaultFilePath = _resolve(profilePath, 'Default');
-    const cookiesFilePath = _resolve(defaultFilePath, 'Cookies');
-    const secondCookiesFilePath = _resolve(defaultFilePath, 'Network', 'Cookies');
+    const cookiesPaths = this.getCookiePath(defaultFilePath);
     try {
-      db = await getDB(cookiesFilePath, false);
-      const cookiesToInsert = await getUniqueCookies(resultCookies, cookiesFilePath);
-      // console.log('cookiesToInsert', cookiesToInsert);
+      db = await getDB(cookiesPaths.primary, false);
+      const cookiesToInsert = await getUniqueCookies(resultCookies, cookiesPaths.primary);
       if (cookiesToInsert.length) {
         const chunckInsertValues = getChunckedInsertValues(cookiesToInsert);
-        console.log('chunckInsertValues', chunckInsertValues);
         for (const [query, queryParams] of chunckInsertValues) {
           const insertStmt = await db.prepare(query);
           await insertStmt.run(queryParams);
@@ -1385,7 +1395,7 @@ export class GoLogin {
       console.log(error.message);
     } finally {
       db && await db.close();
-      await copyFile(cookiesFilePath, secondCookiesFilePath).catch(console.log);
+      await copyFile(cookiesPaths.primary, cookiesPaths.secondary).catch(console.log);
     }
   }
 
