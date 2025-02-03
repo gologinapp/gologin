@@ -60,7 +60,7 @@ export class GoLogin {
     this.profileOs = 'lin';
     this.waitWebsocket = options.waitWebsocket ?? true;
     this.isEmptyFonts = false;
-
+    this.isFirstSession = false;
     this.isCloudHeadless = options.isCloudHeadless ?? true;
 
     this.tmpdir = tmpdir();
@@ -440,8 +440,10 @@ export class GoLogin {
       height: parseInt(screenHeight, 10),
     };
     if (profile.storageInfo.isNewProfile) {
+      this.isFirstSession = true;
       await this.createZeroProfile(profile.createCookiesTableQuery);
     } else {
+      this.isFirstSession = false;
       await this.downloadProfileAndExtract(profile, local);
     }
 
@@ -924,7 +926,7 @@ export class GoLogin {
         params = params.concat(this.extra_params);
       }
 
-      if (this.restoreLastSession) {
+      if (!this.isFirstSession && this.restoreLastSession) {
         params.push('--restore-last-session');
       }
 
