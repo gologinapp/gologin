@@ -978,12 +978,11 @@ export class GoLogin {
       await this.uploadProfileCookiesToServer();
     }
 
-    await this.saveBookmarksToDb();
-
     this.is_stopping = true;
     await this.sanitizeProfile();
 
     if (is_posting) {
+      await this.saveBookmarksToDb();
       await this.commitProfile();
     }
 
