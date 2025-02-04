@@ -35,16 +35,6 @@ export const createDBFile = async ({
 }) => {
   await fsPromises.writeFile(cookiesFilePath, '', { mode: 0o666 });
 
-  await new Promise((resolve, reject) => {
-    new sqlite3.Database(cookiesFilePath, (error) => {
-      if (error) {
-        reject(error);
-      }
-
-      resolve(null);
-    });
-  });
-
   const connectionOpts = {
     filename: cookiesFilePath,
     driver: sqlite3.Database,
