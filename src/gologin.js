@@ -9,6 +9,7 @@ import { dirname, join, resolve as _resolve, sep } from 'path';
 import requests from 'requestretry';
 import rimraf from 'rimraf';
 import { SocksProxyAgent } from 'socks-proxy-agent';
+import { fileURLToPath } from 'url';
 
 import { fontsCollection } from '../fonts.js';
 import { getCurrentProfileBookmarks } from './bookmarks/utils.js';
@@ -243,7 +244,7 @@ export class GoLogin {
 
   async emptyProfileFolder() {
     debug('get emptyProfileFolder');
-    const currentDir = dirname(new URL(import.meta.url).pathname);
+    const currentDir = dirname(fileURLToPath(import.meta.url));
     const zeroProfilePath = join(currentDir, '..', 'zero_profile.zip');
     const profile = await readFile(_resolve(zeroProfilePath));
     debug('emptyProfileFolder LENGTH ::', profile.length);
