@@ -63,6 +63,7 @@ export class GoLogin {
     this.isEmptyFonts = false;
     this.isFirstSession = false;
     this.isCloudHeadless = options.isCloudHeadless ?? true;
+    this.storageGatewayUrl = `${STORAGE_GATEWAY_BASE_URL}/upload`;
 
     this.tmpdir = tmpdir();
     this.autoUpdateBrowser = !!options.autoUpdateBrowser;
@@ -218,12 +219,11 @@ export class GoLogin {
   async postFile(fileName, fileBuff) {
     debug('POSTING FILE', fileBuff.length);
     debug('Getting signed URL for S3');
-    const apiUrl = `${STORAGE_GATEWAY_BASE_URL}/upload`;
 
     const bodyBufferBiteLength = Buffer.byteLength(fileBuff);
     console.log('BUFFER SIZE', bodyBufferBiteLength);
 
-    await requests.put(apiUrl, {
+    await requests.put(this.storageGatewayUrl, {
       headers: {
         Authorization: `Bearer ${this.access_token}`,
         browserId: this.profile_id,
@@ -976,14 +976,14 @@ export class GoLogin {
       false;
 
     if (this.uploadCookiesToServer) {
-      await this.uploadProfileCookiesToServer();
+      const updateResult = await this.uploadProfileDataToServer();
+      this.storageGatewayUrl = updateResult.storageGateway.url;
     }
 
     this.is_stopping = true;
     await this.sanitizeProfile();
 
     if (is_posting) {
-      await this.saveBookmarksToDb();
       await this.commitProfile();
     }
 
@@ -999,6 +999,35 @@ export class GoLogin {
     debug(`PROFILE ${this.profile_id} STOPPED AND CLEAR`);
 
     return false;
+  }
+
+  async uploadProfileDataToServer() {
+    const cookies = await loadCookiesFromFile(this.cookiesFilePath);
+    const bookmarks = await getCurrentProfileBookmarks(this.bookmarksFilePath);
+
+    const body = {
+      cookies,
+      bookmarks,
+      isCookiesEncrypted: true,
+      isStorageGateway: true,
+    };
+
+    const updateResult = await requests.post(`${API_URL}/browser/features/profile/${this.profile_id}/update_after_close`, {
+      headers: {
+        Authorization: `Bearer ${this.access_token}`,
+        'User-Agent': 'gologin-api',
+      },
+      json: body,
+      maxAttempts: 3,
+      retryDelay: 2000,
+      timeout: 20 * 1000,
+    }).catch((e) => {
+      console.log(e);
+
+      return e;
+    });
+
+    return updateResult.body;
   }
 
   async stopBrowser() {
