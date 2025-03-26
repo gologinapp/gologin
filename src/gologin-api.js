@@ -61,15 +61,20 @@ export function GologinApi({ token }) {
   };
 
   const launchCloudProfile = async (params) => {
-    const profileParam = params.profileId
-      ? `&profile=${params.profileId}`
-      : '';
+    const legacyGologin = createLegacyGologin({
+      ...params,
+      token,
+    });
 
-    const geolocationParam = params.geolocation
-      ? `&geolocation=${params.geolocation}`
-      : '';
+    if (!params.profileId) {
+      const { id } = await legacyGologin.quickCreateProfile();
+      await legacyGologin.setProfileId(id);
+      params.profileId = id;
+    }
 
-    const browserWSEndpoint = `https://cloud.gologin.com/connect?token=${token}${profileParam}${geolocationParam}`;
+    legacyGls.push(legacyGologin);
+
+    const browserWSEndpoint = `https://cloudbrowser.gologin.com/connect?token=${token}&profile=${params.profileId}`;
     const browser = await puppeteer.connect({
       browserWSEndpoint,
       ignoreHTTPSErrors: true,
@@ -94,7 +99,9 @@ export function GologinApi({ token }) {
       Promise.allSettled(
         legacyGls.map((gl) => gl.stopLocal({ posting: false })),
       );
-      process.exit(status);
+      Promise.allSettled(
+        legacyGls.map((gl) => gl.stopRemote({ posting: true })),
+      );
     },
 
     delay,
