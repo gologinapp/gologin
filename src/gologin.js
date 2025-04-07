@@ -734,9 +734,9 @@ export class GoLogin {
 
       const proxyUrl = `${proxy.mode}://${proxy.username}:${proxy.password}@${proxy.host}:${proxy.port}`;
       debug(`getTimeZone start ${TIMEZONE_URL}`, proxyUrl);
-      data = await requests.get(TIMEZONE_URL, { proxy: proxyUrl, timeout: 20 * 1000, maxAttempts: 5 });
+      data = await requests.get(TIMEZONE_URL, { proxy: proxyUrl, timeout: 13 * 1000, maxAttempts: 3 });
     } else {
-      data = await requests.get(TIMEZONE_URL, { timeout: 20 * 1000, maxAttempts: 5 });
+      data = await requests.get(TIMEZONE_URL, { timeout: 13 * 1000, maxAttempts: 3 });
     }
 
     debug('getTimeZone finish', data.body);
