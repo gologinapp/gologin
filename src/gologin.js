@@ -253,103 +253,103 @@ export class GoLogin {
   }
 
   getGologinPreferences(profileData) {
-    const os = profileData?.os || '';
-    const osSpec = profileData?.osSpec || '';
-    const isM1 = profileData?.isM1 || false;
+    const os = profileData.os || '';
+    const osSpec = profileData.osSpec || '';
+    const isM1 = profileData.isM1 || false;
     const isArm = (os === 'mac' && osSpec && osSpec.includes('M')) || isM1;
-    const resolution = profileData?.navigator?.resolution || '1920x1080';
+    const resolution = (profileData.navigator && profileData.navigator.resolution) || '1920x1080';
     const [screenWidth, screenHeight] = resolution.split('x').map(Number);
-    const langHeader = profileData?.navigator?.language || '';
+    const langHeader = (profileData.navigator && profileData.navigator.language) || '';
     console.log('langHeader', langHeader);
     const splittedLangs = langHeader ? langHeader.split(',')[0] : 'en-US';
 
-    const startupUrl = (profileData?.startUrl || '').trim().split(',')[0];
-    const startupUrls = (profileData?.startUrl || '').split(',')
+    const startupUrl = (profileData.startUrl || '').trim().split(',')[0];
+    const startupUrls = (profileData.startUrl || '').split(',')
       .map(url => url.trim())
       .filter(url => url);
 
     const preferences = {
-      profile_id: profileData?.id,
-      name: profileData?.name,
+      profile_id: profileData.id,
+      name: profileData.name,
       is_m1: isArm,
       navigator: {
-        platform: profileData?.navigator?.platform || '',
-        max_touch_points: profileData?.navigator?.maxTouchPoints || 0,
+        platform: (profileData.navigator && profileData.navigator.platform) || '',
+        max_touch_points: (profileData.navigator && profileData.navigator.maxTouchPoints) || 0,
       },
-      dns: profileData?.dns || {},
+      dns: profileData.dns || {},
       proxy: {
-        username: profileData?.proxy?.username || '',
-        password: profileData?.proxy?.password || '',
+        username: (profileData.proxy && profileData.proxy.username) || '',
+        password: (profileData.proxy && profileData.proxy.password) || '',
       },
-      webRTC: profileData?.webRTC || {},
+      webRTC: profileData.webRTC || {},
       screenHeight,
       screenWidth,
-      userAgent: profileData?.navigator?.userAgent || '',
+      userAgent: (profileData.navigator && profileData.navigator.userAgent) || '',
       webGl: {
-        vendor: profileData?.webGLMetadata?.vendor || '',
-        renderer: profileData?.webGLMetadata?.renderer || '',
-        mode: profileData?.webGLMetadata?.mode === 'mask',
+        vendor: (profileData.webGLMetadata && profileData.webGLMetadata?.vendor) || '',
+        renderer: (profileData.webGLMetadata && profileData.webGLMetadata?.renderer) || '',
+        mode: (profileData.webGLMetadata && profileData.webGLMetadata?.mode) === 'mask',
       },
       webgl: {
         metadata: {
-          vendor: profileData?.webGLMetadata?.vendor || '',
-          renderer: profileData?.webGLMetadata?.renderer || '',
-          mode: profileData?.webGLMetadata?.mode === 'mask',
+          vendor: (profileData.webGLMetadata && profileData.webGLMetadata?.vendor) || '',
+          renderer: (profileData.webGLMetadata && profileData.webGLMetadata?.renderer) || '',
+          mode: (profileData.webGLMetadata && profileData.webGLMetadata?.mode) === 'mask',
         },
       },
       mobile: {
-        enable: profileData?.os === 'android',
-        width: profileData?.screenWidth || 1920,
-        height: profileData?.screenHeight || 1080,
-        device_scale_factor: profileData?.devicePixelRatio || 1,
+        enable: profileData.os === 'android',
+        width: profileData.screenWidth || 1920,
+        height: profileData.screenHeight || 1080,
+        device_scale_factor: profileData.devicePixelRatio || 1,
       },
-      webglParams: profileData?.webglParams || {},
-      webGpu: profileData?.webGpu || {},
-      webgl_noice_enable: profileData?.webGL?.mode === 'noise',
-      webglNoiceEnable: profileData?.webGL?.mode === 'noise',
-      webgl_noise_enable: profileData?.webGL?.mode === 'noise',
-      webgl_noise_value: profileData?.webGL?.noise,
-      webglNoiseValue: profileData?.webGL?.noise,
-      getClientRectsNoice: profileData?.clientRects?.noise || profileData?.webGL?.getClientRectsNoise,
-      client_rects_noise_enable: profileData?.clientRects?.mode === 'noise',
+      webglParams: profileData.webglParams || {},
+      webGpu: profileData.webGpu || {},
+      webgl_noice_enable: (profileData.webGL && profileData.webGL?.mode) === 'noise',
+      webglNoiceEnable: (profileData.webGL && profileData.webGL?.mode) === 'noise',
+      webgl_noise_enable: (profileData.webGL && profileData.webGL?.mode) === 'noise',
+      webgl_noise_value: profileData.webGL && profileData.webGL?.noise,
+      webglNoiseValue: profileData.webGL && profileData.webGL?.noise,
+      getClientRectsNoice: (profileData.clientRects && profileData.clientRects?.noise) || (profileData.webGL && profileData.webGL?.getClientRectsNoise),
+      client_rects_noise_enable: (profileData.clientRects && profileData.clientRects?.mode) === 'noise',
       media_devices: {
-        enable: profileData?.mediaDevices?.enableMasking ?? true,
-        uid: profileData?.mediaDevices?.uid || '',
-        audioInputs: profileData?.mediaDevices?.audioInputs || 1,
-        audioOutputs: profileData?.mediaDevices?.audioOutputs || 1,
-        videoInputs: profileData?.mediaDevices?.videoInputs || 1,
+        enable: profileData.mediaDevices ? profileData.mediaDevices?.enableMasking : true,
+        uid: (profileData.mediaDevices && profileData.mediaDevices?.uid) || '',
+        audioInputs: (profileData.mediaDevices && profileData.mediaDevices?.audioInputs) || 1,
+        audioOutputs: (profileData.mediaDevices && profileData.mediaDevices?.audioOutputs) || 1,
+        videoInputs: (profileData.mediaDevices && profileData.mediaDevices?.videoInputs) || 1,
       },
-      doNotTrack: profileData?.navigator?.doNotTrack || false,
+      doNotTrack: (profileData.navigator && profileData.navigator?.doNotTrack) || false,
       plugins: {
-        all_enable: profileData?.plugins?.enableVulnerable ?? true,
-        flash_enable: profileData?.plugins?.enableFlash ?? true,
+        all_enable: profileData.plugins ? profileData.plugins?.enableVulnerable : true,
+        flash_enable: profileData.plugins ? profileData.plugins?.enableFlash : true,
       },
       storage: {
-        enable: profileData?.storage?.local ?? true,
+        enable: profileData.storage ? profileData.storage?.local : true,
       },
       audioContext: {
-        enable: profileData?.audioContext?.mode !== 'off',
-        noiseValue: profileData?.audioContext?.noise || '',
+        enable: (profileData.audioContext && profileData.audioContext?.mode) !== 'off',
+        noiseValue: (profileData.audioContext && profileData.audioContext?.noise) || '',
       },
       canvas: {
-        mode: profileData?.canvas?.mode || '',
+        mode: (profileData.canvas && profileData.canvas?.mode) || '',
       },
       languages: splittedLangs,
       langHeader,
-      canvasMode: profileData?.canvas?.mode || '',
-      canvasNoise: profileData?.canvas?.noise || '',
-      deviceMemory: (profileData?.navigator?.deviceMemory || 2) * 1024,
-      hardwareConcurrency: profileData?.navigator?.hardwareConcurrency || 2,
+      canvasMode: (profileData.canvas && profileData.canvas?.mode) || '',
+      canvasNoise: (profileData.canvas && profileData.canvas?.noise) || '',
+      deviceMemory: ((profileData.navigator && profileData.navigator?.deviceMemory) || 2) * 1024,
+      hardwareConcurrency: (profileData.navigator && profileData.navigator?.hardwareConcurrency) || 2,
       startupUrl,
       startup_urls: startupUrls,
       geolocation: {
-        mode: profileData?.geolocation?.mode || 'prompt',
-        latitude: parseFloat(this._tz?.ll?.[0] || 0),
-        longitude: parseFloat(this._tz?.ll?.[1] || 0),
-        accuracy: parseFloat(this._tz?.accuracy || 0),
+        mode: (profileData.geolocation && profileData.geolocation?.mode) || 'prompt',
+        latitude: parseFloat((this._tz && this._tz.ll && this._tz.ll[0]) || 0),
+        longitude: parseFloat((this._tz && this._tz.ll && this._tz.ll[1]) || 0),
+        accuracy: parseFloat((this._tz && this._tz.accuracy) || 0),
       },
       timezone: {
-        id: this._tz?.timezone || '',
+        id: (this._tz && this._tz.timezone) || '',
       },
     };
 
@@ -462,6 +462,10 @@ export class GoLogin {
     await rimraf(profilePath, () => null);
     debug('-', profilePath, 'dropped');
     const profile = await this.getProfile();
+    if (!profile) {
+      throw new Error('Error fetching profile data');
+    }
+
     const { navigator = {}, fonts, os: profileOs } = profile;
     this.fontsMasking = fonts?.enableMasking;
     this.profileOs = profileOs;
