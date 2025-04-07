@@ -252,63 +252,105 @@ export class GoLogin {
     return profile;
   }
 
-  convertPreferences(preferences) {
-    if (get(preferences, 'navigator.userAgent')) {
-      preferences.userAgent = get(preferences, 'navigator.userAgent');
-    }
+  getGologinPreferences(profileData) {
+    const os = profileData?.os || '';
+    const osSpec = profileData?.osSpec || '';
+    const isM1 = profileData?.isM1 || false;
+    const isArm = (os === 'mac' && osSpec && osSpec.includes('M')) || isM1;
+    const resolution = profileData?.navigator?.resolution || '1920x1080';
+    const [screenWidth, screenHeight] = resolution.split('x').map(Number);
+    const langHeader = profileData?.navigator?.language || '';
+    console.log('langHeader', langHeader);
+    const splittedLangs = langHeader ? langHeader.split(',')[0] : 'en-US';
 
-    if (get(preferences, 'navigator.doNotTrack')) {
-      preferences.doNotTrack = get(preferences, 'navigator.doNotTrack');
-    }
+    const startupUrl = (profileData?.startUrl || '').trim().split(',')[0];
+    const startupUrls = (profileData?.startUrl || '').split(',')
+      .map(url => url.trim())
+      .filter(url => url);
 
-    if (get(preferences, 'navigator.hardwareConcurrency')) {
-      preferences.hardwareConcurrency = get(preferences, 'navigator.hardwareConcurrency');
-    }
-
-    if (get(preferences, 'navigator.deviceMemory')) {
-      preferences.deviceMemory = get(preferences, 'navigator.deviceMemory') * 1024;
-    }
-
-    if (get(preferences, 'navigator.language')) {
-      preferences.langHeader = get(preferences, 'navigator.language');
-      preferences.languages = get(preferences, 'navigator.language').replace(/;|q=[\d\.]+/img, '');
-    }
-
-    if (get(preferences, 'navigator.maxTouchPoints')) {
-      preferences.navigator.max_touch_points = get(preferences, 'navigator.maxTouchPoints');
-    }
-
-    if (get(preferences, 'isM1')) {
-      preferences.is_m1 = get(preferences, 'isM1');
-    }
-
-    if (get(preferences, 'os') == 'android') {
-      const devicePixelRatio = get(preferences, 'devicePixelRatio');
-      const deviceScaleFactorCeil = Math.ceil(devicePixelRatio || 3.5);
-      let deviceScaleFactor = devicePixelRatio;
-      if (deviceScaleFactorCeil === devicePixelRatio) {
-        deviceScaleFactor += 0.00000001;
-      }
-
-      preferences.mobile = {
-        enable: true,
-        width: parseInt(this.resolution.width, 10),
-        height: parseInt(this.resolution.height, 10),
-        device_scale_factor: deviceScaleFactor,
-      };
-    }
-
-    preferences.mediaDevices = {
-      enable: preferences.mediaDevices.enableMasking,
-      videoInputs: preferences.mediaDevices.videoInputs,
-      audioInputs: preferences.mediaDevices.audioInputs,
-      audioOutputs: preferences.mediaDevices.audioOutputs,
-    };
-
-    preferences.webRtc = {
-      ...preferences.webRtc,
-      fill_based_on_ip: !!get(preferences, 'webRTC.fillBasedOnIp'),
-      local_ip_masking: !!get(preferences, 'webRTC.local_ip_masking'),
+    const preferences = {
+      profile_id: profileData?.id,
+      name: profileData?.name,
+      is_m1: isArm,
+      navigator: {
+        platform: profileData?.navigator?.platform || '',
+        max_touch_points: profileData?.navigator?.maxTouchPoints || 0,
+      },
+      dns: profileData?.dns || {},
+      proxy: {
+        username: profileData?.proxy?.username || '',
+        password: profileData?.proxy?.password || '',
+      },
+      webRTC: profileData?.webRTC || {},
+      screenHeight,
+      screenWidth,
+      userAgent: profileData?.navigator?.userAgent || '',
+      webGl: {
+        vendor: profileData?.webGLMetadata?.vendor || '',
+        renderer: profileData?.webGLMetadata?.renderer || '',
+        mode: profileData?.webGLMetadata?.mode === 'mask',
+      },
+      webgl: {
+        metadata: {
+          vendor: profileData?.webGLMetadata?.vendor || '',
+          renderer: profileData?.webGLMetadata?.renderer || '',
+          mode: profileData?.webGLMetadata?.mode === 'mask',
+        },
+      },
+      mobile: {
+        enable: profileData?.os === 'android',
+        width: profileData?.screenWidth || 1920,
+        height: profileData?.screenHeight || 1080,
+        device_scale_factor: profileData?.devicePixelRatio || 1,
+      },
+      webglParams: profileData?.webglParams || {},
+      webGpu: profileData?.webGpu || {},
+      webgl_noice_enable: profileData?.webGL?.mode === 'noise',
+      webglNoiceEnable: profileData?.webGL?.mode === 'noise',
+      webgl_noise_enable: profileData?.webGL?.mode === 'noise',
+      webgl_noise_value: profileData?.webGL?.noise,
+      webglNoiseValue: profileData?.webGL?.noise,
+      getClientRectsNoice: profileData?.clientRects?.noise || profileData?.webGL?.getClientRectsNoise,
+      client_rects_noise_enable: profileData?.clientRects?.mode === 'noise',
+      media_devices: {
+        enable: profileData?.mediaDevices?.enableMasking ?? true,
+        uid: profileData?.mediaDevices?.uid || '',
+        audioInputs: profileData?.mediaDevices?.audioInputs || 1,
+        audioOutputs: profileData?.mediaDevices?.audioOutputs || 1,
+        videoInputs: profileData?.mediaDevices?.videoInputs || 1,
+      },
+      doNotTrack: profileData?.navigator?.doNotTrack || false,
+      plugins: {
+        all_enable: profileData?.plugins?.enableVulnerable ?? true,
+        flash_enable: profileData?.plugins?.enableFlash ?? true,
+      },
+      storage: {
+        enable: profileData?.storage?.local ?? true,
+      },
+      audioContext: {
+        enable: profileData?.audioContext?.mode !== 'off',
+        noiseValue: profileData?.audioContext?.noise || '',
+      },
+      canvas: {
+        mode: profileData?.canvas?.mode || '',
+      },
+      languages: splittedLangs,
+      langHeader,
+      canvasMode: profileData?.canvas?.mode || '',
+      canvasNoise: profileData?.canvas?.noise || '',
+      deviceMemory: (profileData?.navigator?.deviceMemory || 2) * 1024,
+      hardwareConcurrency: profileData?.navigator?.hardwareConcurrency || 2,
+      startupUrl,
+      startup_urls: startupUrls,
+      geolocation: {
+        mode: profileData?.geolocation?.mode || 'prompt',
+        latitude: parseFloat(this._tz?.ll?.[0] || 0),
+        longitude: parseFloat(this._tz?.ll?.[1] || 0),
+        accuracy: parseFloat(this._tz?.accuracy || 0),
+      },
+      timezone: {
+        id: this._tz?.timezone || '',
+      },
     };
 
     return preferences;
@@ -461,7 +503,6 @@ export class GoLogin {
     const preferences_raw = await readFile(pref_file_name);
     const preferences = JSON.parse(preferences_raw.toString());
     let proxy = get(profile, 'proxy');
-    const name = get(profile, 'name');
     const chromeExtensions = get(profile, 'chromeExtensions') || [];
     const userChromeExtensions = get(profile, 'userChromeExtensions') || [];
     const allExtensions = [...chromeExtensions, ...userChromeExtensions];
@@ -554,60 +595,7 @@ export class GoLogin {
       throw new Error(`Proxy Error. ${e.message}`);
     });
 
-    const [latitude, longitude] = this._tz.ll;
-    const { accuracy } = this._tz;
-
-    const profileGeolocation = profile.geolocation;
-    const tzGeoLocation = {
-      latitude,
-      longitude,
-      accuracy,
-    };
-
-    profile.geoLocation = this.getGeolocationParams(profileGeolocation, tzGeoLocation);
-    profile.name = name;
-    profile.name_base64 = Buffer.from(name).toString('base64');
-    profile.profile_id = this.profile_id;
-
-    profile.webRtc = {
-      mode: get(profile, 'webRTC.mode') === 'alerted' ? 'public' : get(profile, 'webRTC.mode'),
-      publicIP: get(profile, 'webRTC.fillBasedOnIp') ? this._tz.ip : get(profile, 'webRTC.publicIp'),
-      localIps: get(profile, 'webRTC.localIps', []),
-    };
-
-    debug('profile.webRtc=', profile.webRtc);
-    debug('profile.timezone=', profile.timezone);
-    debug('profile.mediaDevices=', profile.mediaDevices);
-
-    const audioContext = profile.audioContext || {};
-    const { mode: audioCtxMode = 'off', noise: audioCtxNoise } = audioContext;
-    if (profile.timezone.fillBasedOnIp === false) {
-      profile.timezone = { id: profile.timezone.timezone };
-    } else {
-      profile.timezone = { id: this._tz.timezone };
-    }
-
-    profile.webgl_noise_value = profile.webGL.noise;
-    profile.get_client_rects_noise = profile.webGL.getClientRectsNoise;
-    profile.canvasMode = profile.canvas.mode;
-    profile.canvasNoise = profile.canvas.noise;
-    profile.audioContext = {
-      enable: audioCtxMode !== 'off',
-      noiseValue: audioCtxNoise,
-    };
-    profile.webgl = {
-      metadata: {
-        vendor: get(profile, 'webGLMetadata.vendor'),
-        renderer: get(profile, 'webGLMetadata.renderer'),
-        mode: get(profile, 'webGLMetadata.mode') === 'mask',
-      },
-    };
-
-    profile.custom_fonts = {
-      enable: !!fonts?.enableMasking,
-    };
-
-    const gologin = this.convertPreferences(profile);
+    const gologin = this.getGologinPreferences(profile);
 
     debug(`Writing profile for screenWidth ${profilePath}`, JSON.stringify(gologin));
     gologin.screenWidth = this.resolution.width;
@@ -632,18 +620,9 @@ export class GoLogin {
       }
     }
 
-    const languages = this.language.replace(/;|q=[\d\.]+/img, '');
-
     if (preferences.gologin == null) {
       preferences.gologin = {};
     }
-
-    preferences.gologin.langHeader = gologin.navigator.language;
-    preferences.gologin.language = languages;
-
-    const [splittedLangs] = gologin.navigator.language.split(';');
-    const [browserLang] = splittedLangs.split(',');
-    gologin.browserLang = browserLang;
 
     const isMAC = OS_PLATFORM === 'darwin';
     const checkAutoLangResult = checkAutoLang(gologin, this._tz);
