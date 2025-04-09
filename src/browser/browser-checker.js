@@ -6,10 +6,8 @@ import { get } from 'https';
 import { homedir } from 'os';
 import { join } from 'path';
 import ProgressBar from 'progress';
-import { createInterface } from 'readline';
 import util from 'util';
 
-import { findLatestBrowserVersionDirectory } from '../utils/utils.js';
 import { API_URL, getOS } from '../utils/common.js';
 
 const exec = util.promisify(execNonPromise);
@@ -37,87 +35,65 @@ const FAIL_SUM_MATCH_MESSAGE = 'hash_sum_not_matched';
 const EXTRACTED_FOLDER = 'extracted-browser';
 
 export class BrowserChecker {
-  #homedir;
-  #browserPath;
+  #homedir = homedir();
+  #browserPath = join(this.#homedir, '.gologin', 'browser');
   #executableFilePath;
   #skipOrbitaHashChecking = false;
 
-  constructor(skipOrbitaHashChecking) {
-    this.#skipOrbitaHashChecking = skipOrbitaHashChecking;
-    this.#homedir = homedir();
-    this.#browserPath = join(this.#homedir, '.gologin', 'browser');
+  constructor() {
 
-    let executableFilePath = join(this.#browserPath, 'orbita-browser', 'chrome');
-    if (PLATFORM === 'darwin') {
-      const orbitaFolderName = findLatestBrowserVersionDirectory(this.#browserPath);
-      if (orbitaFolderName === 'error') {
-        throw Error('Orbita folder not found in this directory: ' + this.#browserPath);
-      }
-
-      executableFilePath = join(this.#browserPath, orbitaFolderName, 'Orbita-Browser.app', 'Contents', 'MacOS', 'Orbita');
-    } else if (PLATFORM === 'win32') {
-      executableFilePath = join(this.#browserPath, 'orbita-browser', 'chrome.exe');
-    }
-
-    this.#executableFilePath = executableFilePath;
-    // console.log('executableFilePath:', executableFilePath);
   }
 
-  async checkBrowser(autoUpdateBrowser = false, checkBrowserUpdate = true) {
-    const browserFolderExists = await access(this.#executableFilePath).then(() => true).catch(() => false);
-
-    const { latestVersion: browserLatestVersion, browserDownloadUrl } = await this.getLatestBrowserVersion();
-
-    if (!browserFolderExists) {
-      return this.downloadBrowser(browserLatestVersion, browserDownloadUrl);
+  async checkBrowser(majorVersion) {
+    const isBrowserFolderExists = await access(join(this.#browserPath, `orbita-browser-${majorVersion}`)).then(() => true).catch(() => false);
+    if (isBrowserFolderExists) {
+      return this.getBrowserExecutablePath(majorVersion);
     }
 
-    const currentVersionReq = await this.getCurrentVersion();
-    const currentVersion = (currentVersionReq?.stdout || '').replace(/(\r\n|\n|\r)/gm, '');
+    await this.downloadBrowser(majorVersion);
 
-    if (browserLatestVersion === currentVersion || !checkBrowserUpdate) {
-      return;
-    }
-
-    if (autoUpdateBrowser) {
-      return this.downloadBrowser(browserLatestVersion, browserDownloadUrl);
-    }
-
-    return new Promise(resolve => {
-      const rl = createInterface(process.stdin, process.stdout);
-      const timeout = setTimeout(() => {
-        console.log(`\nContinue with current ${currentVersion} version.`);
-        resolve();
-      }, 10000);
-
-      rl.question(`New Orbita ${browserLatestVersion} is available. Update? [y/n] `, (answer) => {
-        clearTimeout(timeout);
-        rl.close();
-        if (answer && answer[0].toString().toLowerCase() === 'y') {
-          return this.downloadBrowser(browserLatestVersion, browserDownloadUrl).then(() => resolve());
-        }
-
-        console.log(`Continue with current ${currentVersion} version.`);
-        resolve();
-      });
-    });
+    return this.getBrowserExecutablePath(majorVersion);
   }
 
-  async downloadBrowser(latestVersion, browserDownloadUrl) {
-    await this.deleteOldArchives(true);
+  async downloadBrowser(majorVersion) {
     await mkdir(this.#browserPath, { recursive: true });
 
-    const pathStr = join(this.#browserPath, BROWSER_ARCHIVE_NAME);
+    const browserPath = join(this.#browserPath, BROWSER_ARCHIVE_NAME);
 
-    await this.downloadBrowserArchive(browserDownloadUrl, pathStr);
-    await this.checkBrowserArchive(pathStr);
+    const browserDownloadUrl = this.getBrowserDownloadUrl(majorVersion);
+
+    await this.downloadBrowserArchive(browserDownloadUrl, browserPath);
     await this.extractBrowser();
-    await this.checkBrowserSum(latestVersion);
-    console.log('Orbita hash checked successfully');
-    await this.replaceBrowser();
-    await this.addLatestVersion(latestVersion).catch(() => null);
+    await this.replaceBrowser(majorVersion);
     await this.deleteOldArchives();
-    console.log('Orbita updated successfully');
+  }
+
+  getBrowserExecutablePath(majorVersion) {
+    const os = getOS();
+    switch (os) {
+      case 'mac':
+        return join(this.#browserPath, `orbita-browser-${majorVersion}`, 'Orbita-Browser.app', 'Contents', 'MacOS', 'Orbita');
+      case 'win':
+        return join(this.#browserPath, `orbita-browser-${majorVersion}`, 'chrome.exe');
+      case 'macM1':
+        return join(this.#browserPath, `orbita-browser-${majorVersion}`, 'Orbita-Browser.app', 'Contents', 'MacOS', 'Orbita');
+      default:
+        return join(this.#browserPath, `orbita-browser-${majorVersion}`, 'chrome');
+    }
+  }
+
+  getBrowserDownloadUrl(majorVersion) {
+    const os = getOS();
+    switch (os) {
+      case 'mac':
+        return `https://orbita-browser-mac.gologin.com/orbita-browser-latest-${majorVersion}.tar.gz`;
+      case 'win':
+        return `https://orbita-browser-windows.gologin.com/orbita-browser-latest-${majorVersion}.zip`;
+      case 'macM1':
+        return `https://orbita-browser-mac-arm.gologin.com/orbita-browser-latest-${majorVersion}.tar.gz`;
+      default:
+        return `https://orbita-browser-linux.gologin.com/orbita-browser-latest-${majorVersion}.tar.gz`;
+    }
   }
 
   addLatestVersion(latestVersion) {
@@ -133,7 +109,7 @@ export class BrowserChecker {
         reject(err);
       });
       writableStream.on('finish', () => resolve());
-
+      console.log('downloading browser archive', link);
       const req = get(link, {
         timeout: 15 * 1000,
       }, (res) => {
@@ -208,6 +184,7 @@ export class BrowserChecker {
       if (ARCH === 'arm64') {
         hashLink = MAC_ARM_HASHFILE_LINK;
       }
+
       resultPath = join(this.#browserPath, MAC_HASH_FILE);
     }
 
@@ -282,13 +259,13 @@ export class BrowserChecker {
     }
   }
 
-  async replaceBrowser() {
+  async replaceBrowser(majorVersion) {
     console.log('Copy Orbita to target path');
     if (PLATFORM === 'darwin') {
-      return rename(join(this.#browserPath, EXTRACTED_FOLDER), join(this.#browserPath, 'orbita-browser'))
+      return rename(join(this.#browserPath, EXTRACTED_FOLDER), join(this.#browserPath, `orbita-browser-${majorVersion}`));
     }
 
-    const targetBrowserPath = join(this.#browserPath, 'orbita-browser');
+    const targetBrowserPath = join(this.#browserPath, `orbita-browser-${majorVersion}`);
     await this.deleteDir(targetBrowserPath);
 
     await this.copyDir(
