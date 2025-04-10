@@ -109,7 +109,7 @@ export class BrowserChecker {
         reject(err);
       });
       writableStream.on('finish', () => resolve());
-      console.log('downloading browser archive', link);
+
       const req = get(link, {
         timeout: 15 * 1000,
       }, (res) => {
