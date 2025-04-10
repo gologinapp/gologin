@@ -92,8 +92,8 @@ export class GoLogin {
     debug('INIT GOLOGIN', this.profile_id);
   }
 
-  async checkBrowser() {
-    return this.browserChecker.checkBrowser(this.autoUpdateBrowser, this.checkBrowserUpdate);
+  async checkBrowser(majorVersion) {
+    this.executablePath = await this.browserChecker.checkBrowser(majorVersion);
   }
 
   async setProfileId(profile_id) {
@@ -464,6 +464,12 @@ export class GoLogin {
     const profile = await this.getProfile();
     if (!profile) {
       throw new Error('Error fetching profile data');
+    }
+
+    if (!this.executablePath) {
+      const { userAgent } = profile.navigator;
+      const [browserMajorVersion] = userAgent.split('Chrome/')[1].split('.');
+      await this.checkBrowser(browserMajorVersion);
     }
 
     const { navigator = {}, fonts, os: profileOs } = profile;
@@ -927,7 +933,7 @@ export class GoLogin {
 
     if (this.waitWebsocket) {
       debug('GETTING WS URL FROM BROWSER');
-      const data = await requests.get(`http://127.0.0.1:${remote_debugging_port}/json/version`, { json: true });
+      const data = await requests.get(`http://127.0.0.1:${remote_debugging_port}/json/version`, { json: true, maxAttempts: 10, retryDelay: 1000 });
 
       debug('WS IS', get(data, 'body.webSocketDebuggerUrl', ''));
       this.is_active = true;
@@ -1427,16 +1433,6 @@ export class GoLogin {
   }
 
   async start() {
-    if (!this.executablePath) {
-      await this.checkBrowser();
-    }
-
-    const ORBITA_BROWSER = this.executablePath || this.browserChecker.getOrbitaPath;
-
-    const orbitaBrowserExists = await access(ORBITA_BROWSER).then(() => true).catch(() => false);
-    if (!orbitaBrowserExists) {
-      throw new Error(`Orbita browser is not exists on path ${ORBITA_BROWSER}, check executablePath param`);
-    }
 
     await this.createStartup();
     // await this.createBrowserExtension();
