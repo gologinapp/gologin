@@ -1,4 +1,5 @@
 import { exec } from 'child_process';
+import { promises as fsPromises } from 'fs';
 import { homedir } from 'os';
 import { join, sep } from 'path';
 import { promisify } from 'util';
@@ -32,6 +33,17 @@ const getMacArmSpec = async () => {
   const [_, armVersion] = match.split(' ');
 
   return armVersion;
+};
+
+export const ensureDirectoryExists = async (filePath) => {
+  try {
+    const directory = filePath.substring(0, filePath.lastIndexOf('/'));
+    await fsPromises.mkdir(directory, { recursive: true });
+  } catch (error) {
+    if (error.code !== 'EEXIST') {
+      console.error('Error creating directory:', error.message);
+    }
+  }
 };
 
 const getOsAdvanced = async () => {

@@ -3,6 +3,8 @@ import { join } from 'path';
 import { open } from 'sqlite';
 import sqlite3 from 'sqlite3';
 
+import { ensureDirectoryExists } from '../utils/common.js';
+
 const { access } = fsPromises;
 const { Database, OPEN_READONLY } = sqlite3;
 
@@ -44,7 +46,11 @@ export const createDBFile = async ({
   await db.run(createCookiesTableQuery);
   await db.close();
 
-  cookiesFileSecondPath && await fsPromises.copyFile(cookiesFilePath, cookiesFileSecondPath).catch(console.log);
+  await ensureDirectoryExists(cookiesFilePath);
+  await ensureDirectoryExists(cookiesFileSecondPath);
+  cookiesFileSecondPath && await fsPromises.copyFile(cookiesFilePath, cookiesFileSecondPath).catch((error) => {
+    console.error('error in copyFile createDBFile', error.message);
+  });
 };
 
 export const getUniqueCookies = async (cookiesArr, cookiesFilePath) => {
