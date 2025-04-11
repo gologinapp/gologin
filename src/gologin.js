@@ -2,7 +2,7 @@ import { execFile, spawn } from 'child_process';
 import debugDefault from 'debug';
 import decompress from 'decompress';
 import decompressUnzip from 'decompress-unzip';
-import { existsSync, mkdirSync,promises as _promises } from 'fs';
+import { existsSync, mkdirSync, promises as _promises } from 'fs';
 import { get as _get } from 'https';
 import { tmpdir } from 'os';
 import { dirname, join, resolve as _resolve, sep } from 'path';
@@ -29,7 +29,7 @@ import {
 import ExtensionsManager from './extensions/extensions-manager.js';
 import { archiveProfile } from './profile/profile-archiver.js';
 import { checkAutoLang } from './utils/browser.js';
-import { API_URL, getOsAdvanced } from './utils/common.js';
+import { API_URL, ensureDirectoryExists, getOsAdvanced } from './utils/common.js';
 import { STORAGE_GATEWAY_BASE_URL } from './utils/constants.js';
 import { get, isPortReachable } from './utils/utils.js';
 export { exitAll, GologinApi } from './gologin-api.js';
@@ -493,6 +493,8 @@ export class GoLogin {
       width: parseInt(screenWidth, 10),
       height: parseInt(screenHeight, 10),
     };
+
+    this.createCookiesTableQuery = profile.createCookiesTableQuery;
     if (profile.storageInfo.isNewProfile) {
       this.isFirstSession = true;
       await this.createZeroProfile(profile.createCookiesTableQuery);
@@ -1383,7 +1385,7 @@ export class GoLogin {
     return { primary, secondary };
   }
 
-  async writeCookiesToFile(cookies) {
+  async writeCookiesToFile(cookies, isSecondTry = false) {
     if (!cookies) {
       cookies = await this.getCookies(this.profile_id);
     }
@@ -1410,10 +1412,26 @@ export class GoLogin {
         }
       }
     } catch (error) {
-      console.log(error.message);
+      if (!isSecondTry && (error.message.includes('table cookies has no column') || error.message.includes('NOT NULL constraint failed'))) {
+        await _promises.rm(cookiesPaths.primary, { recursive: true, force: true });
+        await createDBFile({
+          cookiesFilePath: cookiesPaths.primary,
+          cookiesFileSecondPath: cookiesPaths.secondary,
+          createCookiesTableQuery: this.createCookiesTableQuery,
+        });
+        await this.writeCookiesToFile(cookies, true);
+
+        return;
+      }
+
+      console.error(error.message);
     } finally {
       db && await db.close();
-      await copyFile(cookiesPaths.primary, cookiesPaths.secondary).catch(console.log);
+      await ensureDirectoryExists(cookiesPaths.primary);
+      await ensureDirectoryExists(cookiesPaths.secondary);
+      await copyFile(cookiesPaths.primary, cookiesPaths.secondary).catch((error) => {
+        console.error('error in copyFile', error.message);
+      });
     }
   }
 
