@@ -509,6 +509,7 @@ export class GoLogin {
     const prefFileExists = await access(pref_file_name).then(() => true).catch(() => false);
     if (!prefFileExists) {
       debug('Preferences file not exists waiting', pref_file_name, '. Using empty profile');
+      await mkdir(join(profilePath, 'Default'), { recursive: true });
       await writeFile(pref_file_name, '{}');
     }
 
