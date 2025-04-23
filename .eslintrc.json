@@ -102,7 +102,7 @@
     ],
     "max-lines": [
       "warn",
-      1500
+      2000
     ],
     "no-else-return": [
       "warn",

@@ -47,3 +47,4 @@ export const findLatestBrowserVersionDirectory = (browserPath) => {
   return folderName;
 };
 
+export const delay = (ms = 250) => new Promise((res) => setTimeout(res, ms));

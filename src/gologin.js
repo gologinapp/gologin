@@ -116,36 +116,6 @@ export class GoLogin {
     }
   }
 
-  async getNewFingerPrint(os) {
-    debug('GETTING FINGERPRINT');
-
-    const fpResponse = await requests.get(`${API_URL}/browser/fingerprint?os=${os}`, {
-      json: true,
-      headers: {
-        'Authorization': `Bearer ${this.access_token}`,
-        'User-Agent': 'gologin-api',
-      },
-    });
-
-    return fpResponse?.body || {};
-  }
-
-  async profiles() {
-    const profilesResponse = await requests.get(`${API_URL}/browser/v2`, {
-      headers: {
-        'Authorization': `Bearer ${this.access_token}`,
-        'User-Agent': 'gologin-api',
-
-      },
-    });
-
-    if (profilesResponse.statusCode !== 200) {
-      throw new Error('Gologin /browser response error');
-    }
-
-    return JSON.parse(profilesResponse.body);
-  }
-
   async getProfile(profile_id) {
     const id = profile_id || this.profile_id;
     debug('getProfile', this.access_token, id);
@@ -1235,48 +1205,6 @@ export class GoLogin {
     return response.body.id;
   }
 
-  async createCustom(options) {
-    debug('createCustomProfile', options);
-    const response = await requests.post(`${API_URL}/browser/custom`, {
-      headers: {
-        'Authorization': `Bearer ${this.access_token}`,
-        'User-Agent': 'gologin-api',
-      },
-      json: options,
-    });
-
-    if (response.statusCode === 400) {
-      throw new Error(`gologin failed account creation with status code, ${response.statusCode} DATA  ${JSON.stringify(response.body.message)}`);
-    }
-
-    if (response.statusCode === 500) {
-      throw new Error(`gologin failed account creation with status code, ${response.statusCode}`);
-    }
-
-    debug(JSON.stringify(response));
-
-    return response.body.id;
-  }
-
-  async quickCreateProfile(name = '') {
-    const osInfo = await getOsAdvanced();
-    const { os, osSpec } = osInfo;
-    const resultName = name || 'api-generated';
-
-    return requests.post(`${API_URL}/browser/quick`, {
-      headers: {
-        'Authorization': `Bearer ${this.access_token}`,
-        'User-Agent': 'gologin-api',
-      },
-      json: {
-        os,
-        osSpec,
-        name: resultName,
-      },
-    })
-      .then(res => res.body);
-  }
-
   async delete(pid) {
     const profile_id = pid || this.profile_id;
     await requests.delete(`${API_URL}/browser/${profile_id}`, {
@@ -1452,7 +1380,6 @@ export class GoLogin {
   }
 
   async start() {
-
     await this.createStartup();
     // await this.createBrowserExtension();
     const wsUrl = await this.spawnBrowser();
@@ -1525,22 +1452,72 @@ export class GoLogin {
     }
   }
 
-  getAvailableFonts() {
-    return fontsCollection
-      .filter(elem => elem.fileNames)
-      .map(elem => elem.name);
-  }
-
-  async changeProfileResolution(resolution) {
-    return updateProfileResolution(this.profile_id, this.access_token, resolution);
+  // api for users to manage their profiles
+  async changeProfileProxy(proxyData) {
+    return updateProfileProxy(this.profile_id, this.access_token, proxyData);
   }
 
   async changeProfileUserAgent(userAgent) {
     return updateProfileUserAgent(this.profile_id, this.access_token, userAgent);
   }
 
-  async changeProfileProxy(proxyData) {
-    return updateProfileProxy(this.profile_id, this.access_token, proxyData);
+  async changeProfileResolution(resolution) {
+    return updateProfileResolution(this.profile_id, this.access_token, resolution);
+  }
+
+  getAvailableFonts() {
+    return fontsCollection
+      .filter(elem => elem.fileNames)
+      .map(elem => elem.name);
+  }
+
+  async quickCreateProfile(name = '') {
+    const osInfo = await getOsAdvanced();
+    const { os, osSpec } = osInfo;
+    const resultName = name || 'api-generated';
+
+    return requests.post(`${API_URL}/browser/quick`, {
+      headers: {
+        'Authorization': `Bearer ${this.access_token}`,
+        'User-Agent': 'gologin-api',
+      },
+      json: {
+        os,
+        osSpec,
+        name: resultName,
+      },
+    })
+      .then(res => res.body);
+  }
+
+  async profiles() {
+    const profilesResponse = await requests.get(`${API_URL}/browser/v2`, {
+      headers: {
+        'Authorization': `Bearer ${this.access_token}`,
+        'User-Agent': 'gologin-api',
+
+      },
+    });
+
+    if (profilesResponse.statusCode !== 200) {
+      throw new Error('Gologin /browser response error');
+    }
+
+    return JSON.parse(profilesResponse.body);
+  }
+
+  async getNewFingerPrint(os) {
+    debug('GETTING FINGERPRINT');
+
+    const fpResponse = await requests.get(`${API_URL}/browser/fingerprint?os=${os}`, {
+      json: true,
+      headers: {
+        'Authorization': `Bearer ${this.access_token}`,
+        'User-Agent': 'gologin-api',
+      },
+    });
+
+    return fpResponse?.body || {};
   }
 }
 
