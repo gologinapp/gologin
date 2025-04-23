@@ -14,6 +14,7 @@ export const getDefaultParams = () => ({
 });
 
 const createGologinProfileManager = ({ profileId, ...params }) => {
+  console.log({ params });
   const defaults = getDefaultParams();
   const mergedParams = {
     ...defaults,
@@ -87,6 +88,7 @@ export const GologinApi = ({ token }) => {
 
   const api = {
     async launch(params = {}) {
+      console.log();
       if (params.cloud) {
         return launchCloudProfile(params);
       }
@@ -277,6 +279,18 @@ export const GologinApi = ({ token }) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(cookies),
+      });
+
+      return response.status;
+    },
+
+    async deleteProfile(profileId) {
+      const response = await fetch(`${API_URL}/browser/${profileId}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'user-agent': 'gologin-api',
+        },
       });
 
       return response.status;
