@@ -8,3 +8,4 @@ Combined changelog for GoLogin node.js SDK
 ### Miscellaneous Chores
 
 * Deleted old exmaples and added new one that up to date
+* Added changelog to track changes
