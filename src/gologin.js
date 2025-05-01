@@ -93,7 +93,38 @@ export class GoLogin {
   }
 
   async checkBrowser(majorVersion) {
-    this.executablePath = await this.browserChecker.checkBrowser(majorVersion);
+    this.executablePath = await this.browserChecker.checkBrowser({
+      autoUpdateBrowser: this.autoUpdateBrowser,
+      checkBrowserUpdate: this.checkBrowserUpdate,
+      majorVersion,
+    });
+  }
+
+  async checkAndDownloadBrowserByOpts(opts = {}) {
+    const { majorVersions = [], lastActualCount = 5 } = opts;
+
+    let versionsToDownload = majorVersions;
+    if (!(Array.isArray(versionsToDownload) && versionsToDownload.length)) {
+      versionsToDownload = [];
+
+      const { latestVersion: browserLatestVersion } = await this.browserChecker.getLatestBrowserVersion();
+      const [latestBrowserMajorVersion] = browserLatestVersion.split('.');
+      const latestVersionNumber = Number(latestBrowserMajorVersion);
+
+      for (let i = latestVersionNumber; i > latestVersionNumber - lastActualCount; i--) {
+        versionsToDownload.push(i.toString());
+      }
+    }
+
+    console.log('versions to download:', versionsToDownload);
+
+    for (const majorVersion of versionsToDownload) {
+      await this.browserChecker.checkBrowser({
+        autoUpdateBrowser: true,
+        checkBrowserUpdate: true,
+        majorVersion,
+      });
+    }
   }
 
   async setProfileId(profile_id) {

@@ -7,11 +7,12 @@ import { homedir } from 'os';
 import { join } from 'path';
 import ProgressBar from 'progress';
 import util from 'util';
+import { createInterface } from 'readline';
 
 import { API_URL, getOS } from '../utils/common.js';
 
 const exec = util.promisify(execNonPromise);
-const { access, mkdir, readdir, rmdir, unlink, copyFile, readlink, symlink, lstat, rename, writeFile } = _promises;
+const { access, mkdir, readdir, rmdir, unlink, copyFile, readlink, symlink, lstat, rename, writeFile, readFile } = _promises;
 
 const PLATFORM = process.platform;
 const ARCH = process.arch;
@@ -44,15 +45,47 @@ export class BrowserChecker {
 
   }
 
-  async checkBrowser(majorVersion) {
+  async checkBrowser({ autoUpdateBrowser, checkBrowserUpdate, majorVersion }) {
     const isBrowserFolderExists = await access(join(this.#browserPath, `orbita-browser-${majorVersion}`)).then(() => true).catch(() => false);
-    if (isBrowserFolderExists) {
+    if (!isBrowserFolderExists) {
+      await this.downloadBrowser(majorVersion);
+
       return this.getBrowserExecutablePath(majorVersion);
     }
 
-    await this.downloadBrowser(majorVersion);
+    const { latestVersion: browserLatestVersion } = await this.getLatestBrowserVersion();
+    const [latestBrowserMajorVersion] = browserLatestVersion.split('.');
+    const currentVersion = await this.getCurrentVersion(majorVersion);
 
-    return this.getBrowserExecutablePath(majorVersion);
+    const isCurrentVersionsLatest = majorVersion === latestBrowserMajorVersion;
+    if (browserLatestVersion === currentVersion || !(checkBrowserUpdate && isCurrentVersionsLatest)) {
+      return this.getBrowserExecutablePath(majorVersion);
+    }
+
+    if (autoUpdateBrowser) {
+      await this.downloadBrowser(majorVersion);
+
+      return this.getBrowserExecutablePath(majorVersion);
+    }
+
+    return new Promise(resolve => {
+      const rl = createInterface(process.stdin, process.stdout);
+      const timeout = setTimeout(() => {
+        console.log(`\nContinue with current ${currentVersion} version.`);
+        resolve();
+      }, 10000);
+
+      rl.question(`New Orbita ${browserLatestVersion} is available. Update? [y/n] `, (answer) => {
+        clearTimeout(timeout);
+        rl.close();
+        if (answer && answer[0].toString().toLowerCase() === 'y') {
+          return this.downloadBrowser(majorVersion).then(() => resolve(this.getBrowserExecutablePath(majorVersion)));
+        }
+
+        console.log(`Continue with current ${currentVersion} version.`);
+        resolve(this.getBrowserExecutablePath(majorVersion));
+      });
+    });
   }
 
   async downloadBrowser(majorVersion) {
@@ -274,11 +307,7 @@ export class BrowserChecker {
     );
   }
 
-  async deleteOldArchives(deleteCurrentBrowser = false) {
-    if (deleteCurrentBrowser) {
-      return this.deleteDir(join(this.#browserPath, 'orbita-browser'));
-    }
-
+  async deleteOldArchives() {
     await this.deleteDir(join(this.#browserPath, EXTRACTED_FOLDER));
 
     return readdir(this.#browserPath)
@@ -315,15 +344,13 @@ export class BrowserChecker {
     }
   }
 
-  getCurrentVersion() {
-    let command = `if [ -f ${join(this.#browserPath, 'orbita-browser', 'version')} ]; then cat ${join(this.#browserPath, 'orbita-browser', 'version')}; else echo 0.0.0; fi`;
-    if (PLATFORM === 'win32') {
-      command = `if exist "${join(this.#browserPath, 'orbita-browser', 'version')}" (type "${join(this.#browserPath, 'orbita-browser', 'version')}") else (echo 0.0.0)`;
-    } else if (PLATFORM === 'darwin') {
-      command = `if [ -f ${join(this.#browserPath, 'orbita-browser', 'version', VERSION_FILE)} ]; then cat ${join(this.#browserPath, 'orbita-browser', 'version', VERSION_FILE)}; else echo 0.0.0; fi`;
+  async getCurrentVersion(majorVersion) {
+    let versionFilePath = join(this.#browserPath, `orbita-browser-${majorVersion}`, 'version');
+    if (PLATFORM === 'darwin') {
+      versionFilePath = join(this.#browserPath, `orbita-browser-${majorVersion}`, 'version', VERSION_FILE);
     }
 
-    return exec(command);
+    return (await readFile(versionFilePath, 'utf8').catch(() => '0.0.0')).replace(/[\r\n\t\f\v\u0000-\u001F\u007F]/g, '');
   }
 
   getLatestBrowserVersion() {
