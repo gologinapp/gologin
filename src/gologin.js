@@ -70,7 +70,7 @@ export class GoLogin {
     this.checkBrowserUpdate = options.checkBrowserUpdate ?? true;
     this.browserChecker = new BrowserChecker(options.skipOrbitaHashChecking);
     this.uploadCookiesToServer = options.uploadCookiesToServer || false;
-    this.writeCookiesFromServer = options.writeCookiesFromServer;
+    this.writeCookiesFromServer = options.writeCookiesFromServer ?? true;
     this.remote_debugging_port = options.remote_debugging_port || 0;
     this.timezone = options.timezone;
     this.extensionPathsToInstall = [];

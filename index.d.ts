@@ -1,4 +1,4 @@
-import { type Browser } from 'puppeteer-core/lib/Browser';
+import { Browser } from 'puppeteer-core/lib/Browser';
 
 import { CreateCustomBrowserValidation, BrowserProxyCreateValidation } from './types/profile-params';
 
