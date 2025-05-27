@@ -1,0 +1,32 @@
+
+name: Test App
+
+on: [workflow_dispatch]
+
+jobs:
+  build:
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [18.x]
+
+    steps:
+      - uses: actions/checkout@v1
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Run and test app
+        working-directory: packages/client
+        run: |
+          npm run install
+          npm run test:e2e
+        env:
+          CI: true
+          API_URI: http://localhost:4000/graphql
+          GL_API_TOKEN: ${{ secrets.GL_API_TOKEN }}
+          GOLOGIN_PROFILE_ID: ${{ secrets.GOLOGIN_PROFILE_ID }}
