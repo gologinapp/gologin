@@ -81,13 +81,13 @@ export type ClientRectsModel = {
   noise: number;
 }
 
-export type WebGlMetadataModel {
+export type WebGlMetadataModel = {
   mode: 'off' | 'mask';
   vendor: string;
   renderer: string;
 }
 
-export type BrowserProxyCreateValidation {
+export type BrowserProxyCreateValidation = {
   mode: 'http' | 'https' | 'socks4' | 'socks5' | 'geolocation' | 'none' | 'tor' | 'gologin';
   host: string;
   port: number;
@@ -97,7 +97,6 @@ export type BrowserProxyCreateValidation {
   autoProxyRegion?: string;
   torProxyRegion?: string;
 }
-
 export declare class CreateCustomBrowserValidation {
   name?: string;
   notes?: string;
