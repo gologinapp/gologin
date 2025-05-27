@@ -22,7 +22,7 @@ jobs:
       - name: Run and test app
         working-directory: ./
         run: |
-          npm run install
+          npm install
           npm run test:e2e
         env:
           GL_API_TOKEN: ${{ secrets.GL_API_TOKEN }}
