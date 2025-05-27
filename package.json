@@ -1,6 +1,6 @@
 {
   "name": "gologin",
-  "version": "2.1.16",
+  "version": "2.1.22",
   "description": "A high-level API to control Orbita browser over GoLogin API",
   "types": "./index.d.ts",
   "main": "./src/gologin.js",
@@ -42,7 +42,10 @@
     "eslint-plugin-simple-import-sort": "^8.0.0"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "npm run test:unit && npm run test:e2e",
+    "test:unit": "echo \"No unit tests specified\" && exit 0",
+    "test:e2e": "node test/e2e/run-tests.js",
+    "test:e2e:local": "HEADLESS=false npm run test:e2e",
     "format": "npx prettier --single-quote src/* --write",
     "iphey": "GOLOGIN_PROFILE_ID= GOLOGIN_API_TOKEN= node examples/example-iphey "
   }

@@ -6,9 +6,21 @@
   },
   "extends": "eslint:recommended",
   "overrides": [
+    {
+      "files": [
+        "*.d.ts"
+      ],
+      "parser": "@typescript-eslint/parser",
+      "plugins": [
+        "@typescript-eslint"
+      ],
+      "rules": {
+        "no-unused-vars": "off"
+      }
+    }
   ],
   "parserOptions": {
-    "ecmaVersion": "latest",
+    "ecmaVersion": 2020,
     "sourceType": "module"
   },
   "plugins": [
@@ -102,7 +114,7 @@
     ],
     "max-lines": [
       "warn",
-      1500
+      2000
     ],
     "no-else-return": [
       "warn",
