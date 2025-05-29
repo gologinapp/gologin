@@ -34,7 +34,7 @@ async function runTest(testName, testFunction) {
 async function testBrowserLaunch() {
   const { browser } = await gologin.launch({
     profileId,
-    headless: process.env.HEADLESS !== 'false',
+    headless: true,
   });
 
   const page = await browser.newPage();
@@ -53,7 +53,7 @@ async function testBrowserLaunch() {
 async function testIpCheck() {
   const { browser } = await gologin.launch({
     profileId,
-    headless: process.env.HEADLESS !== 'false',
+    headless: true,
   });
 
   const page = await browser.newPage();
