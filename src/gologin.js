@@ -937,7 +937,7 @@ export class GoLogin {
 
     if (this.waitWebsocket) {
       debug('GETTING WS URL FROM BROWSER');
-      const data = await requests.get(`http://127.0.0.1:${remote_debugging_port}/json/version`, { json: true, maxAttempts: 10, retryDelay: 1000 });
+      const data = await requests.get(`http://127.0.0.1:${remote_debugging_port}/json/version`, { json: true, maxAttempts: 30, retryDelay: 1000 });
 
       debug('WS IS', get(data, 'body.webSocketDebuggerUrl', ''));
       this.is_active = true;
