@@ -931,7 +931,8 @@ export class GoLogin {
       const child = execFile(ORBITA_BROWSER, params, { env });
       this.processSpawned = child;
       // const child = spawn(ORBITA_BROWSER, params, { env, shell: true });
-      child.stdout.on('data', (data) => debug(data.toString()));
+      child.stdout.on('error', (data) => console.log(data.toString()));
+      child.stderr.on('data', (data) => console.log(data.toString()));
       debug('SPAWN CMD', ORBITA_BROWSER, params.join(' '));
     }
 

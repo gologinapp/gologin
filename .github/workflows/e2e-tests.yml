@@ -19,6 +19,11 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
 
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libnss3 libatk-bridge2.0-0 libdrm2 libxkbcommon0 libgbm1 libxss1 libasound2 fonts-liberation libcups2 libxcomposite1 libxdamage1 libxrandr2 libxfixes3 libxtst6 libxi6 libx11-xcb1 libx11-6 libxcb1 libxext6 libxrender1 libcairo2 libglib2.0-0 libgtk-3-0 libgdk-pixbuf2.0-0 libpango-1.0-0 libpangocairo-1.0-0 libatk1.0-0 libcairo-gobject2 libgconf-2-4 libxshmfence1 libgl1-mesa-glx libgl1-mesa-dri libegl1-mesa libxau6 libxdmcp6 libappindicator3-1 xdg-utils
+
       - name: Run and test app
         working-directory: ./
         run: |

@@ -10,7 +10,6 @@ export const getDefaultParams = () => ({
   token: process.env.GOLOGIN_API_TOKEN,
   profile_id: process.env.GOLOGIN_PROFILE_ID,
   executablePath: process.env.GOLOGIN_EXECUTABLE_PATH,
-  autoUpdateBrowser: true,
 });
 
 const createGologinProfileManager = ({ profileId, ...params }) => {
