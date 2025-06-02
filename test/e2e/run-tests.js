@@ -1,6 +1,3 @@
-import fs from 'fs';
-import path from 'path';
-
 import { GologinApi } from '../../src/gologin-api.js';
 
 const token = process.env.GL_API_TOKEN;
@@ -69,38 +66,6 @@ async function main() {
     const result = await runTest(name, testFn);
     results.push(result);
   }
-
-  // Generate test report
-  // const report = {
-  //   timestamp: new Date().toISOString(),
-  //   total: results.length,
-  //   passed: results.filter(r => r.status === 'passed').length,
-  //   failed: results.filter(r => r.status === 'failed').length,
-  //   results,
-  // };
-
-  // // Save test results
-  // const resultsDir = 'test-results';
-  // if (!fs.existsSync(resultsDir)) {
-  //   fs.mkdirSync(resultsDir, { recursive: true });
-  // }
-
-  // fs.writeFileSync(
-  //   path.join(resultsDir, 'e2e-results.json'),
-  //   JSON.stringify(report, null, 2),
-  // );
-
-  // console.log('\n📊 Test Summary:');
-  // console.log(`Total: ${report.total}`);
-  // console.log(`Passed: ${report.passed}`);
-  // console.log(`Failed: ${report.failed}`);
-
-  // if (report.failed > 0) {
-  //   console.log('\n❌ Some tests failed');
-  //   process.exit(1);
-  // } else {
-  //   console.log('\n✅ All tests passed!');
-  // }
 }
 
 main()

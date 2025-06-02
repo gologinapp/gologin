@@ -184,53 +184,7 @@ For debugging use `DEBUG=* node example.js` command
 To use GoLogin with Selenium see  `selenium/example.js`
 
 ## Full GoLogin API
-**Swagger:** <a href="https://api.gologin.com/docs" target="_blank">link here</a>
-
-**Postman:** <a href="https://documenter.getpostman.com/view/21126834/Uz5GnvaL" target="_blank">link here</a>
-
-
-## For local profiles
-
-#### startLocal()  
-
-- returns: string 
-
-start browser with profile id, return WebSocket url for puppeteer. Extracted profile folder should be in specified temp directory.
-
-#### stopLocal()  
-
-stop current browser without removing archived profile 
-
-### example-local-profile.js
-
-```js
-import puppeteer from 'puppeteer-core';
-
-import GoLogin from '../src/gologin.js';
-
-const { connect } = puppeteer;
-
-(async () => {
-  const GL = new GoLogin({
-    token: 'yU0token',
-    profile_id: 'yU0Pr0f1leiD',
-    executablePath: '/usr/bin/orbita-browser/chrome',
-    tmpdir: '/my/tmp/dir',
-  });
-
-  const wsUrl = await GL.startLocal();
-  const browser = await connect({
-    browserWSEndpoint: wsUrl.toString(),
-    ignoreHTTPSErrors: true,
-  });
-
-  const page = await browser.newPage();
-  await page.goto('https://myip.link');
-  console.log(await page.content());
-  await browser.close();
-  await GL.stopLocal({ posting: false });
-})();
-```
+<a href="https://gologin.com/docs/api-reference/profile/get-all-profiles" target="_blank">Gologin Api Documentation</a>
 
 ## Python support
 
