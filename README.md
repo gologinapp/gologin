@@ -191,3 +191,15 @@ To use GoLogin with Selenium see  `selenium/example.js`
 <a href="https://github.com/pyppeteer/pyppeteer" target="_blank">pyppeteer</a> (recommend) and <a href="https://www.selenium.dev" target="_blank">Selenium</a> supported (see file gologin.py)
 
 for Selenium may need download <a href="https://chromedriver.chromium.org/downloads" target="_blank">webdriver</a>
+
+## Telemetry
+
+This package collects anonymous error data to help improve reliability.
+
+### How to disable:
+- Set environment variable: `DISABLE_TELEMETRY=true`
+
+### Data handling:
+- No personal information collected
+- Data stored securely
+- Used only for bug fixes and improvements

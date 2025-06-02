@@ -8,3 +8,4 @@ yarn.lock
 .idea
 *_.js
 *_.py
+local-example.js
