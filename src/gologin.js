@@ -33,6 +33,7 @@ import { API_URL, ensureDirectoryExists, getOsAdvanced } from './utils/common.js
 import { STORAGE_GATEWAY_BASE_URL } from './utils/constants.js';
 import { get, isPortReachable } from './utils/utils.js';
 export { exitAll, GologinApi } from './gologin-api.js';
+import { makeRequest } from './utils/http.js';
 import { zeroProfileBookmarks } from './utils/zero-profile-bookmarks.js';
 import { zeroProfilePreferences } from './utils/zero-profile-preferences.js';
 const { access, unlink, writeFile, readFile, mkdir, copyFile } = _promises;
@@ -756,6 +757,28 @@ export class GoLogin {
     debug('getTimeZone finish', data.body);
     this._tz = JSON.parse(data.body);
 
+    if (proxy.id) {
+      const statusBody = {
+        proxies: [
+          {
+            id: proxy.id,
+            status: true,
+            country: this._tz.country,
+            city: this._tz.city,
+            lastIp: this._tz.ip,
+            timezone: this._tz.timezone,
+            checkDate: Math.floor(Date.now() / 1000),
+          },
+        ],
+      };
+
+      await makeRequest(
+        `${API_URL}/proxy/set_proxy_statuses`,
+        { timeout: 13 * 1000, maxAttempts: 3, method: 'POST', json: statusBody },
+        { token: this.access_token },
+      ).catch();
+    }
+
     return this._tz.timezone;
   }
 
@@ -799,6 +822,28 @@ export class GoLogin {
 
     debug('getTimeZone finish', body.body);
     this._tz = body;
+
+    if (proxy.id) {
+      const statusBody = {
+        proxies: [
+          {
+            id: proxy.id,
+            status: true,
+            country: this._tz.country,
+            city: this._tz.city,
+            lastIp: this._tz.ip,
+            timezone: this._tz.timezone,
+            checkDate: Math.floor(Date.now() / 1000),
+          },
+        ],
+      };
+
+      await makeRequest(
+        `${API_URL}/proxy/set_proxy_statuses`,
+        { timeout: 13 * 1000, maxAttempts: 3, method: 'POST', json: statusBody },
+        { token: this.access_token },
+      ).catch();
+    }
 
     return this._tz.timezone;
   }
