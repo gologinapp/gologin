@@ -7,6 +7,7 @@ import { promisify } from 'util';
 import { deleteExtensionArchive, extractExtension } from '../extensions/extensions-extractor.js';
 
 export const API_URL = 'https://api.gologin.com';
+export const FALLBACK_API_URL = 'https://api.gologin.co';
 
 const HOMEDIR = homedir();
 const CHROME_EXT_DIR_NAME = 'chrome-extensions';
