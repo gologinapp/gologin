@@ -115,8 +115,6 @@ export class GoLogin {
       }
     }
 
-    console.log('versions to download:', versionsToDownload);
-
     for (const majorVersion of versionsToDownload) {
       await this.browserChecker.checkBrowser({
         autoUpdateBrowser: true,
@@ -176,7 +174,6 @@ export class GoLogin {
     debug('Getting signed URL for S3');
 
     const bodyBufferBiteLength = Buffer.byteLength(fileBuff);
-    console.log('BUFFER SIZE', bodyBufferBiteLength);
 
     await makeRequest(this.storageGatewayUrl, {
       headers: {
@@ -214,7 +211,6 @@ export class GoLogin {
     const resolution = (profileData.navigator && profileData.navigator.resolution) || '1920x1080';
     const [screenWidth, screenHeight] = resolution.split('x').map(Number);
     const langHeader = (profileData.navigator && profileData.navigator.language) || '';
-    console.log('langHeader', langHeader);
     const splittedLangs = langHeader ? langHeader.split(',')[0] : 'en-US';
 
     const startupUrl = (profileData.startUrl || '').trim().split(',')[0];
@@ -905,7 +901,6 @@ export class GoLogin {
 
       params.push(...new Set(customArgs));
 
-      console.log(params);
       const child = execFile(ORBITA_BROWSER, params, { env });
       this.processSpawned = child;
       // const child = spawn(ORBITA_BROWSER, params, { env, shell: true });
@@ -921,7 +916,6 @@ export class GoLogin {
         { json: true, maxAttempts: 30, retryDelay: 1000, method: 'GET' },
       );
 
-      console.log('wsUrl', data);
       debug('WS IS', get(data, 'webSocketDebuggerUrl', ''));
       this.is_active = true;
 

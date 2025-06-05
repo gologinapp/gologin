@@ -14,7 +14,6 @@ export const getDefaultParams = () => ({
 });
 
 const createGologinProfileManager = ({ profileId, ...params }) => {
-  console.log({ params });
   const defaults = getDefaultParams();
   const mergedParams = {
     ...defaults,
@@ -22,8 +21,6 @@ const createGologinProfileManager = ({ profileId, ...params }) => {
   };
 
   mergedParams.profile_id = profileId ?? mergedParams.profile_id;
-
-  console.log({ mergedParams });
 
   return new GoLogin(mergedParams);
 };
@@ -88,7 +85,6 @@ export const GologinApi = ({ token }) => {
 
   const api = {
     async launch(params = {}) {
-      console.log();
       if (params.cloud) {
         return launchCloudProfile(params);
       }
@@ -150,7 +146,6 @@ export const GologinApi = ({ token }) => {
     },
 
     async changeProfileProxy(profileId, proxyData) {
-      console.log(proxyData);
       const response = await makeRequest(`${API_URL}/browser/${profileId}/proxy`, {
         method: 'PATCH',
         json: proxyData,
@@ -179,13 +174,11 @@ export const GologinApi = ({ token }) => {
         }, { token, fallbackUrl: `${FALLBACK_API_URL}/users-proxies/geolocation/traffic` });
 
         const availableTrafficData = availableTraffic;
-        console.log(availableTrafficData);
         const availableType = this.getAvailableType(availableTrafficData);
         if (availableType === 'none') {
           throw new Error(trafficLimitMessage);
         }
 
-        console.log(availableType);
         proxyType = availableType;
       }
 
