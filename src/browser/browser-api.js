@@ -1,6 +1,5 @@
-import requestretry from 'requestretry';
-
-import { API_URL } from '../utils/common.js';
+import { API_URL, FALLBACK_API_URL } from '../utils/common.js';
+import { makeRequest } from '../utils/http.js';
 
 /**
   * @param {string} profileId
@@ -8,15 +7,15 @@ import { API_URL } from '../utils/common.js';
   * @param {string} resolution
 */
 export const updateProfileResolution = (profileId, ACCESS_TOKEN, resolution) =>
-  requestretry.patch(`${API_URL}/browser/${profileId}/resolution`, {
-    headers: {
-      Authorization: `Bearer ${ACCESS_TOKEN}`,
-      'user-agent': 'gologin-api',
-    },
+  makeRequest(`${API_URL}/browser/${profileId}/resolution`, {
+    method: 'PATCH',
     json: { resolution },
     maxAttempts: 3,
     retryDelay: 2000,
     timeout: 10 * 1000,
+  }, {
+    token: ACCESS_TOKEN,
+    fallbackUrl: `${FALLBACK_API_URL}/browser/${profileId}/resolution`,
   }).catch((e) => {
     console.log(e);
 
@@ -29,15 +28,15 @@ export const updateProfileResolution = (profileId, ACCESS_TOKEN, resolution) =>
   * @param {string} userAgent
 */
 export const updateProfileUserAgent = (profileId, ACCESS_TOKEN, userAgent) =>
-  requestretry.patch(`${API_URL}/browser/${profileId}/ua`, {
-    headers: {
-      Authorization: `Bearer ${ACCESS_TOKEN}`,
-      'user-agent': 'gologin-api',
-    },
+  makeRequest(`${API_URL}/browser/${profileId}/ua`, {
+    method: 'PATCH',
     json: { userAgent },
     maxAttempts: 3,
     retryDelay: 2000,
     timeout: 10 * 1000,
+  }, {
+    token: ACCESS_TOKEN,
+    fallbackUrl: `${FALLBACK_API_URL}/browser/${profileId}/ua`,
   }).catch((e) => {
     console.log(e);
 
@@ -55,15 +54,15 @@ export const updateProfileUserAgent = (profileId, ACCESS_TOKEN, userAgent) =>
   * @param {string} [browserProxyData.password]
 */
 export const updateProfileProxy = (profileId, ACCESS_TOKEN, browserProxyData) =>
-  requestretry.patch(`${API_URL}/browser/${profileId}/proxy`, {
-    headers: {
-      Authorization: `Bearer ${ACCESS_TOKEN}`,
-      'user-agent': 'gologin-api',
-    },
+  makeRequest(`${API_URL}/browser/${profileId}/proxy`, {
+    method: 'PATCH',
     json: browserProxyData,
     maxAttempts: 3,
     retryDelay: 2000,
     timeout: 10 * 1000,
+  }, {
+    token: ACCESS_TOKEN,
+    fallbackUrl: `${FALLBACK_API_URL}/browser/${profileId}/proxy`,
   }).catch((e) => {
     console.log(e);
 
@@ -81,15 +80,15 @@ export const updateProfileBookmarks = async (profileIds, ACCESS_TOKEN, bookmarks
     bookmarks,
   };
 
-  return requestretry.patch(`${API_URL}/browser/bookmarks/many`, {
-    headers: {
-      Authorization: `Bearer ${ACCESS_TOKEN}`,
-      'user-agent': 'gologin-api',
-    },
+  return makeRequest(`${API_URL}/browser/bookmarks/many`, {
+    method: 'PATCH',
     json: params,
     maxAttempts: 3,
     retryDelay: 2000,
     timeout: 10 * 1000,
+  }, {
+    token: ACCESS_TOKEN,
+    fallbackUrl: `${FALLBACK_API_URL}/browser/bookmarks/many`,
   }).catch((error) => console.log(error));
 };
 

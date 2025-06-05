@@ -4,11 +4,13 @@ import request from 'requestretry';
 
 import { CHROME_EXTENSIONS_PATH, composeExtractionPromises, USER_EXTENSIONS_PATH } from '../utils/common.js';
 import UserExtensionsManager from './user-extensions-manager.js';
+import { makeRequest } from '../utils/http.js';
+import { FALLBACK_API_URL } from '../utils/common.js';
 
 const { mkdir, readdir, rmdir, unlink } = _promises;
 
 const EXTENSION_URL =
-  'https://clients2.google.com/service/update2/crx?response=redirect&acceptformat=crx2,crx3&x=id%3D{ext_id}%26uc&prodversion=97.0.4692.71';
+  'https://clients2.google.com/service/update2/crx?response=redirect&acceptformat=crx2,crx3&x=id%3D{ext_id}%26uc&prodversion=135.0.7049.41';
 
 export class ExtensionsManager extends UserExtensionsManager {
   #existedChromeExtensions = [];
@@ -134,6 +136,7 @@ export class ExtensionsManager extends UserExtensionsManager {
 
       const buffer = await new Promise((res) => {
         const chunks = [];
+        console.log('extUrl', extUrl);
         request.get(extUrl, {
           maxAttempts: 3,
           retryDelay: 1000,
@@ -143,7 +146,7 @@ export class ExtensionsManager extends UserExtensionsManager {
           .on('data', (data) => chunks.push(data))
           .on('end', () => res(Buffer.concat(chunks)));
       });
-
+      console.log('buffer', buffer);
       let zipExt;
       try {
         zipExt = crxToZip(buffer);
@@ -166,17 +169,15 @@ export class ExtensionsManager extends UserExtensionsManager {
   }
 
   async getExtensionsPolicies() {
-    const globalExtConfig = await request.get(`${this.apiBaseUrl}/gologin-settings/chrome_ext_policies`, {
-      headers: {
-        Authorization: `Bearer ${this.accessToken}`,
-        'user-agent': this.userAgent,
-        'x-two-factor-token': this.twoFaKey || '',
-      },
+    const globalExtConfig = await makeRequest(`${this.apiBaseUrl}/gologin-settings/chrome_ext_policies`, {
       json: true,
       maxAttempts: 2,
       retryDelay: 1000,
       timeout: 10 * 1000,
-      fullResponse: false,
+      method: 'GET',
+    }, {
+      token: this.accessToken,
+      fallbackUrl: `${FALLBACK_API_URL}/gologin-settings/chrome_ext_policies`,
     });
 
     const chromeExtPolicies = globalExtConfig?.chromeExtPolicies || {};
@@ -260,20 +261,17 @@ export class ExtensionsManager extends UserExtensionsManager {
       return;
     }
 
-    const checkResponse = await request(`${this.apiBaseUrl}/extensions/check`, {
+    const checkResponse = await makeRequest(`${this.apiBaseUrl}/extensions/check`, {
       method: 'POST',
-      headers: {
-        Authorization: `Bearer ${this.accessToken}`,
-        'user-agent': this.userAgent,
-        'x-two-factor-token': this.twoFaKey || '',
-      },
-      body: {
+      json: {
         extensionsIds,
       },
-      json: true,
+    }, {
+      token: this.accessToken,
+      fallbackUrl: `${FALLBACK_API_URL}/extensions/check`,
     });
 
-    const { extensionsToAdd = [] } = checkResponse.body;
+    const { extensionsToAdd = [] } = checkResponse;
 
     if (!extensionsToAdd.length) {
       return;
@@ -281,17 +279,14 @@ export class ExtensionsManager extends UserExtensionsManager {
 
     const extensionsToUpdate = await this.getExtensionsNameAndImage(extensionsToAdd, pathToExtensions);
 
-    request(`${this.apiBaseUrl}/extensions/create`, {
+    makeRequest(`${this.apiBaseUrl}/extensions/create`, {
       method: 'POST',
-      headers: {
-        Authorization: `Bearer ${this.accessToken}`,
-        'user-agent': this.userAgent,
-        'x-two-factor-token': this.twoFaKey || '',
-      },
-      body: {
+      json: {
         extensionsInfo: extensionsToUpdate,
       },
-      json: true,
+    }, {
+      token: this.accessToken,
+      fallbackUrl: `${FALLBACK_API_URL}/extensions/create`,
     });
   }
 
