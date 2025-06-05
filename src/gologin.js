@@ -191,8 +191,7 @@ export class GoLogin {
       maxAttempts: 3,
       retryDelay: 2000,
       timeout: 30 * 1000,
-      fullResponse: false,
-    }, { token: this.access_token, fallbackUrl: `${FALLBACK_API_URL}/browser/features/${id}/info-for-run` });
+    }, { token: this.access_token });
 
     console.log('Profile has been uploaded to S3 successfully');
   }
@@ -1258,11 +1257,7 @@ export class GoLogin {
       ACCESS_TOKEN: this.access_token,
     });
 
-    if (response.statusCode === 200) {
-      return response.body;
-    }
-
-    return { status: 'failure', status_code: response.statusCode, body: response.body };
+    return response;
   }
 
   async getCookies(profileId) {
@@ -1272,7 +1267,7 @@ export class GoLogin {
       ACCESS_TOKEN: this.access_token,
     });
 
-    return response.body;
+    return response;
   }
 
   getCookiePath(defaultFilePath) {

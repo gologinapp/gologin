@@ -18,9 +18,9 @@ export const makeRequest = async (url, options, internalOptions) => {
 
   const attemptRequest = async (requestUrl) => {
     const { body } = await requests(requestUrl, options);
-
     if (body.statusCode >= 400) {
-      throw new Error(body.body);
+
+      throw new Error(body);
     }
 
     return body;
