@@ -849,12 +849,13 @@ export class GoLogin {
     } else {
       let params = [
         `--remote-debugging-port=${remote_debugging_port}`,
-        `--user-data-dir=${profile_path}`,
         '--password-store=basic',
         `--tz=${tz}`,
         `--lang=${this.browserLang}`,
+        `--window-size=${this.resolution.width},${this.resolution.height}`,
+        '--window-position=0,0',
+        `--user-data-dir=${profile_path}`,
       ];
-
       if (this.extensionPathsToInstall.length) {
         if (Array.isArray(this.extra_params) && this.extra_params.length) {
           this.extra_params.forEach((param, index) => {
@@ -900,7 +901,7 @@ export class GoLogin {
       }
 
       params.push(...new Set(customArgs));
-
+      console.log('params', params);
       const child = execFile(ORBITA_BROWSER, params, { env });
       this.processSpawned = child;
       // const child = spawn(ORBITA_BROWSER, params, { env, shell: true });
@@ -919,16 +920,10 @@ export class GoLogin {
       debug('WS IS', get(data, 'webSocketDebuggerUrl', ''));
       this.is_active = true;
 
-      return get(data, 'webSocketDebuggerUrl', '');
+      return { wsUrl: get(data, 'webSocketDebuggerUrl', ''), resolution: this.resolution };
     }
 
     return '';
-  }
-
-  async createStartupAndSpawnBrowser() {
-    await this.createStartup();
-
-    return this.spawnBrowser();
   }
 
   async clearProfileFiles() {
@@ -1344,19 +1339,19 @@ export class GoLogin {
   async start() {
     await this.createStartup();
     // await this.createBrowserExtension();
-    const wsUrl = await this.spawnBrowser();
+    const startResponse = await this.spawnBrowser();
     this.setActive(true);
 
-    return { status: 'success', wsUrl };
+    return { status: 'success', wsUrl: startResponse.wsUrl, resolution: startResponse.resolution };
   }
 
   async startLocal() {
     await this.createStartup(true);
     // await this.createBrowserExtension();
-    const wsUrl = await this.spawnBrowser();
+    const startResponse = await this.spawnBrowser();
     this.setActive(true);
 
-    return { status: 'success', wsUrl };
+    return { status: 'success', wsUrl: startResponse.wsUrl };
   }
 
   async stop() {

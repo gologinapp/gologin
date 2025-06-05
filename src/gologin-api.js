@@ -47,9 +47,14 @@ export const GologinApi = ({ token }) => {
     }
 
     const startedProfile = await legacyGologin.start();
+
     const browser = await puppeteer.connect({
       browserWSEndpoint: startedProfile.wsUrl,
       ignoreHTTPSErrors: true,
+      defaultViewport: {
+        width: startedProfile.resolution.width,
+        height: startedProfile.resolution.height,
+      },
     });
 
     browsers.push(browser);

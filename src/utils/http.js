@@ -3,6 +3,17 @@ import requests from 'requestretry';
 
 const TIMEZONE_URL = 'https://geo.myip.link';
 
+const attemptRequest = async (requestUrl, options) => {
+  const { body } = await requests(requestUrl, options);
+  if (body.statusCode >= 400) {
+    const error = new Error(body);
+    error.statusCode = body.statusCode;
+    throw error;
+  }
+
+  return body;
+};
+
 export const makeRequest = async (url, options, internalOptions) => {
   options.headers = {
     ...options.headers,
@@ -16,21 +27,11 @@ export const makeRequest = async (url, options, internalOptions) => {
     };
   }
 
-  const attemptRequest = async (requestUrl) => {
-    const { body } = await requests(requestUrl, options);
-    if (body.statusCode >= 400) {
-
-      throw new Error(body);
-    }
-
-    return body;
-  };
-
   try {
-    return await attemptRequest(url);
+    return await attemptRequest(url, options);
   } catch (error) {
-    if (internalOptions?.fallbackUrl) {
-      return await attemptRequest(internalOptions.fallbackUrl);
+    if (internalOptions?.fallbackUrl && !error.statusCode) {
+      return attemptRequest(internalOptions.fallbackUrl, options);
     }
 
     throw error;
