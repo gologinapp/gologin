@@ -192,14 +192,5 @@ To use GoLogin with Selenium see  `selenium/example.js`
 
 for Selenium may need download <a href="https://chromedriver.chromium.org/downloads" target="_blank">webdriver</a>
 
-## Telemetry
-
-This package collects anonymous error data to help improve reliability.
-
-### How to disable:
-- Set environment variable: `DISABLE_TELEMETRY=true`
-
-### Data handling:
-- No personal information collected
-- Data stored securely
-- Used only for bug fixes and improvements
+## Privacy
+Our full privacy policy you can finde <a href="https://github.com/gologinapp/gologin/blob/master/docs/PRIVACY.md">here</a>
