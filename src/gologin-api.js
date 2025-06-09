@@ -51,10 +51,7 @@ export const GologinApi = ({ token }) => {
     const browser = await puppeteer.connect({
       browserWSEndpoint: startedProfile.wsUrl,
       ignoreHTTPSErrors: true,
-      defaultViewport: {
-        width: startedProfile.resolution.width,
-        height: startedProfile.resolution.height,
-      },
+      defaultViewport: null,
     });
 
     browsers.push(browser);
