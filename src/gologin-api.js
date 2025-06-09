@@ -1,7 +1,8 @@
 import puppeteer from 'puppeteer-core';
 
 import GoLogin from './gologin.js';
-import { API_URL, getOsAdvanced } from './utils/common.js';
+import { API_URL, FALLBACK_API_URL, getOsAdvanced } from './utils/common.js';
+import { makeRequest } from './utils/http.js';
 
 const trafficLimitMessage =
   'You dont have free traffic to use the proxy. Please go to app https://app.gologin.com/ and buy some traffic if you want to use the proxy';
@@ -13,7 +14,6 @@ export const getDefaultParams = () => ({
 });
 
 const createGologinProfileManager = ({ profileId, ...params }) => {
-  console.log({ params });
   const defaults = getDefaultParams();
   const mergedParams = {
     ...defaults,
@@ -21,8 +21,6 @@ const createGologinProfileManager = ({ profileId, ...params }) => {
   };
 
   mergedParams.profile_id = profileId ?? mergedParams.profile_id;
-
-  console.log({ mergedParams });
 
   return new GoLogin(mergedParams);
 };
@@ -49,9 +47,14 @@ export const GologinApi = ({ token }) => {
     }
 
     const startedProfile = await legacyGologin.start();
+
     const browser = await puppeteer.connect({
       browserWSEndpoint: startedProfile.wsUrl,
       ignoreHTTPSErrors: true,
+      defaultViewport: {
+        width: startedProfile.resolution.width,
+        height: startedProfile.resolution.height,
+      },
     });
 
     browsers.push(browser);
@@ -87,7 +90,6 @@ export const GologinApi = ({ token }) => {
 
   const api = {
     async launch(params = {}) {
-      console.log();
       if (params.cloud) {
         return launchCloudProfile(params);
       }
@@ -96,26 +98,12 @@ export const GologinApi = ({ token }) => {
     },
 
     async createProfileWithCustomParams(options) {
-      const response = await fetch(`${API_URL}/browser/custom`, {
+      const response = await makeRequest(`${API_URL}/browser/custom`, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'User-Agent': 'gologin-api',
-        },
-        body: JSON.stringify(options),
-      });
+        json: options,
+      }, { token, fallbackUrl: `${FALLBACK_API_URL}/browser/custom` });
 
-      if (response.status === 400) {
-        throw new Error(`gologin failed account creation with status code, ${response.status} DATA  ${JSON.stringify(await response.json())}`);
-      }
-
-      if (response.status === 500) {
-        throw new Error(`gologin failed account creation with status code, ${response.status}`);
-      }
-
-      const profile = await response.json();
-
-      return profile.id;
+      return response.id;
     },
 
     async refreshProfilesFingerprint(profileIds) {
@@ -123,17 +111,12 @@ export const GologinApi = ({ token }) => {
         throw new Error('Profile ID is required');
       }
 
-      const response = await fetch(`${API_URL}/browser/fingerprints`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'User-Agent': 'gologin-api',
-          'Content-Type': 'application/json',
-        },
+      const response = await makeRequest(`${API_URL}/browser/fingerprints`, {
         method: 'PATCH',
-        body: JSON.stringify({ browsersIds: profileIds }),
-      });
+        json: { browsersIds: profileIds },
+      }, { token, fallbackUrl: `${FALLBACK_API_URL}/browser/fingerprints` });
 
-      return response.json();
+      return response;
     },
 
     async createProfileRandomFingerprint(name = '') {
@@ -141,21 +124,16 @@ export const GologinApi = ({ token }) => {
       const { os, osSpec } = osInfo;
       const resultName = name || 'api-generated';
 
-      const response = await fetch(`${API_URL}/browser/quick`, {
+      const response = await makeRequest(`${API_URL}/browser/quick`, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'User-Agent': 'gologin-api',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+        json: {
           os,
           osSpec,
           name: resultName,
-        }),
-      });
+        },
+      }, { token, fallbackUrl: `${FALLBACK_API_URL}/browser/quick` });
 
-      return response.json();
+      return response;
     },
 
     async updateUserAgentToLatestBrowser(profileIds, workspaceId = '') {
@@ -164,32 +142,21 @@ export const GologinApi = ({ token }) => {
         url += `?currentWorkspace=${workspaceId}`;
       }
 
-      const response = await fetch(url, {
+      const response = await makeRequest(url, {
         method: 'PATCH',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'User-Agent': 'gologin-api',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ browserIds: profileIds, updateUaToNewBrowserV: true, updateAllProfiles: false, testOrbita: false }),
-      });
+        json: { browserIds: profileIds, updateUaToNewBrowserV: true, updateAllProfiles: false, testOrbita: false },
+      }, { token, fallbackUrl: `${FALLBACK_API_URL}/browser/update_ua_to_new_browser_v` });
 
-      return response.json();
+      return response;
     },
 
     async changeProfileProxy(profileId, proxyData) {
-      console.log(proxyData);
-      const response = await fetch(`${API_URL}/browser/${profileId}/proxy`, {
+      const response = await makeRequest(`${API_URL}/browser/${profileId}/proxy`, {
         method: 'PATCH',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'user-agent': 'gologin-api',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(proxyData),
-      });
+        json: proxyData,
+      }, { token, fallbackUrl: `${FALLBACK_API_URL}/browser/${profileId}/proxy` });
 
-      return response.status;
+      return response;
     },
 
     getAvailableType(availableTrafficData) {
@@ -207,22 +174,16 @@ export const GologinApi = ({ token }) => {
 
     async addGologinProxyToProfile(profileId, countryCode, proxyType = '') {
       if (!proxyType) {
-        const availableTraffic = await fetch(`${API_URL}/users-proxies/geolocation/traffic`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'user-agent': 'gologin-api',
-            'Content-Type': 'application/json',
-          },
-        });
+        const availableTraffic = await makeRequest(`${API_URL}/users-proxies/geolocation/traffic`, {
+          method: 'GET',
+        }, { token, fallbackUrl: `${FALLBACK_API_URL}/users-proxies/geolocation/traffic` });
 
-        const availableTrafficData = await availableTraffic.json();
-        console.log(availableTrafficData);
+        const availableTrafficData = availableTraffic;
         const availableType = this.getAvailableType(availableTrafficData);
         if (availableType === 'none') {
           throw new Error(trafficLimitMessage);
         }
 
-        console.log(availableType);
         proxyType = availableType;
       }
 
@@ -246,22 +207,17 @@ export const GologinApi = ({ token }) => {
           throw new Error('Invalid proxy type');
       }
 
-      const proxyResponse = await fetch(`${API_URL}/users-proxies/mobile-proxy`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'user-agent': 'gologin-api',
-          'Content-Type': 'application/json',
-        },
+      const proxyResponse = await makeRequest(`${API_URL}/users-proxies/mobile-proxy`, {
         method: 'POST',
-        body: JSON.stringify({
+        json: {
           countryCode,
           isDc,
           isMobile,
           profileIdToLink: profileId,
-        }),
-      });
+        },
+      }, { token, fallbackUrl: `${FALLBACK_API_URL}/users-proxies/mobile-proxy` });
 
-      const proxy = await proxyResponse.json();
+      const proxy = proxyResponse;
       if (proxy.trafficLimitBytes < proxy.trafficUsedBytes) {
         throw new Error(trafficLimitMessage);
       }
@@ -270,27 +226,18 @@ export const GologinApi = ({ token }) => {
     },
 
     async addCookiesToProfile(profileId, cookies) {
-      const response = await fetch(`${API_URL}/browser/${profileId}/cookies?fromUser=true`, {
+      const response = await makeRequest(`${API_URL}/browser/${profileId}/cookies?fromUser=true`, {
         method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'user-agent': 'gologin-api',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(cookies),
-      });
+        json: cookies,
+      }, { token, fallbackUrl: `${FALLBACK_API_URL}/browser/${profileId}/cookies?fromUser=true` });
 
       return response.status;
     },
 
     async deleteProfile(profileId) {
-      const response = await fetch(`${API_URL}/browser/${profileId}`, {
+      const response = await makeRequest(`${API_URL}/browser/${profileId}`, {
         method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'user-agent': 'gologin-api',
-        },
-      });
+      }, { token, fallbackUrl: `${FALLBACK_API_URL}/browser/${profileId}` });
 
       return response.status;
     },
@@ -298,7 +245,7 @@ export const GologinApi = ({ token }) => {
     async exit() {
       Promise.allSettled(browsers.map((browser) => browser.close()));
       Promise.allSettled(
-        legacyGls.map((gl) => gl.stopLocal({ posting: false })),
+        legacyGls.map((gl) => gl.stopLocal({ posting: true })),
       );
       Promise.allSettled(
         legacyGls.map((gl) => gl.stopRemote({ posting: true })),

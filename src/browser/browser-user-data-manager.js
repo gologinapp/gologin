@@ -2,10 +2,11 @@ import { createHash } from 'crypto';
 import { createWriteStream, promises as _promises, rmdirSync } from 'fs';
 import { homedir, tmpdir } from 'os';
 import { dirname, join, resolve, sep } from 'path';
-import requestretry from 'requestretry';
 import { fileURLToPath } from 'url';
 
 import { fontsCollection } from '../../fonts.js';
+import { FALLBACK_API_URL } from '../utils/common.js';
+import { makeRequest } from '../utils/http.js';
 
 const { access, readFile, writeFile, mkdir, readdir, copyFile, rename } = _promises;
 
@@ -24,15 +25,15 @@ const GOLOGIN_TEST_FOLDER_NAME = '.gologin_test';
 const osPlatform = process.platform;
 
 export const downloadCookies = ({ profileId, ACCESS_TOKEN, API_BASE_URL }) =>
-  requestretry.get(`${API_BASE_URL}/browser/${profileId}/cookies`, {
-    headers: {
-      Authorization: `Bearer ${ACCESS_TOKEN}`,
-      'user-agent': 'gologin-api',
-    },
+  makeRequest(`${API_BASE_URL}/browser/${profileId}/cookies`, {
     json: true,
     maxAttempts: 3,
     retryDelay: 2000,
     timeout: 10 * 1000,
+    method: 'GET',
+  }, {
+    token: ACCESS_TOKEN,
+    fallbackUrl: `${FALLBACK_API_URL}/browser/${profileId}/cookies`,
   }).catch((e) => {
     console.log(e);
 
@@ -40,15 +41,15 @@ export const downloadCookies = ({ profileId, ACCESS_TOKEN, API_BASE_URL }) =>
   });
 
 export const uploadCookies = ({ cookies = [], profileId, ACCESS_TOKEN, API_BASE_URL }) =>
-  requestretry.post(`${API_BASE_URL}/browser/${profileId}/cookies?encrypted=true`, {
-    headers: {
-      Authorization: `Bearer ${ACCESS_TOKEN}`,
-      'User-Agent': 'gologin-api',
-    },
+  makeRequest(`${API_BASE_URL}/browser/${profileId}/cookies?encrypted=true`, {
     json: cookies,
     maxAttempts: 3,
     retryDelay: 2000,
     timeout: 20 * 1000,
+    method: 'POST',
+  }, {
+    token: ACCESS_TOKEN,
+    fallbackUrl: `${FALLBACK_API_URL}/browser/${profileId}/cookies?encrypted=true`,
   }).catch((e) => {
     console.log(e);
 
@@ -66,7 +67,7 @@ export const downloadFonts = async (fontsList = [], profilePath) => {
   const files = await readdir(browserFontsPath);
   const fontsToDownload = fontsList.filter(font => !files.includes(font));
 
-  let promises = fontsToDownload.map(font => requestretry.get(FONTS_URL + font, {
+  let promises = fontsToDownload.map(font => makeRequest(FONTS_URL + font, {
     maxAttempts: 5,
     retryDelay: 2000,
     timeout: 30 * 1000,

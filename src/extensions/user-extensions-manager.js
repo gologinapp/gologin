@@ -78,19 +78,17 @@ export class UserExtensionsManager {
       return;
     }
 
-    const extensionsToDownloadPaths = await request.post(`${this.#API_BASE_URL}/extensions/user_chrome_extensions_paths`, {
-      json: true,
+    const extensionsToDownloadPaths = await makeRequest(`${this.#API_BASE_URL}/extensions/user_chrome_extensions_paths`, {
       fullResponse: false,
-      headers: {
-        Authorization: `Bearer ${this.#ACCESS_TOKEN}`,
-        'user-agent': this.#USER_AGENT,
-        'x-two-factor-token': this.#TWO_FA_KEY || '',
-      },
-      body: {
+      json: {
         existedUserChromeExtensions: this.#existedUserExtensions,
         profileId,
         userChromeExtensions,
       },
+      method: 'POST',
+    }, {
+      token: this.#ACCESS_TOKEN,
+      fallbackUrl: `${FALLBACK_API_URL}/extensions/user_chrome_extensions_paths`,
     }) || [];
 
     const extensionsToDownloadPathsFiltered =

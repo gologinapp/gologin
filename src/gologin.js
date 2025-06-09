@@ -4,10 +4,8 @@ import debugDefault from 'debug';
 import decompress from 'decompress';
 import decompressUnzip from 'decompress-unzip';
 import { existsSync, mkdirSync, promises as _promises } from 'fs';
-import { get as _get } from 'https';
 import { tmpdir } from 'os';
 import { dirname, join, resolve as _resolve, sep } from 'path';
-import requests from 'requestretry';
 import rimraf from 'rimraf';
 import { SocksProxyAgent } from 'socks-proxy-agent';
 import { fileURLToPath } from 'url';
@@ -30,11 +28,11 @@ import {
 import ExtensionsManager from './extensions/extensions-manager.js';
 import { archiveProfile } from './profile/profile-archiver.js';
 import { checkAutoLang } from './utils/browser.js';
-import { API_URL, ensureDirectoryExists, getOsAdvanced } from './utils/common.js';
+import { API_URL, ensureDirectoryExists, FALLBACK_API_URL, getOsAdvanced } from './utils/common.js';
 import { STORAGE_GATEWAY_BASE_URL } from './utils/constants.js';
 import { get, isPortReachable } from './utils/utils.js';
 export { exitAll, GologinApi } from './gologin-api.js';
-import { makeRequest } from './utils/http.js';
+import { checkSocksProxy, makeRequest } from './utils/http.js';
 import { zeroProfileBookmarks } from './utils/zero-profile-bookmarks.js';
 import { zeroProfilePreferences } from './utils/zero-profile-preferences.js';
 const { access, unlink, writeFile, readFile, mkdir, copyFile } = _promises;
@@ -125,8 +123,6 @@ export class GoLogin {
       }
     }
 
-    console.log('versions to download:', versionsToDownload);
-
     for (const majorVersion of versionsToDownload) {
       await this.browserChecker.checkBrowser({
         autoUpdateBrowser: true,
@@ -143,59 +139,14 @@ export class GoLogin {
     this.bookmarksFilePath = join(this.tmpdir, `gologin_profile_${this.profile_id}`, 'Default', 'Bookmarks');
   }
 
-  async getToken(username, password) {
-    const data = await requests.post(`${API_URL}/user/login`, {
-      json: {
-        username,
-        password,
-      },
-    });
-
-    if (!Reflect.has(data, 'body.access_token')) {
-      throw new Error(`gologin auth failed with status code, ${data.statusCode} DATA  ${JSON.stringify(data)}`);
-    }
-  }
-
   async getProfile(profile_id) {
     const id = profile_id || this.profile_id;
     debug('getProfile', this.access_token, id);
-    const profileResponse = await requests.get(`${API_URL}/browser/features/${id}/info-for-run`, {
-      headers: {
-        'Authorization': `Bearer ${this.access_token}`,
-        'User-Agent': 'gologin-api',
-      },
-    });
+    const profileResponse = await makeRequest(`${API_URL}/browser/features/${id}/info-for-run`, {
+      method: 'GET',
+    }, { token: this.access_token, fallbackUrl: `${FALLBACK_API_URL}/browser/features/${id}/info-for-run` });
 
-    debug('profileResponse', profileResponse.statusCode, profileResponse.body);
-
-    const { body: errorBody = '' } = profileResponse;
-    const backendErrorHeader = 'backend@error::';
-    if (errorBody.includes(backendErrorHeader)) {
-      const errorData =
-        errorBody
-          .replace(backendErrorHeader, '')
-          .slice(1, -1);
-
-      throw new Error(errorData);
-    }
-
-    if (profileResponse.statusCode === 404) {
-      throw new Error(JSON.parse(profileResponse.body).message);
-    }
-
-    if (profileResponse.statusCode === 403) {
-      throw new Error(JSON.parse(profileResponse.body).message);
-    }
-
-    if (profileResponse.statusCode !== 200) {
-      throw new Error(`Gologin /browser/${id} response error ${profileResponse.statusCode} INVALID TOKEN OR PROFILE NOT FOUND`);
-    }
-
-    if (profileResponse.statusCode === 401) {
-      throw new Error('invalid token');
-    }
-
-    return JSON.parse(profileResponse.body);
+    return JSON.parse(profileResponse);
   }
 
   async emptyProfile() {
@@ -231,23 +182,21 @@ export class GoLogin {
     debug('Getting signed URL for S3');
 
     const bodyBufferBiteLength = Buffer.byteLength(fileBuff);
-    console.log('BUFFER SIZE', bodyBufferBiteLength);
 
-    await requests.put(this.storageGatewayUrl, {
+    await makeRequest(this.storageGatewayUrl, {
       headers: {
-        Authorization: `Bearer ${this.access_token}`,
         browserId: this.profile_id,
         'Content-Type': 'application/zip',
         'Content-Length': bodyBufferBiteLength,
       },
+      method: 'PUT',
       body: fileBuff,
       maxBodyLength: Infinity,
       maxContentLength: Infinity,
       maxAttempts: 3,
       retryDelay: 2000,
       timeout: 30 * 1000,
-      fullResponse: false,
-    });
+    }, { token: this.access_token });
 
     console.log('Profile has been uploaded to S3 successfully');
   }
@@ -270,7 +219,6 @@ export class GoLogin {
     const resolution = (profileData.navigator && profileData.navigator.resolution) || '1920x1080';
     const [screenWidth, screenHeight] = resolution.split('x').map(Number);
     const langHeader = (profileData.navigator && profileData.navigator.language) || '';
-    console.log('langHeader', langHeader);
     const splittedLangs = langHeader ? langHeader.split(',')[0] : 'en-US';
 
     const startupUrl = (profileData.startUrl || '').trim().split(',')[0];
@@ -535,7 +483,7 @@ export class GoLogin {
       ExtensionsManagerInst.apiUrl = API_URL;
       await ExtensionsManagerInst.init()
         .then(() => ExtensionsManagerInst.updateExtensions())
-        .catch(() => { });
+        .catch(() => {});
       ExtensionsManagerInst.accessToken = this.access_token;
 
       await ExtensionsManagerInst.getExtensionsPolicies();
@@ -757,15 +705,15 @@ export class GoLogin {
 
       const proxyUrl = `${proxy.mode}://${proxy.username}:${proxy.password}@${proxy.host}:${proxy.port}`;
       debug(`getTimeZone start ${TIMEZONE_URL}`, proxyUrl);
-      data = await requests.get(TIMEZONE_URL, { proxy: proxyUrl, timeout: 13 * 1000, maxAttempts: 3 });
+      data = await makeRequest(TIMEZONE_URL, { proxy: proxyUrl, timeout: 13 * 1000, maxAttempts: 3, method: 'GET' });
     } else {
-      data = await requests.get(TIMEZONE_URL, { timeout: 13 * 1000, maxAttempts: 3 });
+      data = await makeRequest(TIMEZONE_URL, { timeout: 13 * 1000, maxAttempts: 3, method: 'GET' });
     }
 
-    debug('getTimeZone finish', data.body);
-    this._tz = JSON.parse(data.body);
+    debug('getTimeZone finish', data);
+    this._tz = JSON.parse(data);
 
-    if (proxy.id) {
+    if (proxy?.id) {
       const statusBody = {
         proxies: [
           {
@@ -783,7 +731,7 @@ export class GoLogin {
       await makeRequest(
         `${API_URL}/proxy/set_proxy_statuses`,
         { timeout: 13 * 1000, maxAttempts: 3, method: 'POST', json: statusBody },
-        { token: this.access_token },
+        { token: this.access_token, fallbackUrl: `${FALLBACK_API_URL}/proxy/set_proxy_statuses` },
       ).catch();
     }
 
@@ -792,7 +740,6 @@ export class GoLogin {
 
   async getTimezoneWithSocks(params) {
     const { host, port, username = '', password = '' } = params;
-    let body;
 
     let proxy = 'socks://';
     if (username) {
@@ -802,28 +749,10 @@ export class GoLogin {
 
     proxy += host + ':' + port;
     const agent = new SocksProxyAgent(proxy);
-    const checkData = await new Promise((resolve, reject) => {
-      _get(TIMEZONE_URL, { agent, timeout: 10000 }, (res) => {
-        let resultResponse = '';
-        res.on('data', (data) => resultResponse += data);
 
-        res.on('end', () => {
-          let parsedData;
-          try {
-            parsedData = JSON.parse(resultResponse);
-          } catch (e) {
-            reject(e);
-          }
+    const checkData = await checkSocksProxy(agent);
 
-          resolve({
-            ...res,
-            body: parsedData,
-          });
-        });
-      }).on('error', (err) => reject(err));
-    });
-
-    body = checkData.body || {};
+    const body = checkData || {};
     if (!body.ip && checkData.statusCode.toString().startsWith('4')) {
       throw checkData;
     }
@@ -849,7 +778,7 @@ export class GoLogin {
       await makeRequest(
         `${API_URL}/proxy/set_proxy_statuses`,
         { timeout: 13 * 1000, maxAttempts: 3, method: 'POST', json: statusBody },
-        { token: this.access_token },
+        { token: this.access_token, fallbackUrl: `${FALLBACK_API_URL}/proxy/set_proxy_statuses` },
       ).catch();
     }
 
@@ -928,12 +857,13 @@ export class GoLogin {
     } else {
       let params = [
         `--remote-debugging-port=${remote_debugging_port}`,
-        `--user-data-dir=${profile_path}`,
         '--password-store=basic',
         `--tz=${tz}`,
         `--lang=${this.browserLang}`,
+        `--window-size=${this.resolution.width},${this.resolution.height}`,
+        '--window-position=0,0',
+        `--user-data-dir=${profile_path}`,
       ];
-
       if (this.extensionPathsToInstall.length) {
         if (Array.isArray(this.extra_params) && this.extra_params.length) {
           this.extra_params.forEach((param, index) => {
@@ -979,8 +909,7 @@ export class GoLogin {
       }
 
       params.push(...new Set(customArgs));
-
-      console.log(params);
+      console.log('params', params);
       const child = execFile(ORBITA_BROWSER, params, { env });
       this.processSpawned = child;
       // const child = spawn(ORBITA_BROWSER, params, { env, shell: true });
@@ -991,21 +920,18 @@ export class GoLogin {
 
     if (this.waitWebsocket) {
       debug('GETTING WS URL FROM BROWSER');
-      const data = await requests.get(`http://127.0.0.1:${remote_debugging_port}/json/version`, { json: true, maxAttempts: 30, retryDelay: 1000 });
+      const data = await makeRequest(
+        `http://127.0.0.1:${remote_debugging_port}/json/version`,
+        { json: true, maxAttempts: 30, retryDelay: 1000, method: 'GET' },
+      );
 
-      debug('WS IS', get(data, 'body.webSocketDebuggerUrl', ''));
+      debug('WS IS', get(data, 'webSocketDebuggerUrl', ''));
       this.is_active = true;
 
-      return get(data, 'body.webSocketDebuggerUrl', '');
+      return { wsUrl: get(data, 'webSocketDebuggerUrl', ''), resolution: this.resolution };
     }
 
     return '';
-  }
-
-  async createStartupAndSpawnBrowser() {
-    await this.createStartup();
-
-    return this.spawnBrowser();
   }
 
   async clearProfileFiles() {
@@ -1059,22 +985,22 @@ export class GoLogin {
       isStorageGateway: true,
     };
 
-    const updateResult = await requests.post(`${API_URL}/browser/features/profile/${this.profile_id}/update_after_close`, {
-      headers: {
-        Authorization: `Bearer ${this.access_token}`,
-        'User-Agent': 'gologin-api',
-      },
+    const updateResult = await makeRequest(`${API_URL}/browser/features/profile/${this.profile_id}/update_after_close`, {
       json: body,
+      method: 'POST',
       maxAttempts: 3,
       retryDelay: 2000,
       timeout: 20 * 1000,
+    }, {
+      token: this.access_token,
+      fallbackUrl: `${FALLBACK_API_URL}/browser/features/profile/${this.profile_id}/update_after_close`,
     }).catch((e) => {
       console.log(e);
 
       return e;
     });
 
-    return updateResult.body;
+    return updateResult;
   }
 
   async stopBrowser() {
@@ -1172,26 +1098,6 @@ export class GoLogin {
     return fileBuff;
   }
 
-  async profileExists() {
-    const profileResponse = await requests.post(`${API_URL}/browser`, {
-      headers: {
-        'Authorization': `Bearer ${this.access_token}`,
-        'User-Agent': 'gologin-api',
-      },
-      json: {
-
-      },
-    });
-
-    if (profileResponse.statusCode !== 200) {
-      return false;
-    }
-
-    debug('profile is', profileResponse.body);
-
-    return true;
-  }
-
   async getRandomFingerprint(options) {
     let os = 'lin';
 
@@ -1204,14 +1110,11 @@ export class GoLogin {
       url += '&isM1=true';
     }
 
-    const fingerprint = await requests.get(url, {
-      headers: {
-        'Authorization': `Bearer ${this.access_token}`,
-        'User-Agent': 'gologin-api',
-      },
-    });
+    const fingerprint = await makeRequest(url, {
+      method: 'GET',
+    }, { token: this.access_token, fallbackUrl: `${FALLBACK_API_URL}/browser/fingerprint?os=${os}` });
 
-    return JSON.parse(fingerprint.body);
+    return JSON.parse(fingerprint);
   }
 
   async create(options) {
@@ -1269,35 +1172,19 @@ export class GoLogin {
       json.navigator.userAgent = orig_user_agent;
     }
 
-    const response = await requests.post(`${API_URL}/browser`, {
-      headers: {
-        'Authorization': `Bearer ${this.access_token}`,
-        'User-Agent': 'gologin-api',
-      },
+    const response = await makeRequest(`${API_URL}/browser`, {
+      method: 'POST',
       json,
-    });
+    }, { token: this.access_token, fallbackUrl: `${FALLBACK_API_URL}/browser` });
 
-    if (response.statusCode === 400) {
-      throw new Error(`gologin failed account creation with status code, ${response.statusCode} DATA  ${JSON.stringify(response.body.message)}`);
-    }
-
-    if (response.statusCode === 500) {
-      throw new Error(`gologin failed account creation with status code, ${response.statusCode}`);
-    }
-
-    debug(JSON.stringify(response.body));
-
-    return response.body.id;
+    return response.id;
   }
 
   async delete(pid) {
     const profile_id = pid || this.profile_id;
-    await requests.delete(`${API_URL}/browser/${profile_id}`, {
-      headers: {
-        'Authorization': `Bearer ${this.access_token}`,
-        'User-Agent': 'gologin-api',
-      },
-    });
+    await makeRequest(`${API_URL}/browser/${profile_id}`, {
+      method: 'DELETE',
+    }, { token: this.access_token, fallbackUrl: `${FALLBACK_API_URL}/browser/${profile_id}` });
   }
 
   async update(options) {
@@ -1315,17 +1202,14 @@ export class GoLogin {
     });
 
     debug('update profile', profile);
-    const response = await requests.put(`${API_URL}/browser/${options.id}`, {
+    const response = await makeRequest(`${API_URL}/browser/${options.id}`, {
       json: profile,
-      headers: {
-        'Authorization': `Bearer ${this.access_token}`,
-        'User-Agent': 'gologin-api',
-      },
-    });
+      method: 'PUT',
+    }, { token: this.access_token, fallbackUrl: `${FALLBACK_API_URL}/browser/${options.id}` });
 
-    debug('response', JSON.stringify(response.body));
+    debug('response', JSON.stringify(response));
 
-    return response.body;
+    return response;
   }
 
   setActive(is_active) {
@@ -1370,11 +1254,7 @@ export class GoLogin {
       ACCESS_TOKEN: this.access_token,
     });
 
-    if (response.statusCode === 200) {
-      return response.body;
-    }
-
-    return { status: 'failure', status_code: response.statusCode, body: response.body };
+    return response;
   }
 
   async getCookies(profileId) {
@@ -1384,7 +1264,7 @@ export class GoLogin {
       ACCESS_TOKEN: this.access_token,
     });
 
-    return response.body;
+    return response;
   }
 
   getCookiePath(defaultFilePath) {
@@ -1467,10 +1347,10 @@ export class GoLogin {
   async start() {
     try {
       await this.createStartup();
-      const wsUrl = await this.spawnBrowser();
+      const startResponse = await this.spawnBrowser();
       this.setActive(true);
 
-      return { status: 'success', wsUrl };
+      return { status: 'success', wsUrl: startResponse.wsUrl, resolution: startResponse.resolution };
     } catch (error) {
       Sentry.captureException(error);
       throw error;
@@ -1480,10 +1360,10 @@ export class GoLogin {
   async startLocal() {
     await this.createStartup(true);
     // await this.createBrowserExtension();
-    const wsUrl = await this.spawnBrowser();
+    const startResponse = await this.spawnBrowser();
     this.setActive(true);
 
-    return { status: 'success', wsUrl };
+    return { status: 'success', wsUrl: startResponse.wsUrl };
   }
 
   async stop() {
@@ -1501,16 +1381,18 @@ export class GoLogin {
     await delay(delay_ms);
     const url = `${remoteOrbitaUrl}/json/version`;
     console.log('try_count=', try_count, 'url=', url);
-    const response = await requests.get(url);
-    let wsUrl = '';
-    console.log('response', response.body);
+    const response = await makeRequest(url, {
+      method: 'GET',
+    });
 
-    if (!response.body) {
+    let wsUrl = '';
+
+    if (!response) {
       return wsUrl;
     }
 
     try {
-      const parsedBody = JSON.parse(response.body);
+      const parsedBody = JSON.parse(response);
       wsUrl = parsedBody.webSocketDebuggerUrl;
     } catch (e) {
       if (try_count < 3) {
@@ -1528,16 +1410,12 @@ export class GoLogin {
 
   async stopRemote() {
     debug(`stopRemote ${this.profile_id}`);
-    const profileResponse = await requests.delete(`${API_URL}/browser/${this.profile_id}/web`, {
-      headers: {
-        'Authorization': `Bearer ${this.access_token}`,
-        'User-Agent': 'gologin-api',
-      },
-    });
+    const profileResponse = await makeRequest(`${API_URL}/browser/${this.profile_id}/web`, {
+      method: 'DELETE',
+    }, { token: this.access_token, fallbackUrl: `${FALLBACK_API_URL}/browser/${this.profile_id}/web` });
 
-    console.log(`stopRemote ${profileResponse.body}`);
-    if (profileResponse.body) {
-      return JSON.parse(profileResponse.body);
+    if (profileResponse) {
+      return JSON.parse(profileResponse);
     }
   }
 
@@ -1565,48 +1443,37 @@ export class GoLogin {
     const { os, osSpec } = osInfo;
     const resultName = name || 'api-generated';
 
-    return requests.post(`${API_URL}/browser/quick`, {
-      headers: {
-        'Authorization': `Bearer ${this.access_token}`,
-        'User-Agent': 'gologin-api',
-      },
+    return makeRequest(`${API_URL}/browser/quick`, {
+      method: 'POST',
       json: {
         os,
         osSpec,
         name: resultName,
       },
-    })
-      .then(res => res.body);
+    }, { token: this.access_token, fallbackUrl: `${FALLBACK_API_URL}/browser/quick` });
   }
 
   async profiles() {
-    const profilesResponse = await requests.get(`${API_URL}/browser/v2`, {
-      headers: {
-        'Authorization': `Bearer ${this.access_token}`,
-        'User-Agent': 'gologin-api',
-
-      },
-    });
+    const profilesResponse = await makeRequest(`${API_URL}/browser/v2`, {
+      method: 'GET',
+    }, { token: this.access_token, fallbackUrl: `${FALLBACK_API_URL}/browser/v2` });
 
     if (profilesResponse.statusCode !== 200) {
       throw new Error('Gologin /browser response error');
     }
 
-    return JSON.parse(profilesResponse.body);
+    return JSON.parse(profilesResponse);
   }
 
   async getNewFingerPrint(os) {
     debug('GETTING FINGERPRINT');
 
-    const fpResponse = await requests.get(`${API_URL}/browser/fingerprint?os=${os}`, {
+    const fpResponse = await makeRequest(`${API_URL}/browser/fingerprint?os=${os}`, {
       json: true,
-      headers: {
-        'Authorization': `Bearer ${this.access_token}`,
-        'User-Agent': 'gologin-api',
-      },
-    });
+      method: 'GET',
+    }, { token: this.access_token, fallbackUrl: `${FALLBACK_API_URL}/browser/fingerprint?os=${os}` });
 
-    return fpResponse?.body || {};
+    return fpResponse || {};
   }
 }
 
