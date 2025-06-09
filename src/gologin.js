@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/node';
 import { execFile, spawn } from 'child_process';
 import debugDefault from 'debug';
 import decompress from 'decompress';
@@ -77,6 +78,13 @@ export class GoLogin {
     this.restoreLastSession = options.restoreLastSession || true;
     this.processSpawned = null;
     this.processKillTimeout = 1 * 1000;
+
+    if (process.env.DISABLE_TELEMETRY !== 'true') {
+      Sentry.init({
+        dsn: 'https://a13d5939a60ae4f6583e228597f1f2a0@sentry-new.amzn.pro/24',
+        tracesSampleRate: 1.0,
+      });
+    }
 
     if (options.tmpdir) {
       this.tmpdir = options.tmpdir;
@@ -475,7 +483,7 @@ export class GoLogin {
       ExtensionsManagerInst.apiUrl = API_URL;
       await ExtensionsManagerInst.init()
         .then(() => ExtensionsManagerInst.updateExtensions())
-        .catch(() => { });
+        .catch(() => {});
       ExtensionsManagerInst.accessToken = this.access_token;
 
       await ExtensionsManagerInst.getExtensionsPolicies();
@@ -1337,12 +1345,16 @@ export class GoLogin {
   }
 
   async start() {
-    await this.createStartup();
-    // await this.createBrowserExtension();
-    const startResponse = await this.spawnBrowser();
-    this.setActive(true);
+    try {
+      await this.createStartup();
+      const startResponse = await this.spawnBrowser();
+      this.setActive(true);
 
-    return { status: 'success', wsUrl: startResponse.wsUrl, resolution: startResponse.resolution };
+      return { status: 'success', wsUrl: startResponse.wsUrl, resolution: startResponse.resolution };
+    } catch (error) {
+      Sentry.captureException(error);
+      throw error;
+    }
   }
 
   async startLocal() {

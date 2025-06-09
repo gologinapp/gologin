@@ -2,7 +2,7 @@
 
 Combined changelog for GoLogin node.js SDK
 
-## [2.1.23] 2025-06-06
+## [2.1.23] 2025-06-09
 
 
 ### Fixes
@@ -12,6 +12,11 @@ Combined changelog for GoLogin node.js SDK
 ### New
 
 * Added fallback url for blocked countries
+
+### Miscellaneous Chores
+
+* Added sentry to have information about errors that users face
+
 
 ## [2.1.21] 2025-04-23
 
