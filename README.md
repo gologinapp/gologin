@@ -191,3 +191,6 @@ To use GoLogin with Selenium see  `selenium/example.js`
 <a href="https://github.com/pyppeteer/pyppeteer" target="_blank">pyppeteer</a> (recommend) and <a href="https://www.selenium.dev" target="_blank">Selenium</a> supported (see file gologin.py)
 
 for Selenium may need download <a href="https://chromedriver.chromium.org/downloads" target="_blank">webdriver</a>
+
+## Privacy
+Our full privacy policy you can finde <a href="https://github.com/gologinapp/gologin/blob/master/docs/PRIVACY.md">here</a>

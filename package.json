@@ -1,6 +1,6 @@
 {
   "name": "gologin",
-  "version": "2.1.22",
+  "version": "2.1.23",
   "description": "A high-level API to control Orbita browser over GoLogin API",
   "types": "./index.d.ts",
   "main": "./src/gologin.js",
@@ -15,6 +15,7 @@
   "author": "The GoLogin Authors",
   "license": "GPL-3.0",
   "dependencies": {
+    "@sentry/node": "^9.24.0",
     "adm-zip": "^0.5.1",
     "archiver": "^3.1.1",
     "child_process": "^1.0.2",
