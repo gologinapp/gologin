@@ -47,45 +47,50 @@ export class BrowserChecker {
 
   async checkBrowser({ autoUpdateBrowser, checkBrowserUpdate, majorVersion }) {
     const isBrowserFolderExists = await access(join(this.#browserPath, `orbita-browser-${majorVersion}`)).then(() => true).catch(() => false);
-    if (!isBrowserFolderExists) {
+
+    if (!isBrowserFolderExists || autoUpdateBrowser) {
       await this.downloadBrowser(majorVersion);
 
       return this.getBrowserExecutablePath(majorVersion);
     }
 
-    const { latestVersion: browserLatestVersion } = await this.getLatestBrowserVersion();
-    const [latestBrowserMajorVersion] = browserLatestVersion.split('.');
-    const currentVersion = await this.getCurrentVersion(majorVersion);
+    return this.getBrowserExecutablePath(majorVersion);
 
-    const isCurrentVersionsLatest = majorVersion === latestBrowserMajorVersion;
-    if (browserLatestVersion === currentVersion || !(checkBrowserUpdate && isCurrentVersionsLatest)) {
-      return this.getBrowserExecutablePath(majorVersion);
-    }
+    // TO DO: add check for browser update
+    // const { latestVersion: browserLatestVersion } = await this.getLatestBrowserVersion();
+    // const [latestBrowserMajorVersion] = browserLatestVersion.split('.');
+    // const currentVersion = await this.getCurrentVersion(majorVersion);
 
-    if (autoUpdateBrowser) {
-      await this.downloadBrowser(majorVersion);
+    // const isCurrentVersionsLatest = majorVersion === latestBrowserMajorVersion;
+    // console.log('browserLatestVersion', browserLatestVersion);
+    // console.log('currentVersion', currentVersion);
+    // console.log('isCurrentVersionsLatest', isCurrentVersionsLatest);
+    // console.log('checkBrowserUpdate', checkBrowserUpdate);
+    // console.log('autoUpdateBrowser', autoUpdateBrowser);
+    // if (browserLatestVersion === currentVersion || !(checkBrowserUpdate && isCurrentVersionsLatest)) {
+    //   return this.getBrowserExecutablePath(majorVersion);
+    // }
 
-      return this.getBrowserExecutablePath(majorVersion);
-    }
+    
 
-    return new Promise(resolve => {
-      const rl = createInterface(process.stdin, process.stdout);
-      const timeout = setTimeout(() => {
-        console.log(`\nContinue with current ${currentVersion} version.`);
-        resolve();
-      }, 10000);
+    // return new Promise(resolve => {
+    //   const rl = createInterface(process.stdin, process.stdout);
+    //   const timeout = setTimeout(() => {
+    //     console.log(`\nContinue with current ${currentVersion} version.`);
+    //     resolve();
+    //   }, 10000);
 
-      rl.question(`New Orbita ${browserLatestVersion} is available. Update? [y/n] `, (answer) => {
-        clearTimeout(timeout);
-        rl.close();
-        if (answer && answer[0].toString().toLowerCase() === 'y') {
-          return this.downloadBrowser(majorVersion).then(() => resolve(this.getBrowserExecutablePath(majorVersion)));
-        }
+    //   rl.question(`New Orbita ${browserLatestVersion} is available. Update? [y/n] `, (answer) => {
+    //     clearTimeout(timeout);
+    //     rl.close();
+    //     if (answer && answer[0].toString().toLowerCase() === 'y') {
+    //       return this.downloadBrowser(majorVersion).then(() => resolve(this.getBrowserExecutablePath(majorVersion)));
+    //     }
 
-        console.log(`Continue with current ${currentVersion} version.`);
-        resolve(this.getBrowserExecutablePath(majorVersion));
-      });
-    });
+    //     console.log(`Continue with current ${currentVersion} version.`);
+    //     resolve(this.getBrowserExecutablePath(majorVersion));
+    //   });
+    // });
   }
 
   async downloadBrowser(majorVersion) {
