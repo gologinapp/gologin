@@ -78,6 +78,8 @@ export class GoLogin {
     this.restoreLastSession = options.restoreLastSession || true;
     this.processSpawned = null;
     this.processKillTimeout = 1 * 1000;
+    this.browserMajorVersion = 0;
+    this.newProxyOrbbitaMajorVersion = 135;
 
     if (process.env.DISABLE_TELEMETRY !== 'true') {
       Sentry.init({
@@ -220,6 +222,8 @@ export class GoLogin {
     const [screenWidth, screenHeight] = resolution.split('x').map(Number);
     const langHeader = (profileData.navigator && profileData.navigator.language) || '';
     const splittedLangs = langHeader ? langHeader.split(',')[0] : 'en-US';
+    const [browserMajorVersion] = profileData.navigator.userAgent.split('Chrome/')[1].split('.');
+    this.browserMajorVersion = browserMajorVersion;
 
     const startupUrl = (profileData.startUrl || '').trim().split(',')[0];
     const startupUrls = (profileData.startUrl || '').split(',')
@@ -310,6 +314,27 @@ export class GoLogin {
         id: (this._tz && this._tz.timezone) || '',
       },
     };
+
+    console.log('profileData.proxy', profileData);
+    if (browserMajorVersion >= this.newProxyOrbbitaMajorVersion && profileData.proxy?.mode !== 'none') {
+      let proxyServer = `${profileData.proxy.mode}://`;
+      if (profileData.proxy.username) {
+        const encodedUsername = encodeURIComponent(profileData.proxy.username || '');
+        const encodedPassword = encodeURIComponent(profileData.proxy.password || '');
+
+        proxyServer += encodedPassword
+          ? `${encodedUsername}:${encodedPassword}@`
+          : `${encodedUsername}@`;
+      }
+
+      proxyServer += `${profileData.proxy.host}:${profileData.proxy.port}`;
+      preferences.proxy = {
+        ...preferences.proxy,
+        mode: 'fixed_servers',
+        schema: profileData.proxy.mode,
+        server: proxyServer,
+      };
+    }
 
     return preferences;
   }
@@ -599,9 +624,15 @@ export class GoLogin {
     const checkAutoLangResult = checkAutoLang(gologin, this._tz);
     this.browserLang = isMAC ? 'en-US' : checkAutoLangResult;
 
-    await writeFile(join(profilePath, 'Default', 'Preferences'), JSON.stringify(Object.assign(preferences, {
-      gologin,
-    })));
+    const prefsToWrite = Object.assign(preferences, { gologin });
+    if (this.browserMajorVersion >= this.newProxyOrbbitaMajorVersion && this.proxy?.mode !== 'none') {
+      prefsToWrite.proxy = {
+        mode: 'fixed_servers',
+        server: gologin.proxy.server,
+      };
+    }
+
+    await writeFile(join(profilePath, 'Default', 'Preferences'), JSON.stringify(prefsToWrite));
 
     const bookmarksParsedData = await getCurrentProfileBookmarks(this.bookmarksFilePath);
     const bookmarksFromDb = profile.bookmarks?.bookmark_bar;

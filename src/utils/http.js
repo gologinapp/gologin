@@ -4,14 +4,14 @@ import requests from 'requestretry';
 const TIMEZONE_URL = 'https://geo.myip.link';
 
 const attemptRequest = async (requestUrl, options) => {
-  const { body } = await requests(requestUrl, options);
-  if (body.statusCode >= 400) {
-    const error = new Error(body);
-    error.statusCode = body.statusCode;
+  const req = await requests(requestUrl, options);
+  if (req.statusCode >= 400) {
+    const error = new Error(req.body);
+    error.statusCode = req.statusCode;
     throw error;
   }
 
-  return body;
+  return req.body;
 };
 
 export const makeRequest = async (url, options, internalOptions) => {
