@@ -315,10 +315,16 @@ export class GoLogin {
       },
     };
 
-    if (browserMajorVersion >= this.newProxyOrbbitaMajorVersion && profileData.proxy.mode !== 'none') {
+    console.log('profileData.proxy', profileData);
+    if (browserMajorVersion >= this.newProxyOrbbitaMajorVersion && profileData.proxy?.mode !== 'none') {
       let proxyServer = `${profileData.proxy.mode}://`;
       if (profileData.proxy.username) {
-        proxyServer += `${profileData.proxy.username}:${profileData.proxy.password}@`;
+        const encodedUsername = encodeURIComponent(profileData.proxy.username || '');
+        const encodedPassword = encodeURIComponent(profileData.proxy.password || '');
+
+        proxyServer += encodedPassword
+          ? `${encodedUsername}:${encodedPassword}@`
+          : `${encodedUsername}@`;
       }
 
       proxyServer += `${profileData.proxy.host}:${profileData.proxy.port}`;
