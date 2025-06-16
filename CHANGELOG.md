@@ -2,6 +2,14 @@
 
 Combined changelog for GoLogin node.js SDK
 
+## [2.1.24] 2025-06-16
+
+
+### Fixes
+
+* Error running profile with proxies
+* Proxy passing in orbita 135 
+
 ## [2.1.23] 2025-06-09
 
 
