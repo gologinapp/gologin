@@ -315,9 +315,9 @@ export class GoLogin {
       },
     };
 
-    if (browserMajorVersion >= this.newProxyOrbbitaMajorVersion) {
+    if (browserMajorVersion >= this.newProxyOrbbitaMajorVersion && profileData.proxy.mode !== 'none') {
       let proxyServer = `${profileData.proxy.mode}://`;
-      if (profileData.proxy.username && profileData.proxy.password) {
+      if (profileData.proxy.username) {
         proxyServer += `${profileData.proxy.username}:${profileData.proxy.password}@`;
       }
 
@@ -619,7 +619,7 @@ export class GoLogin {
     this.browserLang = isMAC ? 'en-US' : checkAutoLangResult;
 
     const prefsToWrite = Object.assign(preferences, { gologin });
-    if (this.browserMajorVersion >= this.newProxyOrbbitaMajorVersion) {
+    if (this.browserMajorVersion >= this.newProxyOrbbitaMajorVersion && this.proxy.mode !== 'none') {
       prefsToWrite.proxy = {
         mode: 'fixed_servers',
         server: gologin.proxy.server,
