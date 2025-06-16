@@ -619,7 +619,7 @@ export class GoLogin {
     this.browserLang = isMAC ? 'en-US' : checkAutoLangResult;
 
     const prefsToWrite = Object.assign(preferences, { gologin });
-    if (this.browserMajorVersion >= this.newProxyOrbbitaMajorVersion && this.proxy.mode !== 'none') {
+    if (this.browserMajorVersion >= this.newProxyOrbbitaMajorVersion && this.proxy?.mode !== 'none') {
       prefsToWrite.proxy = {
         mode: 'fixed_servers',
         server: gologin.proxy.server,
