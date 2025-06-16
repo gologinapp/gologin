@@ -315,7 +315,6 @@ export class GoLogin {
       },
     };
 
-    console.log('profileData.proxy', profileData);
     if (browserMajorVersion >= this.newProxyOrbbitaMajorVersion && profileData.proxy?.mode !== 'none') {
       let proxyServer = `${profileData.proxy.mode}://`;
       if (profileData.proxy.username) {
@@ -645,8 +644,9 @@ export class GoLogin {
   }
 
   async commitProfile() {
-    const dataBuff = await this.getProfileDataToUpdate();
-
+    // wait for orbita to finish working with files
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+    const dataBuff = await this.getProfileDataToUpdate().catch(console.log);
     debug('begin updating', dataBuff.length);
     if (!dataBuff.length) {
       debug('WARN: profile zip data empty - SKIPPING PROFILE COMMIT');
