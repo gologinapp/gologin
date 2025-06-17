@@ -85,6 +85,8 @@ export class GoLogin {
       Sentry.init({
         dsn: 'https://a13d5939a60ae4f6583e228597f1f2a0@sentry-new.amzn.pro/24',
         tracesSampleRate: 1.0,
+        defaultIntegrations: false,
+        release: process.env.npm_package_version || '2.1.24',
       });
     }
 
