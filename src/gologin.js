@@ -85,6 +85,8 @@ export class GoLogin {
       Sentry.init({
         dsn: 'https://a13d5939a60ae4f6583e228597f1f2a0@sentry-new.amzn.pro/24',
         tracesSampleRate: 1.0,
+        defaultIntegrations: false,
+        release: process.env.npm_package_version || '2.1.24',
       });
     }
 
@@ -315,7 +317,6 @@ export class GoLogin {
       },
     };
 
-    console.log('profileData.proxy', profileData);
     if (browserMajorVersion >= this.newProxyOrbbitaMajorVersion && profileData.proxy?.mode !== 'none') {
       let proxyServer = `${profileData.proxy.mode}://`;
       if (profileData.proxy.username) {
@@ -645,8 +646,9 @@ export class GoLogin {
   }
 
   async commitProfile() {
-    const dataBuff = await this.getProfileDataToUpdate();
-
+    // wait for orbita to finish working with files
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+    const dataBuff = await this.getProfileDataToUpdate().catch(console.log);
     debug('begin updating', dataBuff.length);
     if (!dataBuff.length) {
       debug('WARN: profile zip data empty - SKIPPING PROFILE COMMIT');

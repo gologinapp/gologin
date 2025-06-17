@@ -240,11 +240,11 @@ export const GologinApi = ({ token }) => {
     },
 
     async exit() {
-      Promise.allSettled(browsers.map((browser) => browser.close()));
-      Promise.allSettled(
+      await Promise.allSettled(browsers.map((browser) => browser.close()));
+      await Promise.allSettled(
         legacyGls.map((gl) => gl.stopLocal({ posting: true })),
       );
-      Promise.allSettled(
+      await Promise.allSettled(
         legacyGls.map((gl) => gl.stopRemote({ posting: true })),
       );
     },
