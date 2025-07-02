@@ -2,6 +2,13 @@
 
 Combined changelog for GoLogin node.js SDK
 
+## [2.1.26] 2025-07-02
+
+
+### Fixes
+
+* Socks 5 proxy passing
+
 ## [2.1.24] 2025-06-16
 
 
