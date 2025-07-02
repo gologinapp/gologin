@@ -785,7 +785,7 @@ export class GoLogin {
 
     const checkData = await checkSocksProxy(agent);
 
-    const body = checkData || {};
+    const body = checkData.body || {};
     if (!body.ip && checkData.statusCode.toString().startsWith('4')) {
       throw checkData;
     }
@@ -929,8 +929,11 @@ export class GoLogin {
 
       if (proxy) {
         const hr_rules = `"MAP * 0.0.0.0 , EXCLUDE ${proxy_host}"`;
-        params.push(`--proxy-server=${proxy}`);
         params.push(`--host-resolver-rules=${hr_rules}`);
+      }
+
+      if (proxy && Number(this.browserMajorVersion) < this.newProxyOrbbitaMajorVersion) {
+        params.push(`--proxy-server=${proxy}`);
       }
 
       if (Array.isArray(this.extra_params) && this.extra_params.length) {
@@ -945,9 +948,8 @@ export class GoLogin {
       console.log('params', params);
       const child = execFile(ORBITA_BROWSER, params, { env });
       this.processSpawned = child;
-      // const child = spawn(ORBITA_BROWSER, params, { env, shell: true });
-      child.stdout.on('error', (data) => console.log(data.toString()));
-      child.stderr.on('data', (data) => console.log(data.toString()));
+      // child.stdout.on('error', (data) => console.log(data.toString()));
+      // child.stderr.on('data', (data) => console.log(data.toString()));
       debug('SPAWN CMD', ORBITA_BROWSER, params.join(' '));
     }
 
