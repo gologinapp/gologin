@@ -80,6 +80,8 @@ export class GoLogin {
     this.processKillTimeout = 1 * 1000;
     this.browserMajorVersion = 0;
     this.newProxyOrbbitaMajorVersion = 135;
+    this.proxyCheckTimeout = options.proxyCheckTimeout || 13 * 1000;
+    this.proxyCheckAttempts = options.proxyCheckAttempts || 3;
 
     if (process.env.DISABLE_TELEMETRY !== 'true') {
       Sentry.init({
@@ -738,9 +740,15 @@ export class GoLogin {
 
       const proxyUrl = `${proxy.mode}://${proxy.username}:${proxy.password}@${proxy.host}:${proxy.port}`;
       debug(`getTimeZone start ${TIMEZONE_URL}`, proxyUrl);
-      data = await makeRequest(TIMEZONE_URL, { proxy: proxyUrl, timeout: 13 * 1000, maxAttempts: 3, method: 'GET' });
+
+      data = await makeRequest(TIMEZONE_URL, {
+        proxy: proxyUrl,
+        timeout: this.proxyCheckTimeout,
+        maxAttempts: this.proxyCheckAttempts,
+        method: 'GET',
+      });
     } else {
-      data = await makeRequest(TIMEZONE_URL, { timeout: 13 * 1000, maxAttempts: 3, method: 'GET' });
+      data = await makeRequest(TIMEZONE_URL, { timeout: this.proxyCheckTimeout, maxAttempts: this.proxyCheckAttempts, method: 'GET' });
     }
 
     debug('getTimeZone finish', data);
@@ -810,7 +818,7 @@ export class GoLogin {
 
       await makeRequest(
         `${API_URL}/proxy/set_proxy_statuses`,
-        { timeout: 13 * 1000, maxAttempts: 3, method: 'POST', json: statusBody },
+        { timeout: this.proxyCheckTimeout, maxAttempts: this.proxyCheckAttempts, method: 'POST', json: statusBody },
         { token: this.access_token, fallbackUrl: `${FALLBACK_API_URL}/proxy/set_proxy_statuses` },
       ).catch();
     }

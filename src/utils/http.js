@@ -3,8 +3,23 @@ import requests from 'requestretry';
 
 const TIMEZONE_URL = 'https://geo.myip.link';
 
+const createTimeoutPromise = (timeoutMs) => new Promise((_, reject) => {
+  setTimeout(() => {
+    reject(new Error(`Request timeout after ${timeoutMs}ms`));
+  }, timeoutMs);
+});
+
 const attemptRequest = async (requestUrl, options) => {
-  const req = await requests(requestUrl, options);
+  const requestPromise = requests(requestUrl, options);
+
+  let req;
+  if (options.proxy) {
+    const timeoutPromise = createTimeoutPromise(options.timeout || 30000);
+    req = await Promise.race([requestPromise, timeoutPromise]);
+  } else {
+    req = await requestPromise;
+  }
+
   if (req.statusCode >= 400) {
     const error = new Error(req.body);
     error.statusCode = req.statusCode;
@@ -39,7 +54,7 @@ export const makeRequest = async (url, options, internalOptions) => {
 };
 
 export const checkSocksProxy = async (agent) => new Promise((resolve, reject) => {
-  _get(TIMEZONE_URL, { agent, timeout: 10000 }, (res) => {
+  _get(TIMEZONE_URL, { agent, timeout: 8000 }, (res) => {
     let resultResponse = '';
     res.on('data', (data) => {
       resultResponse += data;
