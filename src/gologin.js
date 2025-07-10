@@ -155,10 +155,6 @@ export class GoLogin {
     return JSON.parse(profileResponse);
   }
 
-  async emptyProfile() {
-    return readFile(_resolve(__dirname, 'gologin_zeroprofile.b64')).then(res => res.toString());
-  }
-
   async getProfileS3() {
     const token = this.access_token;
     debug('getProfileS3 token=', token, 'profile=', this.profile_id);
@@ -489,6 +485,7 @@ export class GoLogin {
       await this.downloadProfileAndExtract(profile, local);
     }
 
+    await _promises.rm(join(profilePath, 'Default', 'Sync Data'), { recursive: true }).catch(() => null);
     const pref_file_name = join(profilePath, 'Default', 'Preferences');
     debug('reading', pref_file_name);
 
@@ -1094,6 +1091,7 @@ export class GoLogin {
       `${SEPARATOR}Default${SEPARATOR}GPUCache`,
       `${SEPARATOR}Default${SEPARATOR}DawnCache`,
       `${SEPARATOR}Default${SEPARATOR}fonts_config`,
+      `${SEPARATOR}Default${SEPARATOR}Sync Data`,
       `${SEPARATOR}GrShaderCache`,
       `${SEPARATOR}ShaderCache`,
       `${SEPARATOR}biahpgbdmdkfgndcmfiipgcebobojjkp`,

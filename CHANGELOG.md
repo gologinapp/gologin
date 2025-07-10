@@ -2,7 +2,14 @@
 
 Combined changelog for GoLogin node.js SDK
 
-## [2.1.26] 2025-07-02
+## [2.1.27] 2025-07-10
+
+
+### Fixes
+
+* Added removing Sync Data folder to prevent crashes
+
+## [2.1.27] 2025-07-10
 
 
 ### New
