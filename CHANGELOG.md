@@ -5,6 +5,13 @@ Combined changelog for GoLogin node.js SDK
 ## [2.1.26] 2025-07-02
 
 
+### New
+
+* Added possibility to change proxy check timeout
+
+## [2.1.26] 2025-07-02
+
+
 ### Fixes
 
 * Socks 5 proxy passing
