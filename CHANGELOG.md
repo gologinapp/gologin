@@ -2,7 +2,14 @@
 
 Combined changelog for GoLogin node.js SDK
 
-## [2.1.27] 2025-07-10
+## [2.1.29] 2025-07-11
+
+
+### Fixes
+
+* Free proxy support on orbita 135+
+
+## [2.1.28] 2025-07-10
 
 
 ### Fixes

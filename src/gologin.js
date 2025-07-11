@@ -327,6 +327,11 @@ export class GoLogin {
       }
 
       proxyServer += `${profileData.proxy.host}:${profileData.proxy.port}`;
+
+      if (profileData.proxy.mode === 'gologin') {
+        proxyServer = profileData.autoProxyServer;
+      }
+
       preferences.proxy = {
         ...preferences.proxy,
         mode: 'fixed_servers',
