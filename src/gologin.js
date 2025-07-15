@@ -82,6 +82,7 @@ export class GoLogin {
     this.newProxyOrbbitaMajorVersion = 135;
     this.proxyCheckTimeout = options.proxyCheckTimeout || 13 * 1000;
     this.proxyCheckAttempts = options.proxyCheckAttempts || 3;
+    this.browserLatestMajorVersion = 137;
 
     if (process.env.DISABLE_TELEMETRY !== 'true') {
       Sentry.init({
@@ -120,9 +121,7 @@ export class GoLogin {
     if (!(Array.isArray(versionsToDownload) && versionsToDownload.length)) {
       versionsToDownload = [];
 
-      const { latestVersion: browserLatestVersion } = await this.browserChecker.getLatestBrowserVersion();
-      const [latestBrowserMajorVersion] = browserLatestVersion.split('.');
-      const latestVersionNumber = Number(latestBrowserMajorVersion);
+      const latestVersionNumber = await this.getLatestBrowserVersion();
 
       for (let i = latestVersionNumber; i > latestVersionNumber - lastActualCount; i--) {
         versionsToDownload.push(i.toString());
@@ -136,6 +135,15 @@ export class GoLogin {
         majorVersion,
       });
     }
+  }
+
+  async getLatestBrowserVersion() {
+    const { latestVersion: browserLatestVersion } = await this.browserChecker.getLatestBrowserVersion();
+    const [latestBrowserMajorVersion] = browserLatestVersion.split('.');
+    const latestVersionNumber = Number(latestBrowserMajorVersion);
+    this.latestBrowserMajorVersion = latestVersionNumber;
+
+    return latestVersionNumber;
   }
 
   async setProfileId(profile_id) {
@@ -222,8 +230,6 @@ export class GoLogin {
     const [screenWidth, screenHeight] = resolution.split('x').map(Number);
     const langHeader = (profileData.navigator && profileData.navigator.language) || '';
     const splittedLangs = langHeader ? langHeader.split(',')[0] : 'en-US';
-    const [browserMajorVersion] = profileData.navigator.userAgent.split('Chrome/')[1].split('.');
-    this.browserMajorVersion = browserMajorVersion;
 
     const startupUrl = (profileData.startUrl || '').trim().split(',')[0];
     const startupUrls = (profileData.startUrl || '').split(',')
@@ -315,7 +321,7 @@ export class GoLogin {
       },
     };
 
-    if (browserMajorVersion >= this.newProxyOrbbitaMajorVersion && profileData.proxy?.mode !== 'none') {
+    if (this.browserMajorVersion >= this.newProxyOrbbitaMajorVersion && profileData.proxy?.mode !== 'none') {
       let proxyServer = `${profileData.proxy.mode}://`;
       if (profileData.proxy.username) {
         const encodedUsername = encodeURIComponent(profileData.proxy.username || '');
@@ -455,8 +461,14 @@ export class GoLogin {
 
     if (!this.executablePath) {
       const { userAgent } = profile.navigator;
-      const [browserMajorVersion] = userAgent.split('Chrome/')[1].split('.');
-      await this.checkBrowser(browserMajorVersion);
+      try {
+        const [browserMajorVersion] = userAgent.split('Chrome/')[1].split('.');
+        this.browserMajorVersion = Number(browserMajorVersion);
+        await this.checkBrowser(browserMajorVersion);
+      } catch (e) {
+        await this.getLatestBrowserVersion();
+        await this.checkBrowser(this.browserLatestMajorVersion);
+      }
     }
 
     const { navigator = {}, fonts, os: profileOs } = profile;
