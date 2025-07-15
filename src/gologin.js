@@ -27,7 +27,7 @@ import {
 } from './cookies/cookies-manager.js';
 import ExtensionsManager from './extensions/extensions-manager.js';
 import { archiveProfile } from './profile/profile-archiver.js';
-import { checkAutoLang } from './utils/browser.js';
+import { checkAutoLang, getIntlProfileConfig } from './utils/browser.js';
 import { API_URL, ensureDirectoryExists, FALLBACK_API_URL, getOsAdvanced } from './utils/common.js';
 import { STORAGE_GATEWAY_BASE_URL } from './utils/constants.js';
 import { get, isPortReachable } from './utils/utils.js';
@@ -639,9 +639,12 @@ export class GoLogin {
     }
 
     const isMAC = OS_PLATFORM === 'darwin';
-    const checkAutoLangResult = checkAutoLang(gologin, this._tz);
-    this.browserLang = isMAC ? 'en-US' : checkAutoLangResult;
+    const checkAutoLangResult = checkAutoLang(gologin, this._tz, profile.autoLang);
+    const intlConfig = getIntlProfileConfig(profile, this._tz, profile.autoLang);
 
+    await writeFile(join(profilePath, 'orbita.config'), JSON.stringify({ intl: intlConfig }, null, '\t'), { encoding: 'utf-8' }).catch(console.log);
+
+    this.browserLang = isMAC ? 'en-US' : checkAutoLangResult;
     const prefsToWrite = Object.assign(preferences, { gologin });
     if (this.browserMajorVersion >= this.newProxyOrbbitaMajorVersion && this.proxy?.mode !== 'none') {
       prefsToWrite.proxy = {
