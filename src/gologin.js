@@ -466,8 +466,9 @@ export class GoLogin {
         this.browserMajorVersion = Number(browserMajorVersion);
         await this.checkBrowser(browserMajorVersion);
       } catch (e) {
-        await this.getLatestBrowserVersion();
-        await this.checkBrowser(this.browserLatestMajorVersion);
+        const latestVersionNumber = await this.getLatestBrowserVersion();
+        this.browserMajorVersion = latestVersionNumber;
+        await this.checkBrowser(latestVersionNumber);
       }
     }
 
