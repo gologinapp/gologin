@@ -27,7 +27,7 @@ import {
 } from './cookies/cookies-manager.js';
 import ExtensionsManager from './extensions/extensions-manager.js';
 import { archiveProfile } from './profile/profile-archiver.js';
-import { checkAutoLang } from './utils/browser.js';
+import { checkAutoLang, getIntlProfileConfig } from './utils/browser.js';
 import { API_URL, ensureDirectoryExists, FALLBACK_API_URL, getOsAdvanced } from './utils/common.js';
 import { STORAGE_GATEWAY_BASE_URL } from './utils/constants.js';
 import { get, isPortReachable } from './utils/utils.js';
@@ -82,6 +82,7 @@ export class GoLogin {
     this.newProxyOrbbitaMajorVersion = 135;
     this.proxyCheckTimeout = options.proxyCheckTimeout || 13 * 1000;
     this.proxyCheckAttempts = options.proxyCheckAttempts || 3;
+    this.browserLatestMajorVersion = 137;
 
     if (process.env.DISABLE_TELEMETRY !== 'true') {
       Sentry.init({
@@ -120,9 +121,7 @@ export class GoLogin {
     if (!(Array.isArray(versionsToDownload) && versionsToDownload.length)) {
       versionsToDownload = [];
 
-      const { latestVersion: browserLatestVersion } = await this.browserChecker.getLatestBrowserVersion();
-      const [latestBrowserMajorVersion] = browserLatestVersion.split('.');
-      const latestVersionNumber = Number(latestBrowserMajorVersion);
+      const latestVersionNumber = await this.getLatestBrowserVersion();
 
       for (let i = latestVersionNumber; i > latestVersionNumber - lastActualCount; i--) {
         versionsToDownload.push(i.toString());
@@ -136,6 +135,15 @@ export class GoLogin {
         majorVersion,
       });
     }
+  }
+
+  async getLatestBrowserVersion() {
+    const { latestVersion: browserLatestVersion } = await this.browserChecker.getLatestBrowserVersion();
+    const [latestBrowserMajorVersion] = browserLatestVersion.split('.');
+    const latestVersionNumber = Number(latestBrowserMajorVersion);
+    this.latestBrowserMajorVersion = latestVersionNumber;
+
+    return latestVersionNumber;
   }
 
   async setProfileId(profile_id) {
@@ -222,8 +230,6 @@ export class GoLogin {
     const [screenWidth, screenHeight] = resolution.split('x').map(Number);
     const langHeader = (profileData.navigator && profileData.navigator.language) || '';
     const splittedLangs = langHeader ? langHeader.split(',')[0] : 'en-US';
-    const [browserMajorVersion] = profileData.navigator.userAgent.split('Chrome/')[1].split('.');
-    this.browserMajorVersion = browserMajorVersion;
 
     const startupUrl = (profileData.startUrl || '').trim().split(',')[0];
     const startupUrls = (profileData.startUrl || '').split(',')
@@ -315,7 +321,7 @@ export class GoLogin {
       },
     };
 
-    if (browserMajorVersion >= this.newProxyOrbbitaMajorVersion && profileData.proxy?.mode !== 'none') {
+    if (this.browserMajorVersion >= this.newProxyOrbbitaMajorVersion && profileData.proxy?.mode !== 'none') {
       let proxyServer = `${profileData.proxy.mode}://`;
       if (profileData.proxy.username) {
         const encodedUsername = encodeURIComponent(profileData.proxy.username || '');
@@ -455,8 +461,15 @@ export class GoLogin {
 
     if (!this.executablePath) {
       const { userAgent } = profile.navigator;
-      const [browserMajorVersion] = userAgent.split('Chrome/')[1].split('.');
-      await this.checkBrowser(browserMajorVersion);
+      try {
+        const [browserMajorVersion] = userAgent.split('Chrome/')[1].split('.');
+        this.browserMajorVersion = Number(browserMajorVersion);
+        await this.checkBrowser(browserMajorVersion);
+      } catch (e) {
+        const latestVersionNumber = await this.getLatestBrowserVersion();
+        this.browserMajorVersion = latestVersionNumber;
+        await this.checkBrowser(latestVersionNumber);
+      }
     }
 
     const { navigator = {}, fonts, os: profileOs } = profile;
@@ -626,9 +639,12 @@ export class GoLogin {
     }
 
     const isMAC = OS_PLATFORM === 'darwin';
-    const checkAutoLangResult = checkAutoLang(gologin, this._tz);
-    this.browserLang = isMAC ? 'en-US' : checkAutoLangResult;
+    const checkAutoLangResult = checkAutoLang(gologin, this._tz, profile.autoLang);
+    const intlConfig = getIntlProfileConfig(profile, this._tz, profile.autoLang);
 
+    await writeFile(join(profilePath, 'orbita.config'), JSON.stringify({ intl: intlConfig }, null, '\t'), { encoding: 'utf-8' }).catch(console.log);
+
+    this.browserLang = isMAC ? 'en-US' : checkAutoLangResult;
     const prefsToWrite = Object.assign(preferences, { gologin });
     if (this.browserMajorVersion >= this.newProxyOrbbitaMajorVersion && this.proxy?.mode !== 'none') {
       prefsToWrite.proxy = {
