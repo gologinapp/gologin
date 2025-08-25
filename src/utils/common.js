@@ -1,7 +1,7 @@
 import { exec } from 'child_process';
 import { promises as fsPromises } from 'fs';
 import { homedir } from 'os';
-import { join, sep } from 'path';
+import { dirname, join, sep } from 'path';
 import { promisify } from 'util';
 
 import { deleteExtensionArchive, extractExtension } from '../extensions/extensions-extractor.js';
@@ -38,8 +38,10 @@ const getMacArmSpec = async () => {
 
 export const ensureDirectoryExists = async (filePath) => {
   try {
-    const directory = filePath.substring(0, filePath.lastIndexOf('/'));
-    await fsPromises.mkdir(directory, { recursive: true });
+    const directory = dirname(filePath);
+    if (directory && directory !== '.') {
+      await fsPromises.mkdir(directory, { recursive: true, force: true });
+    }
   } catch (error) {
     if (error.code !== 'EEXIST') {
       console.error('Error creating directory:', error.message);
