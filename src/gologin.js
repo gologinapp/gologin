@@ -1020,7 +1020,7 @@ export class GoLogin {
   }
 
   async uploadProfileDataToServer() {
-    const cookies = await loadCookiesFromFile(this.cookiesFilePath);
+    const cookies = await loadCookiesFromFile(this.cookiesFilePath, false, this.profile_id, this.tmpdir);
     const bookmarks = await getCurrentProfileBookmarks(this.bookmarksFilePath);
 
     const body = {
@@ -1375,15 +1375,6 @@ export class GoLogin {
     }
   }
 
-  async uploadProfileCookiesToServer() {
-    const cookies = await loadCookiesFromFile(this.cookiesFilePath);
-    if (!cookies.length) {
-      return;
-    }
-
-    return this.postCookies(this.profile_id, cookies);
-  }
-
   async saveBookmarksToDb() {
     const bookmarksData = await getCurrentProfileBookmarks(this.bookmarksFilePath);
     const bookmarks = bookmarksData.roots || {};
@@ -1420,6 +1411,7 @@ export class GoLogin {
 
   async stopLocal(options) {
     const opts = options || { posting: false };
+    await new Promise(resolve => setTimeout(resolve, 1000));
     await this.stopAndCommit(opts, true);
   }
 

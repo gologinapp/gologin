@@ -114,9 +114,21 @@ export const getChunckedInsertValues = (cookiesArr) => {
   });
 };
 
-export const loadCookiesFromFile = async (filePath) => {
+export const loadCookiesFromFile = async (filePath, isSecondTry = false, profileId, tmpdir) => {
   let db;
   const cookies = [];
+  let secondCookiesFilePath;
+  try {
+    const isNetworkFolder = filePath.includes('Network');
+    secondCookiesFilePath = isNetworkFolder ?
+      join(tmpdir, `gologin_profile_${profileId}`, 'Default', 'Cookies') :
+      join(tmpdir, `gologin_profile_${profileId}`, 'Default', 'Network', 'Cookies');
+  } catch (error) {
+    console.log(error);
+    console.log('error in loadCookiesFromFile', error.message);
+  }
+
+  console.log(1);
 
   try {
     db = await getDB(filePath);
@@ -151,9 +163,16 @@ export const loadCookiesFromFile = async (filePath) => {
       });
     }
   } catch (error) {
-    console.log(error);
+    console.log('error in loadCookiesFromFile', error.message);
+    if (!isSecondTry) {
+      return await loadCookiesFromFile(secondCookiesFilePath, true, profileId, tmpdir);
+    }
   } finally {
     db && await db.close();
+  }
+
+  if (!cookies.length && !isSecondTry) {
+    return loadCookiesFromFile(secondCookiesFilePath, true, profileId, tmpdir);
   }
 
   return cookies;
