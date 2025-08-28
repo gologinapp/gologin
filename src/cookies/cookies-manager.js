@@ -55,9 +55,9 @@ export const createDBFile = async ({
 
 export const getUniqueCookies = async (cookiesArr, cookiesFilePath) => {
   const cookiesInFile = await loadCookiesFromFile(cookiesFilePath);
-  const existingCookieNames = new Set(cookiesInFile.map(c => `${c.name}-${c.value.toString('base64')}`));
+  const existingCookieNames = new Set(cookiesInFile.map(c => `${c.name}-${c.domain}-${c.path}`));
 
-  return cookiesArr.filter(cookie => !existingCookieNames.has(`${cookie.name}-${cookie.value.toString('base64')}`));
+  return cookiesArr.filter(cookie => !existingCookieNames.has(`${cookie.name}-${cookie.domain}-${cookie.path}`));
 };
 
 export const getChunckedInsertValues = (cookiesArr) => {
