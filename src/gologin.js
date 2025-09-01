@@ -133,6 +133,8 @@ export class GoLogin {
         autoUpdateBrowser: true,
         checkBrowserUpdate: true,
         majorVersion,
+      }).catch((error) => {
+        console.log('Error Downloading Browser version', majorVersion, error);
       });
     }
   }

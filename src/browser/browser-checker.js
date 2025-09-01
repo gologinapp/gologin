@@ -71,7 +71,7 @@ export class BrowserChecker {
     //   return this.getBrowserExecutablePath(majorVersion);
     // }
 
-    
+
 
     // return new Promise(resolve => {
     //   const rl = createInterface(process.stdin, process.stdout);
@@ -139,7 +139,7 @@ export class BrowserChecker {
       .then(() => writeFile(join(this.#browserPath, 'orbita-browser', 'version', 'latest-version.txt'), latestVersion));
   }
 
-  downloadBrowserArchive(link, pathStr) {
+  async downloadBrowserArchive(link, pathStr) {
     return new Promise((resolve, reject) => {
       const writableStream = createWriteStream(pathStr);
       writableStream.on('error', async err => {
@@ -153,6 +153,11 @@ export class BrowserChecker {
       }, (res) => {
         const len = parseInt(res.headers['content-length'], 10);
         const formattedLen = len / 1024 / 1024;
+        if (isNaN(formattedLen)) {
+          reject(new Error('Error downloading browser'));
+          return;
+        }
+
         const bar = new ProgressBar('Orbita downloading [:bar] :rate/mps :downloadedMb/:fullMbMB :percent :etas', {
           complete: '=',
           incomplete: ' ',
@@ -299,12 +304,12 @@ export class BrowserChecker {
 
   async replaceBrowser(majorVersion) {
     console.log('Copy Orbita to target path');
-    if (PLATFORM === 'darwin') {
-      return rename(join(this.#browserPath, EXTRACTED_FOLDER), join(this.#browserPath, `orbita-browser-${majorVersion}`));
-    }
-
     const targetBrowserPath = join(this.#browserPath, `orbita-browser-${majorVersion}`);
     await this.deleteDir(targetBrowserPath);
+
+    if (PLATFORM === 'darwin') {
+      return rename(join(this.#browserPath, EXTRACTED_FOLDER), targetBrowserPath);
+    }
 
     await this.copyDir(
       join(this.#browserPath, EXTRACTED_FOLDER, 'orbita-browser'),

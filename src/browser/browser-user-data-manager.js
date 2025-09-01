@@ -67,13 +67,15 @@ export const downloadFonts = async (fontsList = [], profilePath) => {
   const files = await readdir(browserFontsPath);
   const fontsToDownload = fontsList.filter(font => !files.includes(font));
 
-  let promises = fontsToDownload.map(font => makeRequest(FONTS_URL + font, {
-    maxAttempts: 5,
-    retryDelay: 2000,
-    timeout: 30 * 1000,
-  })
-    .pipe(createWriteStream(join(browserFontsPath, font))),
-  );
+  let promises = fontsToDownload.map(async font => {
+    const body = await makeRequest(FONTS_URL + font, {
+      maxAttempts: 5,
+      retryDelay: 2000,
+      timeout: 30 * 1000,
+    });
+
+    await writeFile(join(browserFontsPath, font), body);
+  });
 
   if (promises.length) {
     await Promise.all(promises);

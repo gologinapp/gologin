@@ -2,6 +2,14 @@
 
 Combined changelog for GoLogin node.js SDK
 
+## [2.1.31] 2025-09-01
+
+
+### Fixes
+
+* Orbita downloading doesnt break the flow if major version is skipped
+* Languages passing now works correctly
+
 ## [2.1.29] 2025-07-11
 
 
