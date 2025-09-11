@@ -2,6 +2,13 @@
 
 Combined changelog for GoLogin node.js SDK
 
+## [2.1.32] 2025-09-11
+
+
+### Fixes
+
+* Custom extension downloading now works correctly
+
 ## [2.1.31] 2025-09-01
 
 
