@@ -80,7 +80,7 @@ export class UserExtensionsManager {
     }
 
     const extensionsToDownloadPaths = await makeRequest(`${this.#API_BASE_URL}/extensions/user_chrome_extensions_paths`, {
-      fullResponse: false,
+      fullResponse: true,
       json: {
         existedUserChromeExtensions: this.#existedUserExtensions,
         profileId,
