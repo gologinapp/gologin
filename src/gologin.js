@@ -1371,13 +1371,14 @@ export class GoLogin {
       }
     } catch (error) {
       if (!isSecondTry && (error.message.includes('table cookies has no column') || error.message.includes('NOT NULL constraint failed'))) {
-        await _promises.rm(cookiesPaths.primary, { recursive: true, force: true });
+        await db.close();
+        await _promises.rm(cookiesPaths.primary, { recursive: true, force: true }).catch(() => null);
         await createDBFile({
           cookiesFilePath: cookiesPaths.primary,
           cookiesFileSecondPath: cookiesPaths.secondary,
           createCookiesTableQuery: this.createCookiesTableQuery,
-        });
-        await this.writeCookiesToFile(cookies, true);
+        }).catch(console.error);
+        await this.writeCookiesToFile(cookies, true).catch(console.error);
 
         return;
       }
