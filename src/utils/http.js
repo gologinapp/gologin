@@ -46,7 +46,9 @@ export const makeRequest = async (url, options, internalOptions) => {
     return await attemptRequest(url, options);
   } catch (error) {
     if (internalOptions?.fallbackUrl && !error.statusCode) {
-      return attemptRequest(internalOptions.fallbackUrl, options);
+      const fallbackData = await attemptRequest(internalOptions.fallbackUrl, options);
+
+      return fallbackData;
     }
 
     throw error;

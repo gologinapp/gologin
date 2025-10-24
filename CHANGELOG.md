@@ -2,6 +2,14 @@
 
 Combined changelog for GoLogin node.js SDK
 
+## [2.1.33] 2025-09-11
+
+
+### Fixes
+
+* Orbita download doesnt interupts while opening two profiles in parallel
+* Error gathering changes
+
 ## [2.1.32] 2025-09-11
 
 

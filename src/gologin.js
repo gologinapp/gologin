@@ -5,10 +5,9 @@ import decompress from 'decompress';
 import decompressUnzip from 'decompress-unzip';
 import { existsSync, mkdirSync, promises as _promises } from 'fs';
 import { tmpdir } from 'os';
-import { dirname, join, resolve as _resolve, sep } from 'path';
+import { join, resolve as _resolve, sep } from 'path';
 import rimraf from 'rimraf';
 import { SocksProxyAgent } from 'socks-proxy-agent';
-import { fileURLToPath } from 'url';
 
 import { fontsCollection } from '../fonts.js';
 import { getCurrentProfileBookmarks } from './bookmarks/utils.js';
@@ -33,8 +32,10 @@ import { STORAGE_GATEWAY_BASE_URL } from './utils/constants.js';
 import { get, isPortReachable } from './utils/utils.js';
 export { exitAll, GologinApi } from './gologin-api.js';
 import { checkSocksProxy, makeRequest } from './utils/http.js';
+import { captureGroupedSentryError } from './utils/sentry.js';
 import { zeroProfileBookmarks } from './utils/zero-profile-bookmarks.js';
 import { zeroProfilePreferences } from './utils/zero-profile-preferences.js';
+
 const { access, unlink, writeFile, readFile, mkdir, copyFile } = _promises;
 
 const SEPARATOR = sep;
@@ -89,7 +90,7 @@ export class GoLogin {
         dsn: 'https://a13d5939a60ae4f6583e228597f1f2a0@sentry-new.amzn.pro/24',
         tracesSampleRate: 1.0,
         defaultIntegrations: false,
-        release: process.env.npm_package_version || '2.1.24',
+        release: process.env.npm_package_version || '2.1.33',
       });
     }
 
@@ -211,16 +212,6 @@ export class GoLogin {
     }, { token: this.access_token });
 
     console.log('Profile has been uploaded to S3 successfully');
-  }
-
-  async emptyProfileFolder() {
-    debug('get emptyProfileFolder');
-    const currentDir = dirname(fileURLToPath(import.meta.url));
-    const zeroProfilePath = join(currentDir, '..', 'zero_profile.zip');
-    const profile = await readFile(_resolve(zeroProfilePath));
-    debug('emptyProfileFolder LENGTH ::', profile.length);
-
-    return profile;
   }
 
   getGologinPreferences(profileData) {
@@ -417,9 +408,7 @@ export class GoLogin {
       debug('extraction done');
     } catch (e) {
       console.trace(e);
-      profile_folder = await this.emptyProfileFolder();
-      await writeFile(this.profile_zip_path, profile_folder);
-      await this.extractProfile(profilePath, this.profile_zip_path);
+      await this.createZeroProfile(this.createCookiesTableQuery);
     }
 
     const singletonLockPath = join(profilePath, 'SingletonLock');
@@ -1094,6 +1083,7 @@ export class GoLogin {
       debug('browser killed');
     } catch (error) {
       console.error(error);
+      captureGroupedSentryError(error, { method: 'killBrowser', profileId: this.profile_id });
     }
   }
 
@@ -1384,6 +1374,7 @@ export class GoLogin {
       }
 
       console.error(error.message);
+      captureGroupedSentryError(error, { method: 'writeCookiesToFile', profileId: this.profile_id });
     } finally {
       db && await db.close();
       await ensureDirectoryExists(cookiesPaths.primary);
@@ -1408,7 +1399,7 @@ export class GoLogin {
 
       return { status: 'success', wsUrl: startResponse.wsUrl, resolution: startResponse.resolution };
     } catch (error) {
-      Sentry.captureException(error);
+      captureGroupedSentryError(error, { method: 'start', profileId: this.profile_id });
       throw error;
     }
   }
