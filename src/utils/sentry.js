@@ -16,6 +16,7 @@ export const captureGroupedSentryError = (error, context = {}) => {
       break;
 
     case errorMessage.includes('Request timeout after 13000ms'):
+    case errorMessage.includes('Proxy Error'):
       fingerprint = ['proxy-error'];
       tags = { errorType: 'proxy', category: 'configuration' };
       break;
