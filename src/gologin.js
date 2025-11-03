@@ -90,7 +90,7 @@ export class GoLogin {
         dsn: 'https://a13d5939a60ae4f6583e228597f1f2a0@sentry-new.amzn.pro/24',
         tracesSampleRate: 1.0,
         defaultIntegrations: false,
-        release: process.env.npm_package_version || '2.1.33',
+        release: process.env.npm_package_version || '2.1.34',
       });
     }
 
