@@ -4,6 +4,7 @@
     "es2021": true,
     "node": true
   },
+  "parser": "@babel/eslint-parser",
   "extends": "eslint:recommended",
   "overrides": [
     {
@@ -20,8 +21,19 @@
     }
   ],
   "parserOptions": {
-    "ecmaVersion": 2020,
-    "sourceType": "module"
+    "ecmaVersion": "latest",
+    "sourceType": "module",
+    "requireConfigFile": false,
+    "babelOptions": {
+      "plugins": [
+        [
+          "@babel/plugin-syntax-import-assertions",
+          {
+            "deprecatedAssertSyntax": true
+          }
+        ]
+      ]
+    }
   },
   "plugins": [
     "simple-import-sort"
