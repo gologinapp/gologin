@@ -1,6 +1,10 @@
 import { get as _get } from 'https';
 import requests from 'requestretry';
 
+import packageJson from '../../package.json' assert { type: 'json' };
+
+const { version } = packageJson;
+
 const TIMEZONE_URL = 'https://geo.myip.link';
 
 const createTimeoutPromise = (timeoutMs) => new Promise((_, reject) => {
@@ -32,7 +36,7 @@ const attemptRequest = async (requestUrl, options) => {
 export const makeRequest = async (url, options, internalOptions) => {
   options.headers = {
     ...options.headers,
-    'User-Agent': 'gologin-nodejs-sdk',
+    'User-Agent': `gologin-nodejs-sdk/${version}`,
   };
 
   if (internalOptions?.token) {

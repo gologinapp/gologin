@@ -2,6 +2,13 @@
 
 Combined changelog for GoLogin node.js SDK
 
+## [2.1.34] 2025-09-11
+
+
+### Fixes
+
+* Errors grouping for internal uses
+
 ## [2.1.33] 2025-09-11
 
 
