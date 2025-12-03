@@ -181,7 +181,11 @@ export class GoLogin {
 
     const profileResponseBody = await profileResponse.arrayBuffer();
 
+    if (profileResponse.status !== 200) {
+      debug(`Gologin S3 BUCKET ${downloadURL} response error ${profileResponse.statusCode}  - use empty`);
 
+      return '';
+    }
 
     return Buffer.from(profileResponseBody);
   }
