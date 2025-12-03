@@ -26,7 +26,7 @@ import {
 } from './cookies/cookies-manager.js';
 import ExtensionsManager from './extensions/extensions-manager.js';
 import { archiveProfile } from './profile/profile-archiver.js';
-import { checkAutoLang, getIntlProfileConfig } from './utils/browser.js';
+import { checkAutoLang, getIntlProfileConfig, securedOrbitaOpts } from './utils/browser.js';
 import { API_URL, ensureDirectoryExists, FALLBACK_API_URL, getOsAdvanced } from './utils/common.js';
 import { STORAGE_GATEWAY_BASE_URL } from './utils/constants.js';
 import { get, isPortReachable } from './utils/utils.js';
@@ -143,10 +143,8 @@ export class GoLogin {
   async getLatestBrowserVersion() {
     const { latestVersion: browserLatestVersion } = await this.browserChecker.getLatestBrowserVersion();
     const [latestBrowserMajorVersion] = browserLatestVersion.split('.');
-    const latestVersionNumber = Number(latestBrowserMajorVersion);
-    this.latestBrowserMajorVersion = latestVersionNumber;
 
-    return latestVersionNumber;
+    return Number(latestBrowserMajorVersion);
   }
 
   async setProfileId(profile_id) {
@@ -164,6 +162,22 @@ export class GoLogin {
     }, { token: this.access_token, fallbackUrl: `${FALLBACK_API_URL}/browser/features/${id}/info-for-run` });
 
     return JSON.parse(profileResponse);
+  }
+
+  async requestOrbitaProfileParamsToken(profileId) {
+    const tokenRes = await makeRequest(`${API_URL}/browser/features/${profileId}/profile-params-for-orbita-token`, {
+      method: 'GET',
+    }, { token: this.access_token, fallbackUrl: `${FALLBACK_API_URL}/browser/features/${profileId}/profile-params-for-orbita-token` });
+
+    return JSON.parse(tokenRes);
+  }
+
+  composeClientGologinOpts(gologinSettings) {
+    const clonedOpts = structuredClone(gologinSettings);
+
+    securedOrbitaOpts.forEach((field) => delete clonedOpts[field]);
+
+    return clonedOpts;
   }
 
   async getProfileS3() {
@@ -475,10 +489,8 @@ export class GoLogin {
 
     const {
       resolution = '1920x1080',
-      language = 'en-US,en;q=0.9',
     } = navigator;
 
-    this.language = language;
     const [screenWidth, screenHeight] = resolution.split('x');
     this.resolution = {
       width: parseInt(screenWidth, 10),
@@ -625,7 +637,7 @@ export class GoLogin {
       }
     }
 
-    if (preferences.gologin == null) {
+    if (preferences.gologin === null) {
       preferences.gologin = {};
     }
 
@@ -633,7 +645,12 @@ export class GoLogin {
     const checkAutoLangResult = checkAutoLang(gologin, this._tz, profile.autoLang);
     const intlConfig = getIntlProfileConfig(profile, this._tz, profile.autoLang);
 
-    await writeFile(join(profilePath, 'orbita.config'), JSON.stringify({ intl: intlConfig }, null, '\t'), { encoding: 'utf-8' }).catch(console.log);
+    let orbitaParamsToken = '';
+    if (profile.securedOrbitaVersion && (this.browserMajorVersion >= profile.securedOrbitaVersion)) {
+      const tokenRes = await this.requestOrbitaProfileParamsToken(this.profile_id);
+
+      orbitaParamsToken = tokenRes.token;
+    }
 
     this.browserLang = isMAC ? 'en-US' : checkAutoLangResult;
     const prefsToWrite = Object.assign(preferences, { gologin });
@@ -644,6 +661,16 @@ export class GoLogin {
       };
     }
 
+    const clientGologinOpts = this.composeClientGologinOpts(prefsToWrite.gologin);
+    const orbitaConfig = {
+      intl: intlConfig,
+      gologin: {
+        profile_token: orbitaParamsToken,
+        ...clientGologinOpts,
+      },
+    };
+
+    await writeFile(join(profilePath, 'orbita.config'), JSON.stringify(orbitaConfig, null, '\t'), { encoding: 'utf-8' }).catch(console.log);
     await writeFile(join(profilePath, 'Default', 'Preferences'), JSON.stringify(prefsToWrite));
 
     const bookmarksParsedData = await getCurrentProfileBookmarks(this.bookmarksFilePath);
