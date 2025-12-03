@@ -1177,13 +1177,6 @@ export class GoLogin {
     const fingerprint = await this.getRandomFingerprint(options);
     debug('fingerprint=', fingerprint);
 
-    if (fingerprint.statusCode === 500) {
-      throw new Error('no valid random fingerprint check os param');
-    }
-
-    if (fingerprint.statusCode === 401) {
-      throw new Error('invalid token');
-    }
 
     const { navigator, fonts, webGLMetadata, webRTC } = fingerprint;
     let deviceMemory = navigator.deviceMemory || 2;
@@ -1505,10 +1498,6 @@ export class GoLogin {
     const profilesResponse = await makeRequest(`${API_URL}/browser/v2`, {
       method: 'GET',
     }, { token: this.access_token, fallbackUrl: `${FALLBACK_API_URL}/browser/v2` });
-
-    if (profilesResponse.statusCode !== 200) {
-      throw new Error('Gologin /browser response error');
-    }
 
     return JSON.parse(profilesResponse);
   }
