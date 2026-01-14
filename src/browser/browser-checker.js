@@ -122,6 +122,8 @@ export class BrowserChecker {
         return `https://orbita-browser-windows.gologin.com/orbita-browser-latest-${majorVersion}.zip`;
       case 'macM1':
         return `https://orbita-browser-mac-arm.gologin.com/orbita-browser-latest-${majorVersion}.tar.gz`;
+      case 'linArm':
+        return `https://orbita-browser-linux-arm.gologin.com/orbita-browser-latest-${majorVersion}.tar.gz`;
       default:
         return `https://orbita-browser-linux.gologin.com/orbita-browser-latest-${majorVersion}.tar.gz`;
     }
