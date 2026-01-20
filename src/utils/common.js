@@ -14,6 +14,8 @@ const CHROME_EXT_DIR_NAME = 'chrome-extensions';
 const EXTENSIONS_PATH = join(HOMEDIR, '.gologin', 'extensions');
 const CHROME_EXTENSIONS_PATH = join(EXTENSIONS_PATH, CHROME_EXT_DIR_NAME);
 const USER_EXTENSIONS_PATH = join(HOMEDIR, '.gologin', 'extensions', 'user-extensions');
+const PLATFORM = process.platform;
+const ARCH = process.arch;
 
 const composeExtractionPromises = (filteredArchives, destPath = CHROME_EXTENSIONS_PATH) => (
   filteredArchives.map((extArchivePath) => {
@@ -64,15 +66,15 @@ const getOsAdvanced = async () => {
 };
 
 const getOS = () => {
-  if (process.platform === 'win32') {
+  if (PLATFORM === 'win32') {
     return 'win';
   }
 
-  if (process.platform === 'darwin') {
-    return process.arch === 'arm64' ? 'macM1' : 'mac';
+  if (PLATFORM === 'darwin') {
+    return ARCH === 'arm64' ? 'macM1' : 'mac';
   }
 
-  return 'lin';
+  return ARCH === 'arm64' ? 'linArm' : 'lin';
 };
 
 const _composeExtractionPromises = composeExtractionPromises;

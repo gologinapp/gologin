@@ -9,6 +9,7 @@ import ProgressBar from 'progress';
 import util from 'util';
 
 import { API_URL, getOS } from '../utils/common.js';
+import { makeRequest } from '../utils/http.js';
 import BrowserDownloadLockManager from './browser-download-manager.js';
 
 const exec = util.promisify(execNonPromise);
@@ -121,6 +122,8 @@ export class BrowserChecker {
         return `https://orbita-browser-windows.gologin.com/orbita-browser-latest-${majorVersion}.zip`;
       case 'macM1':
         return `https://orbita-browser-mac-arm.gologin.com/orbita-browser-latest-${majorVersion}.tar.gz`;
+      case 'linArm':
+        return `https://orbita-browser-linux-arm.gologin.com/orbita-browser-latest-${majorVersion}.tar.gz`;
       default:
         return `https://orbita-browser-linux.gologin.com/orbita-browser-latest-${majorVersion}.tar.gz`;
     }
@@ -359,23 +362,7 @@ export class BrowserChecker {
   getLatestBrowserVersion() {
     const userOs = getOS();
 
-    return new Promise(resolve => get(`${API_URL}/gologin-global-settings/latest-browser-info?os=${userOs}`,
-      {
-        timeout: 15 * 1000,
-        headers: {
-          'Content-Type': 'application/json',
-          'User-Agent': 'gologin-api',
-        },
-      }, (res) => {
-        res.setEncoding('utf8');
-
-        let resultResponse = '';
-        res.on('data', (data) => resultResponse += data);
-
-        res.on('end', () => {
-          resolve(JSON.parse(resultResponse.trim()));
-        });
-      }).on('error', (err) => resolve('')));
+    return makeRequest(`${API_URL}/gologin-global-settings/latest-browser-info?os=${userOs}`);
   }
 
   get getOrbitaPath() {

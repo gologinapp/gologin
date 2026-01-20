@@ -90,7 +90,7 @@ export class GoLogin {
         dsn: 'https://a13d5939a60ae4f6583e228597f1f2a0@sentry-new.amzn.pro/24',
         tracesSampleRate: 1.0,
         defaultIntegrations: false,
-        release: process.env.npm_package_version || '2.1.33',
+        release: process.env.npm_package_version || '2.1.34',
       });
     }
 
@@ -1204,13 +1204,6 @@ export class GoLogin {
     const fingerprint = await this.getRandomFingerprint(options);
     debug('fingerprint=', fingerprint);
 
-    if (fingerprint.statusCode === 500) {
-      throw new Error('no valid random fingerprint check os param');
-    }
-
-    if (fingerprint.statusCode === 401) {
-      throw new Error('invalid token');
-    }
 
     const { navigator, fonts, webGLMetadata, webRTC } = fingerprint;
     let deviceMemory = navigator.deviceMemory || 2;
@@ -1532,10 +1525,6 @@ export class GoLogin {
     const profilesResponse = await makeRequest(`${API_URL}/browser/v2`, {
       method: 'GET',
     }, { token: this.access_token, fallbackUrl: `${FALLBACK_API_URL}/browser/v2` });
-
-    if (profilesResponse.statusCode !== 200) {
-      throw new Error('Gologin /browser response error');
-    }
 
     return JSON.parse(profilesResponse);
   }
