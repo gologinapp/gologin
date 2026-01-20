@@ -2,7 +2,7 @@
 
 Combined changelog for GoLogin node.js SDK
 
-## [2.2.1] 2025-11-04
+## [2.2.1] 2026-01-20
 
 
 ### New
