@@ -2,6 +2,15 @@
 
 Combined changelog for GoLogin node.js SDK
 
+### New
+
+* Secured Orbita launch
+
+## [2.2.1] 2026-01-20
+
+
+Combined changelog for GoLogin node.js SDK
+
 ## [2.1.34] 2025-09-11
 
 
