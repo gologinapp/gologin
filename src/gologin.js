@@ -972,7 +972,7 @@ export class GoLogin {
       }
 
       if (proxy) {
-        const hr_rules = `"MAP * 0.0.0.0 , EXCLUDE ${proxy_host}"`;
+        const hr_rules = `"MAP * 0.0.0.0 , EXCLUDE ${proxy_host} , EXCLUDE api.gologin.com"`;
         params.push(`--host-resolver-rules=${hr_rules}`);
       }
 
