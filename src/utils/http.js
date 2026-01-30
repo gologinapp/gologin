@@ -1,7 +1,7 @@
 import { get as _get } from 'https';
 import requests from 'requestretry';
 
-import packageJson from '../../package.json' assert { type: 'json' };
+import packageJson from '../../package.json' with { type: 'json' };
 
 const { version } = packageJson;
 
