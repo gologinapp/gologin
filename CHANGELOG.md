@@ -2,6 +2,13 @@
 
 Combined changelog for GoLogin node.js SDK
 
+## [2.2.3] 2026-02-02
+
+
+### Fixes
+
+* Assert syntax fix for higher node.js versions
+
 ### New
 
 * Secured Orbita launch
