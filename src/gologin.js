@@ -674,10 +674,11 @@ export class GoLogin {
     await writeFile(join(profilePath, 'orbita.config'), JSON.stringify(orbitaConfig, null, '\t'), { encoding: 'utf-8' }).catch(console.log);
     await writeFile(join(profilePath, 'Default', 'Preferences'), JSON.stringify(prefsToWrite));
 
+    const bookmarksToWrite = {};
     const bookmarksParsedData = await getCurrentProfileBookmarks(this.bookmarksFilePath);
     const bookmarksFromDb = profile.bookmarks?.bookmark_bar;
-    bookmarksParsedData.roots = bookmarksFromDb ? profile.bookmarks : bookmarksParsedData;
-    await writeFile(this.bookmarksFilePath, JSON.stringify(bookmarksParsedData));
+    bookmarksToWrite.roots = bookmarksFromDb ? profile.bookmarks : bookmarksParsedData;
+    await writeFile(this.bookmarksFilePath, JSON.stringify(bookmarksToWrite));
 
     debug('Profile ready. Path: ', profilePath, 'PROXY', JSON.stringify(get(preferences, 'gologin.proxy')));
 
