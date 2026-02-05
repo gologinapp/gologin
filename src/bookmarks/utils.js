@@ -7,7 +7,11 @@ export const getCurrentProfileBookmarks = async (pathToBookmarks) => {
   try {
     const currentBookmarksFileData = await readFile(pathToBookmarks, { encoding: 'utf-8' });
     bookmarks = JSON.parse(currentBookmarksFileData);
-    bookmarks = bookmarks.roots;
+    if (bookmarks.bookmark_bar) {
+      return bookmarks;
+    }
+
+    return bookmarks.roots || {};
   } catch (error) {
     console.log(error);
   }

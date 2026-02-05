@@ -2,6 +2,13 @@
 
 Combined changelog for GoLogin node.js SDK
 
+## [2.2.5] 2026-02-05
+
+
+### Fixes
+
+* Bookmarks reading on lower versions of orbita
+
 ## [2.2.4] 2026-02-05
 
 
