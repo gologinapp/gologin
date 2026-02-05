@@ -2,6 +2,13 @@
 
 Combined changelog for GoLogin node.js SDK
 
+## [2.2.4] 2026-02-05
+
+
+### Fixes
+
+* Improved bookmarks and extensions syncronization with db
+
 ## [2.2.3] 2026-02-02
 
 

@@ -31,6 +31,7 @@ import { API_URL, ensureDirectoryExists, FALLBACK_API_URL, getOsAdvanced } from 
 import { STORAGE_GATEWAY_BASE_URL } from './utils/constants.js';
 import { get, isPortReachable } from './utils/utils.js';
 export { exitAll, GologinApi } from './gologin-api.js';
+import { getProfileChromeExtensions } from './extensions/get-extensions.js';
 import { checkSocksProxy, makeRequest } from './utils/http.js';
 import { captureGroupedSentryError } from './utils/sentry.js';
 import { zeroProfileBookmarks } from './utils/zero-profile-bookmarks.js';
@@ -1056,10 +1057,12 @@ export class GoLogin {
   async uploadProfileDataToServer() {
     const cookies = await loadCookiesFromFile(this.cookiesFilePath, false, this.profile_id, this.tmpdir);
     const bookmarks = await getCurrentProfileBookmarks(this.bookmarksFilePath);
-
+    const profilePreferencesPath = join(this.profilePath(), 'Default', 'Preferences');
+    const extensions = await getProfileChromeExtensions(profilePreferencesPath).catch(() => null);
     const body = {
       cookies,
       bookmarks,
+      extensionsIds: extensions,
       isCookiesEncrypted: true,
       isStorageGateway: true,
     };
@@ -1203,7 +1206,6 @@ export class GoLogin {
 
     const fingerprint = await this.getRandomFingerprint(options);
     debug('fingerprint=', fingerprint);
-
 
     const { navigator, fonts, webGLMetadata, webRTC } = fingerprint;
     let deviceMemory = navigator.deviceMemory || 2;
