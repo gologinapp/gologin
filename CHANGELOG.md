@@ -2,6 +2,12 @@
 
 Combined changelog for GoLogin node.js SDK
 
+## [2.2.7] 2026-02-06
+
+### Fixes
+
+* Fix error on attempt to add proxy using `addGologinProxyToProfile`
+
 ## [2.2.6] 2026-02-05
 
 
