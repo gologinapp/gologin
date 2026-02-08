@@ -674,11 +674,10 @@ export class GoLogin {
     await writeFile(join(profilePath, 'orbita.config'), JSON.stringify(orbitaConfig, null, '\t'), { encoding: 'utf-8' }).catch(console.log);
     await writeFile(join(profilePath, 'Default', 'Preferences'), JSON.stringify(prefsToWrite));
 
-    const bookmarksToWrite = {};
     const bookmarksParsedData = await getCurrentProfileBookmarks(this.bookmarksFilePath);
     const bookmarksFromDb = profile.bookmarks?.bookmark_bar;
-    bookmarksToWrite.roots = bookmarksFromDb ? profile.bookmarks : bookmarksParsedData;
-    await writeFile(this.bookmarksFilePath, JSON.stringify(bookmarksToWrite));
+    bookmarksParsedData.roots = bookmarksFromDb ? profile.bookmarks : bookmarksParsedData.roots;
+    await writeFile(this.bookmarksFilePath, JSON.stringify(bookmarksParsedData));
 
     debug('Profile ready. Path: ', profilePath, 'PROXY', JSON.stringify(get(preferences, 'gologin.proxy')));
 
@@ -1062,7 +1061,7 @@ export class GoLogin {
     const extensions = await getProfileChromeExtensions(profilePreferencesPath).catch(() => null);
     const body = {
       cookies,
-      bookmarks,
+      bookmarks: bookmarks.roots,
       extensionsIds: extensions,
       isCookiesEncrypted: true,
       isStorageGateway: true,
@@ -1410,7 +1409,7 @@ export class GoLogin {
 
   async saveBookmarksToDb() {
     const bookmarksData = await getCurrentProfileBookmarks(this.bookmarksFilePath);
-    const bookmarks = bookmarksData || {};
+    const bookmarks = bookmarksData.roots || {};
     await updateProfileBookmarks([this.profile_id], this.access_token, bookmarks);
   }
 
