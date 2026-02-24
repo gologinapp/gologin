@@ -476,6 +476,10 @@ export class GoLogin {
         this.browserMajorVersion = latestVersionNumber;
         await this.checkBrowser(latestVersionNumber);
       }
+    } else {
+      const { userAgent } = profile.navigator;
+      const [browserMajorVersion] = userAgent.split('Chrome/')[1].split('.');
+      this.browserMajorVersion = Number(browserMajorVersion);
     }
 
     const { navigator = {}, fonts, os: profileOs } = profile;
