@@ -80,11 +80,10 @@ export class GoLogin {
     this.restoreLastSession = options.restoreLastSession || true;
     this.processSpawned = null;
     this.processKillTimeout = 1 * 1000;
-    this.browserMajorVersion = 0;
-    this.newProxyOrbbitaMajorVersion = 135;
+    this.browserMajorVersion = options.browserMajorVersion || 0;
+    this.newProxyOrbitaMajorVersion = 135;
     this.proxyCheckTimeout = options.proxyCheckTimeout || 13 * 1000;
     this.proxyCheckAttempts = options.proxyCheckAttempts || 3;
-    this.browserLatestMajorVersion = 137;
 
     if (process.env.DISABLE_TELEMETRY !== 'true') {
       Sentry.init({
@@ -329,7 +328,7 @@ export class GoLogin {
       },
     };
 
-    if (this.browserMajorVersion >= this.newProxyOrbbitaMajorVersion && profileData.proxy?.mode !== 'none') {
+    if (this.browserMajorVersion >= this.newProxyOrbitaMajorVersion && profileData.proxy?.mode !== 'none') {
       let proxyServer = `${profileData.proxy.mode}://`;
       if (profileData.proxy.username) {
         const encodedUsername = encodeURIComponent(profileData.proxy.username || '');
@@ -476,10 +475,29 @@ export class GoLogin {
         this.browserMajorVersion = latestVersionNumber;
         await this.checkBrowser(latestVersionNumber);
       }
-    } else {
+    } else if (!this.browserMajorVersion) {
       const { userAgent } = profile.navigator;
       const [browserMajorVersion] = userAgent.split('Chrome/')[1].split('.');
       this.browserMajorVersion = Number(browserMajorVersion);
+
+      let executableDir = join(this.executablePath, '..');
+      if (OS_PLATFORM === 'darwin') {
+        executableDir = join(this.executablePath, '..', '..', '..');
+      }
+
+      const versionFilePath = join(executableDir, 'version');
+      try {
+        await access(versionFilePath);
+        const versionContent = await readFile(versionFilePath, 'utf8');
+        const versionFromFile = versionContent.trim();
+        const isValidVersion = /^\d+\.\d+\.\d+/.test(versionFromFile);
+        if (isValidVersion) {
+          const [browserMajorVersion] = isValidVersion.split('.');
+          this.browserMajorVersion = Number(browserMajorVersion);
+        }
+      } catch (error) {
+        console.warn('Error reading version file:', error);
+      }
     }
 
     const { navigator = {}, fonts, os: profileOs } = profile;
@@ -659,7 +677,7 @@ export class GoLogin {
 
     this.browserLang = isMAC ? 'en-US' : checkAutoLangResult;
     const prefsToWrite = Object.assign(preferences, { gologin });
-    if (this.browserMajorVersion >= this.newProxyOrbbitaMajorVersion && this.proxy?.mode !== 'none') {
+    if (this.browserMajorVersion >= this.newProxyOrbitaMajorVersion && this.proxy?.mode !== 'none') {
       prefsToWrite.proxy = {
         mode: 'fixed_servers',
         server: gologin.proxy.server,
@@ -670,6 +688,7 @@ export class GoLogin {
     const orbitaConfig = {
       intl: intlConfig,
       gologin: {
+        api_domain: API_URL,
         profile_token: orbitaParamsToken,
         ...clientGologinOpts,
       },
@@ -981,7 +1000,7 @@ export class GoLogin {
         params.push(`--host-resolver-rules=${hr_rules}`);
       }
 
-      if (proxy && Number(this.browserMajorVersion) < this.newProxyOrbbitaMajorVersion) {
+      if (proxy && Number(this.browserMajorVersion) < this.newProxyOrbitaMajorVersion) {
         params.push(`--proxy-server=${proxy}`);
       }
 
