@@ -33,7 +33,7 @@ const attemptRequest = async (requestUrl, options) => {
   return req.body;
 };
 
-export const makeRequest = async (url, options, internalOptions) => {
+export const makeRequest = async (url, options = {}, internalOptions) => {
   options.headers = {
     ...options.headers,
     'User-Agent': `gologin-nodejs-sdk/${version}`,

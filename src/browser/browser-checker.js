@@ -361,8 +361,11 @@ export class BrowserChecker {
 
   getLatestBrowserVersion() {
     const userOs = getOS();
+    const options = {
+      json: true,
+    };
 
-    return makeRequest(`${API_URL}/gologin-global-settings/latest-browser-info?os=${userOs}`);
+    return makeRequest(`${API_URL}/gologin-global-settings/latest-browser-info?os=${userOs}`, options);
   }
 
   get getOrbitaPath() {
