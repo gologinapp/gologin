@@ -1,17 +1,31 @@
-// Gologin provides a cloud browser that can be used to run puppeteer aytomation.
-// It will handle the browser start and close management - you just need to control the browser with pupputter
-import { GologinApi } from 'gologin';
+// Gologin provides a cloud browser that can be used to run puppeteer automation.
+// It will handle the browser start and close management - you just need to control the browser with puppeteer
+import puppeteer from 'puppeteer-core';
 
 const token = process.env.GL_API_TOKEN || 'your dev token here';
-const gologin = GologinApi({
-  token,
-});
+const profileId = 'profile ID';
+
+const CLOUD_BROWSER_URL = `https://cloudbrowser.gologin.com/connect?token=${token}&profile=${profileId}`;
+const STOP_PROFILE_URL = `https://api.gologin.com/browser/${profileId}/web`;
+
+async function stopProfile() {
+  await fetch(STOP_PROFILE_URL, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
 
 async function main() {
-  const { browser } = await gologin.launch({
-    cloud: true,
-    // pass profileId parameter if you want to run particular profile
-    // profileId: 'your profileId here',
+  const response = await fetch(CLOUD_BROWSER_URL);
+
+  if (!response.ok) {
+    const errorReason = response.headers.get('X-Error-Reason');
+    throw new Error(`Failed to start cloud browser: ${errorReason ?? response.statusText}`);
+  }
+
+  const browser = await puppeteer.connect({
+    browserWSEndpoint: CLOUD_BROWSER_URL,
+    ignoreHTTPSErrors: true,
   });
 
   const page = await browser.newPage();
@@ -23,8 +37,9 @@ async function main() {
 
   console.log('status', status);
 
+  await browser.close();
+
   return status;
 }
 
-main().catch(console.error)
-  .finally(gologin.exit);
+main().catch(console.error).finally(stopProfile);
