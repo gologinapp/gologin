@@ -35,10 +35,6 @@ async function main() {
     (elt) => elt?.innerText?.trim(),
   );
 
-  console.log('status', status);
-
-  await browser.close();
-
   return status;
 }
 
