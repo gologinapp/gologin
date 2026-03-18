@@ -2,12 +2,12 @@ import { Browser } from 'puppeteer-core/lib/Browser';
 
 import { CreateCustomBrowserValidation, BrowserProxyCreateValidation } from './types/profile-params';
 
-export const OPERATING_SYSTEMS = {
-  win: 'win',
-  lin: 'lin',
-  mac: 'mac',
-  android: 'android',
-} as const;
+export declare const OPERATING_SYSTEMS: {
+  readonly win: 'win';
+  readonly lin: 'lin';
+  readonly mac: 'mac';
+  readonly android: 'android';
+};
 export type OsType = (typeof OPERATING_SYSTEMS)[keyof typeof OPERATING_SYSTEMS];
 
 type CloudLaunchParams = {
@@ -93,6 +93,63 @@ type GologinApiType = {
 type GologinApiParams = {
   token: string;
 };
+
+/** Options for the GoLogin class constructor (advanced usage, custom wrappers). */
+export type GoLoginOptions = {
+  token?: string;
+  profile_id?: string;
+  password?: string;
+  extra_params?: Record<string, unknown>;
+  executablePath?: string;
+  vncPort?: number;
+  tmpdir?: string;
+  waitWebsocket?: boolean;
+  isCloudHeadless?: boolean;
+  skipOrbitaHashChecking?: boolean;
+  uploadCookiesToServer?: boolean;
+  writeCookiesFromServer?: boolean;
+  remote_debugging_port?: number;
+  timezone?: string;
+  args?: string[];
+  restoreLastSession?: boolean;
+  browserMajorVersion?: number;
+  proxyCheckTimeout?: number;
+  proxyCheckAttempts?: number;
+  autoUpdateBrowser?: boolean;
+  checkBrowserUpdate?: boolean;
+};
+
+/** Return type of GoLogin#start() — use wsUrl to connect with Puppeteer. */
+export type GoLoginStartResult = {
+  status: 'success';
+  wsUrl: string;
+  resolution?: { width: number; height: number };
+};
+
+/**
+ * GoLogin class for advanced usage and custom wrappers.
+ * Use when you need direct control over the browser lifecycle (e.g. custom launchLocal,
+ * multiple instances, or access to wsUrl from start() for Puppeteer).
+ *
+ * @example
+ * import { GoLogin } from 'gologin';
+ * const gologin = new GoLogin({ token: 'YOUR_TOKEN', profile_id: 'PROFILE_ID' });
+ * const { wsUrl } = await gologin.start();
+ * // connect with puppeteer.connect({ browserWSEndpoint: wsUrl })
+ * await gologin.stop();
+ */
+export declare class GoLogin {
+  constructor(options?: GoLoginOptions);
+  start(): Promise<GoLoginStartResult>;
+  stop(): Promise<void>;
+  startLocal(): Promise<void>;
+  stopLocal(options?: { posting?: boolean }): Promise<void>;
+  setProfileId(profile_id: string): Promise<void>;
+  getProfile(profile_id?: string): Promise<Record<string, unknown>>;
+  quickCreateProfile(name?: string): Promise<{ id: string }>;
+  profilePath(): string;
+  commitProfile(): Promise<void>;
+}
 
 export declare function getDefaultParams(): {
   token: string | undefined;
