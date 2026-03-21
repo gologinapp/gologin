@@ -109,7 +109,7 @@ export type GoLoginOptions = {
   uploadCookiesToServer?: boolean;
   writeCookiesFromServer?: boolean;
   remote_debugging_port?: number;
-  timezone?: string;
+  timezone?: { timezone: string; country?: string; city?: string; ip?: string; ll?: [number, number]; accuracy?: number, stateProv?: string, languages?: string }; 
   args?: string[];
   restoreLastSession?: boolean;
   browserMajorVersion?: number;
