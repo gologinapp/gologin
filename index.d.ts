@@ -99,7 +99,7 @@ export type GoLoginOptions = {
   token?: string;
   profile_id?: string;
   password?: string;
-  extra_params?: Record<string, unknown>;
+  extra_params?: string[];
   executablePath?: string;
   vncPort?: number;
   tmpdir?: string;
@@ -142,7 +142,7 @@ export declare class GoLogin {
   constructor(options?: GoLoginOptions);
   start(): Promise<GoLoginStartResult>;
   stop(): Promise<void>;
-  startLocal(): Promise<void>;
+  startLocal(): Promise<{ status: string, wsUrl: string }>;
   stopLocal(options?: { posting?: boolean }): Promise<void>;
   setProfileId(profile_id: string): Promise<void>;
   getProfile(profile_id?: string): Promise<Record<string, unknown>>;
