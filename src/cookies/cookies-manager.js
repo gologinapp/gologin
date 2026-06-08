@@ -128,8 +128,6 @@ export const loadCookiesFromFile = async (filePath, isSecondTry = false, profile
     console.log('error in loadCookiesFromFile', error.message);
   }
 
-  console.log(1);
-
   try {
     db = await getDB(filePath);
     const cookiesRows = await db.all('select * from cookies');

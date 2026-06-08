@@ -654,7 +654,8 @@ export class GoLogin {
       }
 
       try {
-        await composeFonts(families, profilePath, this.differentOs);
+        // TODO: uncomment this when fonts will be fixed
+        // await composeFonts(families, profilePath, this.differentOs);
       } catch (e) {
         console.trace(e);
       }
@@ -783,6 +784,8 @@ export class GoLogin {
       return this._tz.timezone;
     }
 
+    const isGologinProxy = proxy?.host?.includes('floppydata.com');
+
     let data = null;
     if (proxy && proxy.mode !== PROXY_NONE) {
       if (proxy.mode.includes('socks')) {
@@ -795,7 +798,7 @@ export class GoLogin {
             console.log(e.message);
           }
         }
-        throw new Error('Socks proxy connection timed out');
+        throw new Error(`Proxy Error${isGologinProxy ? ' (Gologin)' : ''}`);
       }
 
       const proxyUrl = `${proxy.mode}://${proxy.username}:${proxy.password}@${proxy.host}:${proxy.port}`;
@@ -806,6 +809,8 @@ export class GoLogin {
         timeout: this.proxyCheckTimeout,
         maxAttempts: this.proxyCheckAttempts,
         method: 'GET',
+      }).catch((e) => {
+        throw new Error(`${e.message}${isGologinProxy ? ' (Gologin)' : ''}`);
       });
     } else {
       data = await makeRequest(TIMEZONE_URL, { timeout: this.proxyCheckTimeout, maxAttempts: this.proxyCheckAttempts, method: 'GET' });
@@ -851,7 +856,9 @@ export class GoLogin {
     proxy += host + ':' + port;
     const agent = new SocksProxyAgent(proxy);
 
-    const checkData = await checkSocksProxy(agent);
+    const checkData = await checkSocksProxy(agent).catch((e) => {
+      throw new Error(`Proxy Error. ${e.message}`);
+    });
 
     const body = checkData.body || {};
     if (!body.ip && checkData.statusCode.toString().startsWith('4')) {

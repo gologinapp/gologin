@@ -2,6 +2,15 @@
 
 Combined changelog for GoLogin node.js SDK
 
+## [2.2.9] 2026-06-08
+
+### Fixes
+
+* Disabled fonts downloading which was throwing errors
+* Type fixes
+* Added Proxy Error message to socks5 proxies check fails
+* Added (Gologin) prefix where gologin proxies failed
+
 ## [2.2.7] 2026-02-06
 
 ### Fixes
