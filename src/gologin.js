@@ -397,6 +397,7 @@ export class GoLogin {
   async downloadProfileAndExtract(profile, local) {
     let profile_folder;
     const profilePath = join(this.tmpdir, `gologin_profile_${this.profile_id}`);
+
     const profileZipExists = await access(this.profile_zip_path).then(() => true).catch(() => false);
 
     if (!(local && profileZipExists)) {
@@ -457,47 +458,14 @@ export class GoLogin {
 
   async createStartup(local = false) {
     const profilePath = join(this.tmpdir, `gologin_profile_${this.profile_id}`);
-    await rimraf(profilePath, () => null);
-    debug('-', profilePath, 'dropped');
-    const profile = await this.getProfile();
+
+    const [profile] = await Promise.all([
+      this.getProfile(),
+      new Promise((resolve) => rimraf(profilePath, resolve)).then(() => debug('-', profilePath, 'dropped')),
+    ]);
+
     if (!profile) {
       throw new Error('Error fetching profile data');
-    }
-
-    if (!this.executablePath) {
-      const { userAgent } = profile.navigator;
-      try {
-        const [browserMajorVersion] = userAgent.split('Chrome/')[1].split('.');
-        this.browserMajorVersion = Number(browserMajorVersion);
-        await this.checkBrowser(browserMajorVersion);
-      } catch (e) {
-        const latestVersionNumber = await this.getLatestBrowserVersion();
-        this.browserMajorVersion = latestVersionNumber;
-        await this.checkBrowser(latestVersionNumber);
-      }
-    } else if (!this.browserMajorVersion) {
-      const { userAgent } = profile.navigator;
-      const [browserMajorVersion] = userAgent.split('Chrome/')[1].split('.');
-      this.browserMajorVersion = Number(browserMajorVersion);
-
-      let executableDir = join(this.executablePath, '..');
-      if (OS_PLATFORM === 'darwin') {
-        executableDir = join(this.executablePath, '..', '..', '..');
-      }
-
-      const versionFilePath = join(executableDir, 'version');
-      try {
-        await access(versionFilePath);
-        const versionContent = await readFile(versionFilePath, 'utf8');
-        const versionFromFile = versionContent.trim();
-        const isValidVersion = /^\d+\.\d+\.\d+/.test(versionFromFile);
-        if (isValidVersion) {
-          const [browserMajorVersion] = isValidVersion.split('.');
-          this.browserMajorVersion = Number(browserMajorVersion);
-        }
-      } catch (error) {
-        console.warn('Error reading version file:', error);
-      }
     }
 
     const { navigator = {}, fonts, os: profileOs } = profile;
@@ -510,10 +478,7 @@ export class GoLogin {
         OS_PLATFORM === 'linux' && profileOs !== 'lin'
       );
 
-    const {
-      resolution = '1920x1080',
-    } = navigator;
-
+    const { resolution = '1920x1080' } = navigator;
     const [screenWidth, screenHeight] = resolution.split('x');
     this.resolution = {
       width: parseInt(screenWidth, 10),
@@ -521,87 +486,8 @@ export class GoLogin {
     };
 
     this.createCookiesTableQuery = profile.createCookiesTableQuery;
-    if (profile.storageInfo.isNewProfile) {
-      this.isFirstSession = true;
-      await this.createZeroProfile(profile.createCookiesTableQuery);
-    } else {
-      this.isFirstSession = false;
-      await this.downloadProfileAndExtract(profile, local);
-    }
 
-    await _promises.rm(join(profilePath, 'Default', 'Sync Data'), { recursive: true }).catch(() => null);
-    const pref_file_name = join(profilePath, 'Default', 'Preferences');
-    debug('reading', pref_file_name);
-
-    const prefFileExists = await access(pref_file_name).then(() => true).catch(() => false);
-    if (!prefFileExists) {
-      debug('Preferences file not exists waiting', pref_file_name, '. Using empty profile');
-      await mkdir(join(profilePath, 'Default'), { recursive: true });
-      await writeFile(pref_file_name, '{}');
-    }
-
-    const preferences_raw = await readFile(pref_file_name);
-    const preferences = JSON.parse(preferences_raw.toString());
     let proxy = get(profile, 'proxy');
-    const chromeExtensions = get(profile, 'chromeExtensions') || [];
-    const userChromeExtensions = get(profile, 'userChromeExtensions') || [];
-    const allExtensions = [...chromeExtensions, ...userChromeExtensions];
-
-    if (allExtensions.length) {
-      const ExtensionsManagerInst = new ExtensionsManager();
-      ExtensionsManagerInst.apiUrl = API_URL;
-      await ExtensionsManagerInst.init()
-        .then(() => ExtensionsManagerInst.updateExtensions())
-        .catch(() => {});
-      ExtensionsManagerInst.accessToken = this.access_token;
-
-      await ExtensionsManagerInst.getExtensionsPolicies();
-      let profileExtensionsCheckRes = [];
-
-      if (ExtensionsManagerInst.useLocalExtStorage) {
-        const promises = [
-          ExtensionsManagerInst.checkChromeExtensions(allExtensions)
-            .then(res => ({ profileExtensionsCheckRes: res }))
-            .catch((e) => {
-              console.log('checkChromeExtensions error: ', e);
-
-              return { profileExtensionsCheckRes: [] };
-            }),
-          ExtensionsManagerInst.checkLocalUserChromeExtensions(userChromeExtensions, this.profile_id)
-            .then(res => ({ profileUserExtensionsCheckRes: res }))
-            .catch((error) => {
-              console.log('checkUserChromeExtensions error: ', error);
-
-              return null;
-            }),
-        ];
-
-        const extensionsResult = await Promise.all(promises);
-
-        const profileExtensionPathRes = extensionsResult.find(el => 'profileExtensionsCheckRes' in el) || {};
-        const profileUserExtensionPathRes = extensionsResult.find(el => 'profileUserExtensionsCheckRes' in el);
-        profileExtensionsCheckRes =
-          (profileExtensionPathRes?.profileExtensionsCheckRes || []).concat(profileUserExtensionPathRes?.profileUserExtensionsCheckRes || []);
-      }
-
-      let extSettings;
-      if (ExtensionsManagerInst.useLocalExtStorage) {
-        extSettings = await setExtPathsAndRemoveDeleted(preferences, profileExtensionsCheckRes, this.profile_id);
-      } else {
-        const originalExtensionsFolder = join(profilePath, 'Default', 'Extensions');
-        extSettings = await setOriginalExtPaths(preferences, originalExtensionsFolder);
-      }
-
-      this.extensionPathsToInstall =
-        ExtensionsManagerInst.getExtensionsToInstall(extSettings, profileExtensionsCheckRes);
-
-      if (extSettings) {
-        const currentExtSettings = preferences.extensions || {};
-        currentExtSettings.settings = extSettings;
-        preferences.extensions = currentExtSettings;
-      }
-    }
-
     if (proxy.mode === 'gologin' || proxy.mode === 'tor') {
       const autoProxyServer = get(profile, 'autoProxyServer');
       const splittedAutoProxyServer = autoProxyServer.split('://');
@@ -630,22 +516,37 @@ export class GoLogin {
 
     this.proxy = proxy;
 
-    await this.getTimeZone(proxy).catch((e) => {
-      console.error('Proxy Error. Check it and try again.');
-      throw new Error(`Proxy Error. ${e.message}`);
-    });
+    await Promise.all([
+      this.resolveProfileBrowserVersion(profile),
+      this.initProfileStorage({ profile, local }),
+      this.getTimeZone(proxy).catch((e) => {
+        console.error('Proxy Error. Check it and try again.');
+        throw new Error(`Proxy Error. ${e.message}`);
+      }),
+      this.initCookiesFile(profile),
+    ]);
 
-    const gologin = this.getGologinPreferences(profile);
+    await _promises.rm(join(profilePath, 'Default', 'Sync Data'), { recursive: true }).catch(() => null);
+    const pref_file_name = join(profilePath, 'Default', 'Preferences');
+    debug('reading', pref_file_name);
 
-    debug(`Writing profile for screenWidth ${profilePath}`, JSON.stringify(gologin));
-    gologin.screenWidth = this.resolution.width;
-    gologin.screenHeight = this.resolution.height;
-    debug('writeCookiesFromServer', this.writeCookiesFromServer);
-    this.cookiesFilePath = await getCookiesFilePath(this.profile_id, this.tmpdir);
-
-    if (this.writeCookiesFromServer) {
-      await this.writeCookiesToFile(profile.cookies?.cookies);
+    const prefFileExists = await access(pref_file_name).then(() => true).catch(() => false);
+    if (!prefFileExists) {
+      debug('Preferences file not exists waiting', pref_file_name, '. Using empty profile');
+      await mkdir(join(profilePath, 'Default'), { recursive: true });
+      await writeFile(pref_file_name, '{}');
     }
+
+    const preferences_raw = await readFile(pref_file_name);
+    const preferences = JSON.parse(preferences_raw.toString());
+    const chromeExtensions = get(profile, 'chromeExtensions') || [];
+    const userChromeExtensions = get(profile, 'userChromeExtensions') || [];
+    const allExtensions = [...chromeExtensions, ...userChromeExtensions];
+
+    const [, orbitaParamsToken] = await Promise.all([
+      this.setupProfileExtensions({ preferences, allExtensions, userChromeExtensions, profilePath }),
+      this.fetchOrbitaParamsToken(profile),
+    ]);
 
     if (this.fontsMasking) {
       const families = fonts?.families || [];
@@ -665,16 +566,16 @@ export class GoLogin {
       preferences.gologin = {};
     }
 
+    const gologin = this.getGologinPreferences(profile);
+
+    debug(`Writing profile for screenWidth ${profilePath}`, JSON.stringify(gologin));
+    gologin.screenWidth = this.resolution.width;
+    gologin.screenHeight = this.resolution.height;
+    debug('writeCookiesFromServer', this.writeCookiesFromServer);
+
     const isMAC = OS_PLATFORM === 'darwin';
     const checkAutoLangResult = checkAutoLang(gologin, this._tz, profile.autoLang);
     const intlConfig = getIntlProfileConfig(profile, this._tz, profile.autoLang);
-
-    let orbitaParamsToken = '';
-    if (profile.securedOrbitaVersion && (this.browserMajorVersion >= profile.securedOrbitaVersion)) {
-      const tokenRes = await this.requestOrbitaProfileParamsToken(this.profile_id);
-
-      orbitaParamsToken = tokenRes.token;
-    }
 
     this.browserLang = isMAC ? 'en-US' : checkAutoLangResult;
     const prefsToWrite = Object.assign(preferences, { gologin });
@@ -702,10 +603,139 @@ export class GoLogin {
     const bookmarksFromDb = profile.bookmarks?.bookmark_bar;
     bookmarksParsedData.roots = bookmarksFromDb ? profile.bookmarks : bookmarksParsedData.roots;
     await writeFile(this.bookmarksFilePath, JSON.stringify(bookmarksParsedData));
-
     debug('Profile ready. Path: ', profilePath, 'PROXY', JSON.stringify(get(preferences, 'gologin.proxy')));
 
     return profilePath;
+  }
+
+  async resolveProfileBrowserVersion(profile) {
+    if (!this.executablePath) {
+      const { userAgent } = profile.navigator;
+      try {
+        const [browserMajorVersion] = userAgent.split('Chrome/')[1].split('.');
+        this.browserMajorVersion = Number(browserMajorVersion);
+        await this.checkBrowser(browserMajorVersion);
+      } catch (e) {
+        const latestVersionNumber = await this.getLatestBrowserVersion();
+        this.browserMajorVersion = latestVersionNumber;
+        await this.checkBrowser(latestVersionNumber);
+      }
+
+      return;
+    }
+
+    if (!this.browserMajorVersion) {
+      const { userAgent } = profile.navigator;
+      const [browserMajorVersion] = userAgent.split('Chrome/')[1].split('.');
+      this.browserMajorVersion = Number(browserMajorVersion);
+
+      let executableDir = join(this.executablePath, '..');
+      if (OS_PLATFORM === 'darwin') {
+        executableDir = join(this.executablePath, '..', '..', '..');
+      }
+
+      const versionFilePath = join(executableDir, 'version');
+      try {
+        await access(versionFilePath);
+        const versionContent = await readFile(versionFilePath, 'utf8');
+        const versionFromFile = versionContent.trim();
+        const isValidVersion = /^\d+\.\d+\.\d+/.test(versionFromFile);
+        if (isValidVersion) {
+          const [browserMajorVersion] = isValidVersion.split('.');
+          this.browserMajorVersion = Number(browserMajorVersion);
+        }
+      } catch (error) {
+        console.warn('Error reading version file:', error);
+      }
+    }
+  }
+
+  async initProfileStorage({ profile, local }) {
+    if (profile.storageInfo.isNewProfile) {
+      this.isFirstSession = true;
+      await this.createZeroProfile(profile.createCookiesTableQuery);
+
+      return;
+    }
+
+    this.isFirstSession = false;
+    await this.downloadProfileAndExtract(profile, local);
+  }
+
+  async initCookiesFile(profile) {
+    this.cookiesFilePath = await getCookiesFilePath(this.profile_id, this.tmpdir);
+    if (this.writeCookiesFromServer) {
+      await this.writeCookiesToFile(profile.cookies?.cookies);
+    }
+  }
+
+  async setupProfileExtensions({ preferences, allExtensions, userChromeExtensions, profilePath }) {
+    if (!allExtensions.length) {
+      return;
+    }
+
+    const ExtensionsManagerInst = new ExtensionsManager();
+    ExtensionsManagerInst.apiUrl = API_URL;
+    await ExtensionsManagerInst.init()
+      .then(() => ExtensionsManagerInst.updateExtensions())
+      .catch(() => {});
+    ExtensionsManagerInst.accessToken = this.access_token;
+
+    await ExtensionsManagerInst.getExtensionsPolicies();
+    let profileExtensionsCheckRes = [];
+
+    if (ExtensionsManagerInst.useLocalExtStorage) {
+      const promises = [
+        ExtensionsManagerInst.checkChromeExtensions(allExtensions)
+          .then(res => ({ profileExtensionsCheckRes: res }))
+          .catch((e) => {
+            console.log('checkChromeExtensions error: ', e);
+
+            return { profileExtensionsCheckRes: [] };
+          }),
+        ExtensionsManagerInst.checkLocalUserChromeExtensions(userChromeExtensions, this.profile_id)
+          .then(res => ({ profileUserExtensionsCheckRes: res }))
+          .catch((error) => {
+            console.log('checkUserChromeExtensions error: ', error);
+
+            return null;
+          }),
+      ];
+
+      const extensionsResult = await Promise.all(promises);
+
+      const profileExtensionPathRes = extensionsResult.find(el => 'profileExtensionsCheckRes' in el) || {};
+      const profileUserExtensionPathRes = extensionsResult.find(el => 'profileUserExtensionsCheckRes' in el);
+      profileExtensionsCheckRes =
+        (profileExtensionPathRes?.profileExtensionsCheckRes || []).concat(profileUserExtensionPathRes?.profileUserExtensionsCheckRes || []);
+    }
+
+    let extSettings;
+    if (ExtensionsManagerInst.useLocalExtStorage) {
+      extSettings = await setExtPathsAndRemoveDeleted(preferences, profileExtensionsCheckRes, this.profile_id);
+    } else {
+      const originalExtensionsFolder = join(profilePath, 'Default', 'Extensions');
+      extSettings = await setOriginalExtPaths(preferences, originalExtensionsFolder);
+    }
+
+    this.extensionPathsToInstall =
+      ExtensionsManagerInst.getExtensionsToInstall(extSettings, profileExtensionsCheckRes);
+
+    if (extSettings) {
+      const currentExtSettings = preferences.extensions || {};
+      currentExtSettings.settings = extSettings;
+      preferences.extensions = currentExtSettings;
+    }
+  }
+
+  async fetchOrbitaParamsToken(profile) {
+    if (!profile.securedOrbitaVersion || this.browserMajorVersion < profile.securedOrbitaVersion) {
+      return '';
+    }
+
+    const tokenRes = await this.requestOrbitaProfileParamsToken(this.profile_id);
+
+    return tokenRes.token;
   }
 
   async commitProfile() {
@@ -780,6 +810,12 @@ export class GoLogin {
     if (this.timezone) {
       debug('getTimeZone from options', this.timezone);
       this._tz = this.timezone;
+
+      return this._tz.timezone;
+    }
+
+    if (this._tz) {
+      debug('getTimeZone from cache', this._tz.timezone);
 
       return this._tz.timezone;
     }
@@ -942,6 +978,7 @@ export class GoLogin {
 
     const ORBITA_BROWSER = this.executablePath || this.browserChecker.getOrbitaPath;
     debug(`ORBITA_BROWSER=${ORBITA_BROWSER}`);
+
     const env = {};
     Object.keys(process.env).forEach((key) => {
       env[key] = process.env[key];
@@ -1032,7 +1069,7 @@ export class GoLogin {
       debug('GETTING WS URL FROM BROWSER');
       const data = await makeRequest(
         `http://127.0.0.1:${remote_debugging_port}/json/version`,
-        { json: true, maxAttempts: 30, retryDelay: 1000, method: 'GET' },
+        { json: true, maxAttempts: 30, retryDelay: 400, method: 'GET' },
       );
 
       debug('WS IS', get(data, 'webSocketDebuggerUrl', ''));
@@ -1458,6 +1495,7 @@ export class GoLogin {
 
   async startLocal() {
     await this.createStartup(true);
+
     // await this.createBrowserExtension();
     const startResponse = await this.spawnBrowser();
     this.setActive(true);

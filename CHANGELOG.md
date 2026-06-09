@@ -10,6 +10,7 @@ Combined changelog for GoLogin node.js SDK
 * Type fixes
 * Added Proxy Error message to socks5 proxies check fails
 * Added (Gologin) prefix where gologin proxies failed
+* Profile start timing optimization
 
 ## [2.2.7] 2026-02-06
 

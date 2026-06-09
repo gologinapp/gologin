@@ -9,3 +9,4 @@ yarn.lock
 *_.js
 *_.py
 local-example.js
+.npmrc
