@@ -44,6 +44,11 @@ const DEFAULT_FOLDER_USELESS_FILE = [
     subs: [],
     isDirectory: true,
   },
+  {
+    name: 'Shared Dictionary',
+    subs: ['cache'],
+    isDirectory: true,
+  },
 ];
 
 export const getDirectoriesToDeleteForNode = (routerSlash = '/') =>
