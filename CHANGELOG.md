@@ -2,6 +2,14 @@
 
 Combined changelog for GoLogin node.js SDK
 
+## [3.0.0] 2026-06-24
+
+### Features
+
+* Impoved package initialization speed and profile start speed
+* Replaced request npm package with native fetch
+
+
 ## [2.2.9] 2026-06-08
 
 ### Fixes
