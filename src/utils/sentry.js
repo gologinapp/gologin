@@ -1,6 +1,11 @@
-import * as Sentry from '@sentry/node';
+// import { loadSentry } from './lazy-deps.js';
 
-export const captureGroupedSentryError = (error, context = {}) => {
+export const captureGroupedSentryError = async (_error, _context = {}) => {
+  return;
+};
+
+/*
+export const captureGroupedSentryError = async (error, context = {}) => {
   if (process.env.DISABLE_TELEMETRY === 'true') {
     return;
   }
@@ -61,6 +66,7 @@ export const captureGroupedSentryError = (error, context = {}) => {
       break;
   }
 
+  const Sentry = await loadSentry();
   Sentry.captureException(error, scope => {
     scope.setFingerprint(fingerprint);
     scope.setTransactionName(fingerprint);
@@ -71,3 +77,4 @@ export const captureGroupedSentryError = (error, context = {}) => {
     });
   });
 };
+*/

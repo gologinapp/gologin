@@ -1,6 +1,4 @@
 import { exec as execNonPromise } from 'child_process';
-import decompress from 'decompress';
-import decompressUnzip from 'decompress-unzip';
 import { createWriteStream, promises as _promises } from 'fs';
 import { get } from 'https';
 import { homedir } from 'os';
@@ -10,6 +8,7 @@ import util from 'util';
 
 import { API_URL, getOS } from '../utils/common.js';
 import { makeRequest } from '../utils/http.js';
+import { loadDecompress } from '../utils/lazy-deps.js';
 import BrowserDownloadLockManager from './browser-download-manager.js';
 
 const exec = util.promisify(execNonPromise);
@@ -202,6 +201,8 @@ export class BrowserChecker {
     console.log('Extracting Orbita');
     await mkdir(join(this.browserPath, EXTRACTED_FOLDER), { recursive: true });
     if (PLATFORM === 'win32') {
+      const { decompress, decompressUnzip } = await loadDecompress();
+
       return decompress(join(this.browserPath, BROWSER_ARCHIVE_NAME), join(this.browserPath, EXTRACTED_FOLDER),
         {
           plugins: [decompressUnzip()],

@@ -1,39 +1,32 @@
-import * as Sentry from '@sentry/node';
 import { execFile, spawn } from 'child_process';
 import debugDefault from 'debug';
-import decompress from 'decompress';
-import decompressUnzip from 'decompress-unzip';
 import { existsSync, mkdirSync, promises as _promises } from 'fs';
 import { tmpdir } from 'os';
 import { join, resolve as _resolve, sep } from 'path';
-import rimraf from 'rimraf';
-import { SocksProxyAgent } from 'socks-proxy-agent';
 
-import { fontsCollection } from '../fonts.js';
 import { getCurrentProfileBookmarks } from './bookmarks/utils.js';
 import { updateProfileBookmarks, updateProfileProxy, updateProfileResolution, updateProfileUserAgent } from './browser/browser-api.js';
-import BrowserChecker from './browser/browser-checker.js';
 import {
-  composeFonts, downloadCookies, setExtPathsAndRemoveDeleted, setOriginalExtPaths, uploadCookies,
+  downloadCookies, setExtPathsAndRemoveDeleted, setOriginalExtPaths, uploadCookies,
 } from './browser/browser-user-data-manager.js';
-import {
-  createDBFile,
-  getChunckedInsertValues,
-  getCookiesFilePath,
-  getDB,
-  getUniqueCookies,
-  loadCookiesFromFile,
-} from './cookies/cookies-manager.js';
-import ExtensionsManager from './extensions/extensions-manager.js';
-import { archiveProfile } from './profile/profile-archiver.js';
+import { getProfileChromeExtensions } from './extensions/get-extensions.js';
 import { checkAutoLang, getIntlProfileConfig, securedOrbitaOpts } from './utils/browser.js';
 import { API_URL, ensureDirectoryExists, FALLBACK_API_URL, getOsAdvanced } from './utils/common.js';
 import { STORAGE_GATEWAY_BASE_URL } from './utils/constants.js';
-import { get, isPortReachable } from './utils/utils.js';
-export { exitAll, GologinApi } from './gologin-api.js';
-import { getProfileChromeExtensions } from './extensions/get-extensions.js';
 import { checkSocksProxy, makeRequest } from './utils/http.js';
-import { captureGroupedSentryError } from './utils/sentry.js';
+import {
+  // ensureSentryInitialized,
+  loadBrowserChecker,
+  loadCookiesManager,
+  loadDecompress,
+  loadExtensionsManager,
+  loadProfileArchiver,
+  loadSocksProxyAgent,
+  preloadStartupDeps,
+  removePath,
+} from './utils/lazy-deps.js';
+import { get, isPortReachable } from './utils/utils.js';
+// import { captureGroupedSentryError } from './utils/sentry.js';
 import { zeroProfileBookmarks } from './utils/zero-profile-bookmarks.js';
 import { zeroProfilePreferences } from './utils/zero-profile-preferences.js';
 
@@ -70,7 +63,8 @@ export class GoLogin {
     this.tmpdir = tmpdir();
     this.autoUpdateBrowser = !!options.autoUpdateBrowser;
     this.checkBrowserUpdate = options.checkBrowserUpdate ?? true;
-    this.browserChecker = new BrowserChecker(options.skipOrbitaHashChecking);
+    this._skipOrbitaHashChecking = options.skipOrbitaHashChecking;
+    this._browserChecker = null;
     this.uploadCookiesToServer = options.uploadCookiesToServer || false;
     this.writeCookiesFromServer = options.writeCookiesFromServer ?? true;
     this.remote_debugging_port = options.remote_debugging_port || 0;
@@ -85,15 +79,6 @@ export class GoLogin {
     this.proxyCheckTimeout = options.proxyCheckTimeout || 13 * 1000;
     this.proxyCheckAttempts = options.proxyCheckAttempts || 3;
 
-    if (process.env.DISABLE_TELEMETRY !== 'true') {
-      Sentry.init({
-        dsn: 'https://a13d5939a60ae4f6583e228597f1f2a0@sentry-new.amzn.pro/24',
-        tracesSampleRate: 1.0,
-        defaultIntegrations: false,
-        release: process.env.npm_package_version || '2.1.34',
-      });
-    }
-
     if (options.tmpdir) {
       this.tmpdir = options.tmpdir;
       if (!existsSync(this.tmpdir)) {
@@ -107,8 +92,18 @@ export class GoLogin {
     debug('INIT GOLOGIN', this.profile_id);
   }
 
+  async getBrowserChecker() {
+    if (!this._browserChecker) {
+      const BrowserChecker = await loadBrowserChecker();
+      this._browserChecker = new BrowserChecker(this._skipOrbitaHashChecking);
+    }
+
+    return this._browserChecker;
+  }
+
   async checkBrowser(majorVersion) {
-    this.executablePath = await this.browserChecker.checkBrowser({
+    const browserChecker = await this.getBrowserChecker();
+    this.executablePath = await browserChecker.checkBrowser({
       autoUpdateBrowser: this.autoUpdateBrowser,
       checkBrowserUpdate: this.checkBrowserUpdate,
       majorVersion,
@@ -130,7 +125,8 @@ export class GoLogin {
     }
 
     for (const majorVersion of versionsToDownload) {
-      await this.browserChecker.checkBrowser({
+      const browserChecker = await this.getBrowserChecker();
+      await browserChecker.checkBrowser({
         autoUpdateBrowser: true,
         checkBrowserUpdate: true,
         majorVersion,
@@ -141,7 +137,8 @@ export class GoLogin {
   }
 
   async getLatestBrowserVersion() {
-    const { latestVersion: browserLatestVersion } = await this.browserChecker.getLatestBrowserVersion();
+    const browserChecker = await this.getBrowserChecker();
+    const { latestVersion: browserLatestVersion } = await browserChecker.getLatestBrowserVersion();
     const [latestBrowserMajorVersion] = browserLatestVersion.split('.');
 
     return Number(latestBrowserMajorVersion);
@@ -149,6 +146,7 @@ export class GoLogin {
 
   async setProfileId(profile_id) {
     this.profile_id = profile_id;
+    const { getCookiesFilePath } = await loadCookiesManager();
     this.cookiesFilePath = await getCookiesFilePath(profile_id, this.tmpdir);
     this.profile_zip_path = join(this.tmpdir, `gologin_${this.profile_id}.zip`);
     this.bookmarksFilePath = join(this.tmpdir, `gologin_profile_${this.profile_id}`, 'Default', 'Bookmarks');
@@ -359,10 +357,11 @@ export class GoLogin {
   async createBrowserExtension() {
     const that = this;
     debug('start createBrowserExtension');
-    await rimraf(this.orbitaExtensionPath(), () => null);
+    await removePath(this.orbitaExtensionPath());
     const extPath = this.orbitaExtensionPath();
     debug('extension folder sanitized');
     const extension_source = _resolve(__dirname, 'gologin-browser-ext.zip');
+    const { decompress, decompressUnzip } = await loadDecompress();
     await decompress(extension_source, extPath,
       {
         plugins: [decompressUnzip()],
@@ -383,8 +382,9 @@ export class GoLogin {
     debug('createBrowserExtension done');
   }
 
-  extractProfile(path, zipfile) {
+  async extractProfile(path, zipfile) {
     debug(`extactProfile ${zipfile}, ${path}`);
+    const { decompress, decompressUnzip } = await loadDecompress();
 
     return decompress(zipfile, path,
       {
@@ -402,15 +402,19 @@ export class GoLogin {
 
     if (!(local && profileZipExists)) {
       try {
-        profile_folder = await this.getProfileS3();
+        const [, profileData] = await Promise.all([
+          loadDecompress(),
+          this.getProfileS3(),
+        ]);
+
+        profile_folder = profileData;
       } catch (e) {
         debug('Cannot get profile - using empty', e);
+        await loadDecompress();
       }
 
       debug('FILE READY', this.profile_zip_path);
-
       await writeFile(this.profile_zip_path, profile_folder);
-
       debug('PROFILE LENGTH', profile_folder.length);
     } else {
       debug('PROFILE LOCAL HAVING', this.profile_zip_path);
@@ -436,6 +440,7 @@ export class GoLogin {
   }
 
   async createZeroProfile(createCookiesTableQuery) {
+    const { createDBFile } = await loadCookiesManager();
     const profilePath = join(this.tmpdir, `gologin_profile_${this.profile_id}`);
     const defaultFilePath = _resolve(profilePath, 'Default');
     const preferencesFilePath = _resolve(defaultFilePath, 'Preferences');
@@ -458,10 +463,12 @@ export class GoLogin {
 
   async createStartup(local = false) {
     const profilePath = join(this.tmpdir, `gologin_profile_${this.profile_id}`);
+    const startupDepsPromise = preloadStartupDeps();
 
     const [profile] = await Promise.all([
       this.getProfile(),
-      new Promise((resolve) => rimraf(profilePath, resolve)).then(() => debug('-', profilePath, 'dropped')),
+      startupDepsPromise.then(() => removePath(profilePath)
+        .then(() => debug('-', profilePath, 'dropped'))),
     ]);
 
     if (!profile) {
@@ -544,7 +551,9 @@ export class GoLogin {
     const allExtensions = [...chromeExtensions, ...userChromeExtensions];
 
     const [, orbitaParamsToken] = await Promise.all([
-      this.setupProfileExtensions({ preferences, allExtensions, userChromeExtensions, profilePath }),
+      this.setupProfileExtensions({
+        preferences, allExtensions, userChromeExtensions, profilePath,
+      }),
       this.fetchOrbitaParamsToken(profile),
     ]);
 
@@ -552,13 +561,6 @@ export class GoLogin {
       const families = fonts?.families || [];
       if (!families.length) {
         this.isEmptyFonts = true;
-      }
-
-      try {
-        // TODO: uncomment this when fonts will be fixed
-        // await composeFonts(families, profilePath, this.differentOs);
-      } catch (e) {
-        console.trace(e);
       }
     }
 
@@ -663,6 +665,7 @@ export class GoLogin {
   }
 
   async initCookiesFile(profile) {
+    const { getCookiesFilePath } = await loadCookiesManager();
     this.cookiesFilePath = await getCookiesFilePath(this.profile_id, this.tmpdir);
     if (this.writeCookiesFromServer) {
       await this.writeCookiesToFile(profile.cookies?.cookies);
@@ -674,6 +677,7 @@ export class GoLogin {
       return;
     }
 
+    const ExtensionsManager = await loadExtensionsManager();
     const ExtensionsManagerInst = new ExtensionsManager();
     ExtensionsManagerInst.apiUrl = API_URL;
     await ExtensionsManagerInst.init()
@@ -890,6 +894,7 @@ export class GoLogin {
     }
 
     proxy += host + ':' + port;
+    const SocksProxyAgent = await loadSocksProxyAgent();
     const agent = new SocksProxyAgent(proxy);
 
     const checkData = await checkSocksProxy(agent).catch((e) => {
@@ -976,7 +981,12 @@ export class GoLogin {
 
     this.port = remote_debugging_port;
 
-    const ORBITA_BROWSER = this.executablePath || this.browserChecker.getOrbitaPath;
+    let ORBITA_BROWSER = this.executablePath;
+    if (!ORBITA_BROWSER) {
+      const browserChecker = await this.getBrowserChecker();
+      ORBITA_BROWSER = browserChecker.getOrbitaPath;
+    }
+
     debug(`ORBITA_BROWSER=${ORBITA_BROWSER}`);
 
     const env = {};
@@ -1069,7 +1079,7 @@ export class GoLogin {
       debug('GETTING WS URL FROM BROWSER');
       const data = await makeRequest(
         `http://127.0.0.1:${remote_debugging_port}/json/version`,
-        { json: true, maxAttempts: 30, retryDelay: 400, method: 'GET' },
+        { json: true, maxAttempts: 60, retryDelay: 100, method: 'GET' },
       );
 
       debug('WS IS', get(data, 'webSocketDebuggerUrl', ''));
@@ -1082,8 +1092,8 @@ export class GoLogin {
   }
 
   async clearProfileFiles() {
-    await rimraf(join(this.tmpdir, `gologin_profile_${this.profile_id}`), () => null);
-    await rimraf(join(this.tmpdir, `gologin_${this.profile_id}_upload.zip`), () => null);
+    await removePath(join(this.tmpdir, `gologin_profile_${this.profile_id}`));
+    await removePath(join(this.tmpdir, `gologin_${this.profile_id}_upload.zip`));
   }
 
   async stopAndCommit(options, local = false) {
@@ -1113,7 +1123,7 @@ export class GoLogin {
     await this.clearProfileFiles();
 
     if (!local) {
-      await rimraf(join(this.tmpdir, `gologin_${this.profile_id}.zip`), () => null);
+      await removePath(join(this.tmpdir, `gologin_${this.profile_id}.zip`));
     }
 
     debug(`PROFILE ${this.profile_id} STOPPED AND CLEAR`);
@@ -1122,6 +1132,7 @@ export class GoLogin {
   }
 
   async uploadProfileDataToServer() {
+    const { loadCookiesFromFile } = await loadCookiesManager();
     const cookies = await loadCookiesFromFile(this.cookiesFilePath, false, this.profile_id, this.tmpdir);
     const bookmarks = await getCurrentProfileBookmarks(this.bookmarksFilePath);
     const profilePreferencesPath = join(this.profilePath(), 'Default', 'Preferences');
@@ -1180,7 +1191,7 @@ export class GoLogin {
       debug('browser killed');
     } catch (error) {
       console.error(error);
-      captureGroupedSentryError(error, { method: 'killBrowser', profileId: this.profile_id });
+      // captureGroupedSentryError(error, { method: 'killBrowser', profileId: this.profile_id });
     }
   }
 
@@ -1221,13 +1232,7 @@ export class GoLogin {
     await Promise.all(remove_dirs.map(d => {
       const path_to_remove = `${that.profilePath()}${d}`;
 
-      return new Promise(resolve => {
-        debug('DROPPING', path_to_remove);
-        rimraf(path_to_remove, { maxBusyTries: 100 }, (e) => {
-          // debug('DROPPING RESULT', e);
-          resolve();
-        });
-      });
+      return removePath(path_to_remove, { maxBusyTries: 100 });
     }));
   }
 
@@ -1242,6 +1247,7 @@ export class GoLogin {
     debug('profile sanitized');
 
     const profilePath = this.profilePath();
+    const { archiveProfile } = await loadProfileArchiver();
     const fileBuff = await archiveProfile(profilePath);
 
     debug('PROFILE ZIP CREATED', profilePath, zipPath);
@@ -1431,6 +1437,13 @@ export class GoLogin {
       return;
     }
 
+    const {
+      createDBFile,
+      getChunckedInsertValues,
+      getDB,
+      getUniqueCookies,
+    } = await loadCookiesManager();
+
     const resultCookies = cookies.map((el) => ({ ...el, value: Buffer.from(el.value) }));
     let db;
     const profilePath = join(this.tmpdir, `gologin_profile_${this.profile_id}`);
@@ -1463,7 +1476,7 @@ export class GoLogin {
       }
 
       console.error(error.message);
-      captureGroupedSentryError(error, { method: 'writeCookiesToFile', profileId: this.profile_id });
+      // captureGroupedSentryError(error, { method: 'writeCookiesToFile', profileId: this.profile_id });
     } finally {
       db && await db.close();
       await ensureDirectoryExists(cookiesPaths.primary);
@@ -1481,16 +1494,17 @@ export class GoLogin {
   }
 
   async start() {
-    try {
-      await this.createStartup();
-      const startResponse = await this.spawnBrowser();
-      this.setActive(true);
+    // ensureSentryInitialized({ release: process.env.npm_package_version || '2.1.34' });
 
-      return { status: 'success', wsUrl: startResponse.wsUrl, resolution: startResponse.resolution };
-    } catch (error) {
-      captureGroupedSentryError(error, { method: 'start', profileId: this.profile_id });
-      throw error;
-    }
+    await this.createStartup();
+    const startResponse = await this.spawnBrowser();
+    this.setActive(true);
+
+    return {
+      status: 'success',
+      wsUrl: startResponse.wsUrl,
+      resolution: startResponse.resolution,
+    };
   }
 
   async startLocal() {
@@ -1568,12 +1582,6 @@ export class GoLogin {
 
   async changeProfileResolution(resolution) {
     return updateProfileResolution(this.profile_id, this.access_token, resolution);
-  }
-
-  getAvailableFonts() {
-    return fontsCollection
-      .filter(elem => elem.fileNames)
-      .map(elem => elem.name);
   }
 
   async quickCreateProfile(name = '') {

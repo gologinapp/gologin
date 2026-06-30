@@ -1,12 +1,9 @@
 import { promises as fsPromises } from 'fs';
 import { join } from 'path';
-import { open } from 'sqlite';
-import sqlite3 from 'sqlite3';
 
 import { ensureDirectoryExists } from '../utils/common.js';
 
 const { access } = fsPromises;
-const { Database, OPEN_READONLY } = sqlite3;
 
 const MAX_SQLITE_VARIABLES = 76;
 
@@ -17,7 +14,27 @@ const SAME_SITE = {
   2: 'strict',
 };
 
-export const getDB = (filePath, readOnly = true) => {
+let sqliteModulePromise = null;
+
+const loadSqlite = () => {
+  sqliteModulePromise ||= Promise.all([
+    import('sqlite'),
+    import('sqlite3'),
+  ]).then(([sqliteModule, sqlite3Module]) => {
+    const sqlite3 = sqlite3Module.default ?? sqlite3Module;
+
+    return {
+      open: sqliteModule.open,
+      Database: sqlite3.Database,
+      OPEN_READONLY: sqlite3.OPEN_READONLY,
+    };
+  });
+
+  return sqliteModulePromise;
+};
+
+export const getDB = async (filePath, readOnly = true) => {
+  const { open, Database, OPEN_READONLY } = await loadSqlite();
   const connectionOpts = {
     filename: filePath,
     driver: Database,
@@ -35,11 +52,12 @@ export const createDBFile = async ({
   cookiesFileSecondPath,
   createCookiesTableQuery,
 }) => {
+  const { open, Database } = await loadSqlite();
   await fsPromises.writeFile(cookiesFilePath, '', { mode: 0o666 });
 
   const connectionOpts = {
     filename: cookiesFilePath,
-    driver: sqlite3.Database,
+    driver: Database,
   };
 
   const db = await open(connectionOpts);
@@ -77,7 +95,6 @@ export const getChunckedInsertValues = (cookiesArr) => {
 
       const sourceScheme = isSecure === 1 ? 2 : 1;
       const sourcePort = isSecure === 1 ? 443 : 80;
-      // eslint-disable-next-line no-undefined
       let isPersistent = [undefined, null].includes(cookie.session)
         ? Number(expirationDate !== 0)
         : Number(!cookie.session);
@@ -90,23 +107,23 @@ export const getChunckedInsertValues = (cookiesArr) => {
       return [
         creationDate,
         cookie.domain,
-        '', // top_frame_site_key
+        '',
         cookie.name,
-        '', // value
+        '',
         encryptedValue,
         cookie.path,
         expirationDate,
         isSecure,
         Number(cookie.httpOnly),
-        0, // last_access_utc
-        expirationDate === 0 ? 0 : 1, // has_expires
+        0,
+        expirationDate === 0 ? 0 : 1,
         isPersistent,
-        1, // default priority value (https://github.com/chromium/chromium/blob/main/net/cookies/cookie_constants.h)
+        1,
         samesite,
         sourceScheme,
         sourcePort,
-        0, // is_same_party
-        0, // last_update_utc
+        0,
+        0,
       ];
     });
 
