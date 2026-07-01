@@ -1,4 +1,3 @@
-import AdmZip from 'adm-zip';
 import { promises as _promises } from 'fs';
 import path from 'path';
 
@@ -6,7 +5,16 @@ import { getDirectoriesForArchiver } from './profile-directories-to-remove.js';
 
 const { access } = _promises;
 
+let admZipPromise = null;
+
+const loadAdmZip = () => {
+  admZipPromise ||= import('adm-zip').then((module) => module.default ?? module);
+
+  return admZipPromise;
+};
+
 export const archiveProfile = async (profileFolder = '') => {
+  const AdmZip = await loadAdmZip();
   const folderExists = await access(profileFolder).then(() => true, () => false);
   if (!folderExists) {
     throw new Error('Invalid profile folder path: ' + profileFolder);
@@ -32,6 +40,7 @@ export const archiveProfile = async (profileFolder = '') => {
 };
 
 export const decompressProfile = async (zipPath = '', profileFolder = '') => {
+  const AdmZip = await loadAdmZip();
   const zipExists = await access(zipPath).then(() => true, () => false);
   if (!zipExists) {
     throw new Error('Invalid zip path: ' + zipPath);

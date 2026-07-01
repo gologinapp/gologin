@@ -1,10 +1,9 @@
 import { createWriteStream, promises as _promises } from 'fs';
 import { join, sep } from 'path';
-import request from 'requestretry';
 
 import { CHROME_EXTENSIONS_PATH, composeExtractionPromises, USER_EXTENSIONS_PATH } from '../utils/common.js';
 import UserExtensionsManager from './user-extensions-manager.js';
-import { makeRequest } from '../utils/http.js';
+import { fetchBufferWithRetry, fetchHeadWithRetry, makeRequest } from '../utils/http.js';
 import { FALLBACK_API_URL } from '../utils/common.js';
 
 const { mkdir, readdir, rmdir, unlink } = _promises;
@@ -134,19 +133,11 @@ export class ExtensionsManager extends UserExtensionsManager {
       const reqPath = uploadedProfileMetadata.req.path;
       const extVer = getExtVersion(reqPath);
 
-      const buffer = await new Promise((res) => {
-        const chunks = [];
-        console.log('extUrl', extUrl);
-        request.get(extUrl, {
-          maxAttempts: 3,
-          retryDelay: 1000,
-          timeout: 8 * 1000,
-          fullResponse: false,
-        })
-          .on('data', (data) => chunks.push(data))
-          .on('end', () => res(Buffer.concat(chunks)));
+      const buffer = await fetchBufferWithRetry(extUrl, {
+        maxAttempts: 3,
+        retryDelay: 1000,
+        timeout: 8 * 1000,
       });
-      console.log('buffer', buffer);
       let zipExt;
       try {
         zipExt = crxToZip(buffer);
@@ -357,14 +348,11 @@ const calcLength = (a, b, c, d) => {
   return length;
 };
 
-const getExtMetadata = (extUrl) => (
-  request.head(extUrl, {
-    maxAttempts: 3,
-    retryDelay: 2000,
-    timeout: 2 * 1000,
-    fullResponse: true,
-  })
-);
+const getExtMetadata = (extUrl) => fetchHeadWithRetry(extUrl, {
+  maxAttempts: 3,
+  retryDelay: 2000,
+  timeout: 2 * 1000,
+});
 
 const getExtVersion = (metadata) => {
   const [extFullName = ''] = metadata.split('/').reverse();

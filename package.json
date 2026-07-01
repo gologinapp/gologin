@@ -1,9 +1,19 @@
 {
   "name": "gologin",
-  "version": "2.2.9",
+  "version": "3.0.0",
   "description": "A high-level API to control Orbita browser over GoLogin API",
   "types": "./index.d.ts",
-  "main": "./src/gologin.js",
+  "main": "./src/index.js",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "import": "./src/index.js"
+    },
+    "./api": {
+      "types": "./api.d.ts",
+      "import": "./src/gologin-api.js"
+    }
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/gologinapp/gologin.git"
@@ -14,6 +24,9 @@
   "type": "module",
   "author": "The GoLogin Authors",
   "license": "GPL-3.0",
+  "overrides": {
+    "https-proxy-agent": "$https-proxy-agent"
+  },
   "dependencies": {
     "@sentry/node": "^9.24.0",
     "adm-zip": "^0.5.1",
@@ -22,10 +35,9 @@
     "decompress": "^4.2.1",
     "decompress-unzip": "^4.0.1",
     "form-data": "^3.0.0",
+    "https-proxy-agent": "^7.0.6",
     "progress": "^2.0.3",
     "puppeteer-core": "^2.1.1",
-    "request": "^2.88.2",
-    "requestretry": "^4.1.0",
     "rimraf": "^3.0.2",
     "socks-proxy-agent": "^8.0.3",
     "sqlite": "^4.0.23",

@@ -1,11 +1,23 @@
-import puppeteer from 'puppeteer-core';
-
 import GoLogin from './gologin.js';
 import { API_URL, FALLBACK_API_URL, getOsAdvanced } from './utils/common.js';
 import { makeRequest } from './utils/http.js';
 
 const trafficLimitMessage =
   'You dont have free traffic to use the proxy. Please go to app https://app.gologin.com/ and buy some traffic if you want to use the proxy';
+
+let puppeteerModulePromise = null;
+
+const loadPuppeteer = () => {
+  puppeteerModulePromise ||= import('puppeteer-core').then((module) => module.default ?? module);
+
+  return puppeteerModulePromise;
+};
+
+const connectToBrowser = async (options) => {
+  const puppeteer = await loadPuppeteer();
+
+  return puppeteer.connect(options);
+};
 
 export const getDefaultParams = () => ({
   token: process.env.GOLOGIN_API_TOKEN,
@@ -48,7 +60,7 @@ export const GologinApi = ({ token }) => {
 
     const startedProfile = await legacyGologin.start();
 
-    const browser = await puppeteer.connect({
+    const browser = await connectToBrowser({
       browserWSEndpoint: startedProfile.wsUrl,
       ignoreHTTPSErrors: true,
       defaultViewport: null,
@@ -75,7 +87,7 @@ export const GologinApi = ({ token }) => {
     legacyGls.push(legacyGologin);
 
     const browserWSEndpoint = `https://cloudbrowser.gologin.com/connect?token=${token}&profile=${params.profileId}`;
-    const browser = await puppeteer.connect({
+    const browser = await connectToBrowser({
       browserWSEndpoint,
       ignoreHTTPSErrors: true,
     });

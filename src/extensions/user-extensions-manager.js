@@ -1,9 +1,8 @@
 import { createWriteStream, promises as _promises } from 'fs';
 import { join, sep } from 'path';
-import request from 'requestretry';
 
 import { CHROME_EXTENSIONS_PATH, composeExtractionPromises, FALLBACK_API_URL, USER_EXTENSIONS_PATH } from '../utils/common.js';
-import { makeRequest } from '../utils/http.js';
+import { fetchToWriteStream, makeRequest } from '../utils/http.js';
 
 const { readdir, readFile, stat, mkdir, copyFile } = _promises;
 
@@ -105,12 +104,10 @@ export class UserExtensionsManager {
       const zipPath = `${join(USER_EXTENSIONS_PATH, extId)}.zip`;
       const archiveZip = createWriteStream(zipPath);
 
-      await request(awsPath, {
+      await fetchToWriteStream(awsPath, archiveZip, {
         retryDelay: 2 * 1000,
         maxAttempts: 3,
-      }).pipe(archiveZip);
-
-      await new Promise(r => archiveZip.on('close', () => r()));
+      });
 
       return zipPath;
     });

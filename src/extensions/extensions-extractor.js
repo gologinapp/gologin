@@ -1,13 +1,15 @@
-import decompress from 'decompress';
-import decompressUnzip from 'decompress-unzip';
 import { promises } from 'fs';
+
+import { loadDecompress } from '../utils/lazy-deps.js';
 
 const { access, unlink } = promises;
 
-export const extractExtension = (source, dest) => {
+export const extractExtension = async (source, dest) => {
   if (!(source && dest)) {
     throw new Error('Missing parameter');
   }
+
+  const { decompress, decompressUnzip } = await loadDecompress();
 
   return access(source)
     .then(() =>
@@ -20,7 +22,7 @@ export const extractExtension = (source, dest) => {
         },
       }),
     );
-}
+};
 
 export const deleteExtensionArchive = (dest) => {
   if (!dest) {
@@ -32,7 +34,7 @@ export const deleteExtensionArchive = (dest) => {
       () => unlink(dest),
       () => Promise.resolve(),
     );
-}
+};
 
 const withRetry = optionsOrUndefined => {
   const opts = optionsOrUndefined || {};
