@@ -22,7 +22,7 @@ Where is token? API token is <a href="https://app.gologin.com/#/personalArea/Tok
 ### Example
 
 ```js
-import { GologinApi } from './src/gologin-api.js';
+import { GologinApi } from 'gologin';
 
 const GL = GologinApi({
   token: 'your token',
