@@ -628,8 +628,13 @@ export class GoLogin {
 
     if (!this.browserMajorVersion) {
       const { userAgent } = profile.navigator;
-      const [browserMajorVersion] = userAgent.split('Chrome/')[1].split('.');
-      this.browserMajorVersion = Number(browserMajorVersion);
+      try {
+        const [browserMajorVersion] = userAgent.split('Chrome/')[1].split('.');
+        this.browserMajorVersion = Number(browserMajorVersion);
+      } catch (e) {
+        const latestVersionNumber = await this.getLatestBrowserVersion();
+        this.browserMajorVersion = latestVersionNumber;
+      }
 
       let executableDir = join(this.executablePath, '..');
       if (OS_PLATFORM === 'darwin') {

@@ -2,6 +2,12 @@
 
 Combined changelog for GoLogin node.js SDK
 
+## [3.0.1] 2026-07-28
+
+### Fixes
+
+* Fixed crash when profile user agent is malformed and `executablePath` is set
+
 ## [3.0.0] 2026-06-24
 
 ### Features
