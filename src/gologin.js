@@ -78,6 +78,7 @@ export class GoLogin {
     this.newProxyOrbitaMajorVersion = 135;
     this.proxyCheckTimeout = options.proxyCheckTimeout || 13 * 1000;
     this.proxyCheckAttempts = options.proxyCheckAttempts || 3;
+    this.customChromeFrame = options.customChromeFrame;
 
     if (options.tmpdir) {
       this.tmpdir = options.tmpdir;
@@ -581,6 +582,13 @@ export class GoLogin {
 
     this.browserLang = isMAC ? 'en-US' : checkAutoLangResult;
     const prefsToWrite = Object.assign(preferences, { gologin });
+    if (this.customChromeFrame === false) {
+      prefsToWrite.browser = {
+        ...(prefsToWrite.browser || {}),
+        custom_chrome_frame: false,
+      };
+    }
+
     if (this.browserMajorVersion >= this.newProxyOrbitaMajorVersion && this.proxy?.mode !== 'none') {
       prefsToWrite.proxy = {
         mode: 'fixed_servers',

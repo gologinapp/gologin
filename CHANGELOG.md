@@ -2,6 +2,12 @@
 
 Combined changelog for GoLogin node.js SDK
 
+## [3.0.2] 2026-07-29
+
+### Features
+
+* Added `customChromeFrame` option to control writing `browser.custom_chrome_frame: false` into profile Preferences
+
 ## [3.0.1] 2026-07-28
 
 ### Fixes

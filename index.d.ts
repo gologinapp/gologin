@@ -20,6 +20,7 @@ export type GoLoginOptions = {
   proxyCheckAttempts?: number;
   autoUpdateBrowser?: boolean;
   checkBrowserUpdate?: boolean;
+  customChromeFrame?: boolean;
 };
 
 export type GoLoginStartResult = {
