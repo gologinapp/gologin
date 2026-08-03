@@ -40,6 +40,15 @@ const PROXY_NONE = 'none';
 const debug = debugDefault('gologin');
 const delay = (time) => new Promise((resolve) => setTimeout(resolve, time));
 
+const withTiming = async ({ name, promise }) => {
+  const start = Date.now();
+  try {
+    return await promise;
+  } finally {
+    debug(`[timing] ${name}: ${Date.now() - start}ms`);
+  }
+};
+
 export class GoLogin {
   constructor(options = {}) {
     this.browserLang = 'en-US';
@@ -463,13 +472,17 @@ export class GoLogin {
   }
 
   async createStartup(local = false) {
+    const startupStart = Date.now();
     const profilePath = join(this.tmpdir, `gologin_profile_${this.profile_id}`);
     const startupDepsPromise = preloadStartupDeps();
 
     const [profile] = await Promise.all([
-      this.getProfile(),
-      startupDepsPromise.then(() => removePath(profilePath)
-        .then(() => debug('-', profilePath, 'dropped'))),
+      withTiming({ name: 'getProfile', promise: this.getProfile() }),
+      withTiming({
+        name: 'preloadDepsAndClearProfile',
+        promise: startupDepsPromise.then(() => removePath(profilePath)
+          .then(() => debug('-', profilePath, 'dropped'))),
+      }),
     ]);
 
     if (!profile) {
@@ -525,37 +538,54 @@ export class GoLogin {
     this.proxy = proxy;
 
     await Promise.all([
-      this.resolveProfileBrowserVersion(profile),
-      this.initProfileStorage({ profile, local }),
-      this.getTimeZone(proxy).catch((e) => {
-        console.error('Proxy Error. Check it and try again.');
-        throw new Error(`Proxy Error. ${e.message}`);
+      withTiming({ name: 'resolveProfileBrowserVersion', promise: this.resolveProfileBrowserVersion(profile) }),
+      withTiming({ name: 'initProfileStorage', promise: this.initProfileStorage({ profile, local }) }),
+      withTiming({
+        name: 'getTimeZone',
+        promise: this.getTimeZone(proxy).catch((e) => {
+          console.error('Proxy Error. Check it and try again.');
+          throw new Error(`Proxy Error. ${e.message}`);
+        }),
       }),
-      this.initCookiesFile(profile),
+      withTiming({ name: 'initCookiesFile', promise: this.initCookiesFile(profile) }),
     ]);
 
-    await _promises.rm(join(profilePath, 'Default', 'Sync Data'), { recursive: true }).catch(() => null);
-    const pref_file_name = join(profilePath, 'Default', 'Preferences');
-    debug('reading', pref_file_name);
+    await withTiming({
+      name: 'preparePreferencesFile',
+      promise: (async () => {
+        await _promises.rm(join(profilePath, 'Default', 'Sync Data'), { recursive: true }).catch(() => null);
+        const pref_file_name = join(profilePath, 'Default', 'Preferences');
+        debug('reading', pref_file_name);
 
-    const prefFileExists = await access(pref_file_name).then(() => true).catch(() => false);
-    if (!prefFileExists) {
-      debug('Preferences file not exists waiting', pref_file_name, '. Using empty profile');
-      await mkdir(join(profilePath, 'Default'), { recursive: true });
-      await writeFile(pref_file_name, '{}');
-    }
+        const prefFileExists = await access(pref_file_name).then(() => true).catch(() => false);
+        if (!prefFileExists) {
+          debug('Preferences file not exists waiting', pref_file_name, '. Using empty profile');
+          await mkdir(join(profilePath, 'Default'), { recursive: true });
+          await writeFile(pref_file_name, '{}');
+        }
+      })(),
+    });
 
-    const preferences_raw = await readFile(pref_file_name);
+    const preferences_raw = await withTiming({
+      name: 'readPreferences',
+      promise: readFile(join(profilePath, 'Default', 'Preferences')),
+    });
     const preferences = JSON.parse(preferences_raw.toString());
     const chromeExtensions = get(profile, 'chromeExtensions') || [];
     const userChromeExtensions = get(profile, 'userChromeExtensions') || [];
-    const allExtensions = [...chromeExtensions, ...userChromeExtensions];
+    const allExtensions = [...new Set([...chromeExtensions, ...userChromeExtensions])];
 
     const [, orbitaParamsToken] = await Promise.all([
-      this.setupProfileExtensions({
-        preferences, allExtensions, userChromeExtensions, profilePath,
+      withTiming({
+        name: 'setupProfileExtensions',
+        promise: this.setupProfileExtensions({
+          preferences,
+          allExtensions,
+          userChromeExtensions: [...new Set(userChromeExtensions)],
+          profilePath,
+        }),
       }),
-      this.fetchOrbitaParamsToken(profile),
+      withTiming({ name: 'fetchOrbitaParamsToken', promise: this.fetchOrbitaParamsToken(profile) }),
     ]);
 
     if (this.fontsMasking) {
@@ -606,14 +636,21 @@ export class GoLogin {
       },
     };
 
-    await writeFile(join(profilePath, 'orbita.config'), JSON.stringify(orbitaConfig, null, '\t'), { encoding: 'utf-8' }).catch(console.log);
-    await writeFile(join(profilePath, 'Default', 'Preferences'), JSON.stringify(prefsToWrite));
+    await withTiming({
+      name: 'writeProfileFiles',
+      promise: (async () => {
+        await writeFile(join(profilePath, 'orbita.config'), JSON.stringify(orbitaConfig, null, '\t'), { encoding: 'utf-8' }).catch(console.log);
+        await writeFile(join(profilePath, 'Default', 'Preferences'), JSON.stringify(prefsToWrite));
 
-    const bookmarksParsedData = await getCurrentProfileBookmarks(this.bookmarksFilePath);
-    const bookmarksFromDb = profile.bookmarks?.bookmark_bar;
-    bookmarksParsedData.roots = bookmarksFromDb ? profile.bookmarks : bookmarksParsedData.roots;
-    await writeFile(this.bookmarksFilePath, JSON.stringify(bookmarksParsedData));
+        const bookmarksParsedData = await getCurrentProfileBookmarks(this.bookmarksFilePath);
+        const bookmarksFromDb = profile.bookmarks?.bookmark_bar;
+        bookmarksParsedData.roots = bookmarksFromDb ? profile.bookmarks : bookmarksParsedData.roots;
+        await writeFile(this.bookmarksFilePath, JSON.stringify(bookmarksParsedData));
+      })(),
+    });
+
     debug('Profile ready. Path: ', profilePath, 'PROXY', JSON.stringify(get(preferences, 'gologin.proxy')));
+    debug(`[timing] createStartup total: ${Date.now() - startupStart}ms`);
 
     return profilePath;
   }
@@ -723,8 +760,9 @@ export class GoLogin {
 
       const profileExtensionPathRes = extensionsResult.find(el => 'profileExtensionsCheckRes' in el) || {};
       const profileUserExtensionPathRes = extensionsResult.find(el => 'profileUserExtensionsCheckRes' in el);
-      profileExtensionsCheckRes =
-        (profileExtensionPathRes?.profileExtensionsCheckRes || []).concat(profileUserExtensionPathRes?.profileUserExtensionsCheckRes || []);
+      profileExtensionsCheckRes = [...new Set(
+        (profileExtensionPathRes?.profileExtensionsCheckRes || []).concat(profileUserExtensionPathRes?.profileUserExtensionsCheckRes || []),
+      )];
     }
 
     let extSettings;
@@ -978,9 +1016,13 @@ export class GoLogin {
   }
 
   async spawnBrowser() {
+    const spawnStart = Date.now();
     let { remote_debugging_port, customArgs } = this;
     if (!remote_debugging_port) {
-      remote_debugging_port = await this.getRandomPort();
+      remote_debugging_port = await withTiming({
+        name: 'getRandomPort',
+        promise: this.getRandomPort(),
+      });
     }
 
     const profile_path = this.profilePath();
@@ -996,7 +1038,10 @@ export class GoLogin {
 
     let ORBITA_BROWSER = this.executablePath;
     if (!ORBITA_BROWSER) {
-      const browserChecker = await this.getBrowserChecker();
+      const browserChecker = await withTiming({
+        name: 'getBrowserChecker',
+        promise: this.getBrowserChecker(),
+      });
       ORBITA_BROWSER = browserChecker.getOrbitaPath;
     }
 
@@ -1007,9 +1052,12 @@ export class GoLogin {
       env[key] = process.env[key];
     });
 
-    const tz = await this.getTimeZone(this.proxy).catch((e) => {
-      console.error('Proxy Error. Check it and try again.');
-      throw e;
+    const tz = await withTiming({
+      name: 'getTimeZone',
+      promise: this.getTimeZone(this.proxy).catch((e) => {
+        console.error('Proxy Error. Check it and try again.');
+        throw e;
+      }),
     });
 
     env.TZ = tz;
@@ -1090,16 +1138,22 @@ export class GoLogin {
 
     if (this.waitWebsocket) {
       debug('GETTING WS URL FROM BROWSER');
-      const data = await makeRequest(
-        `http://127.0.0.1:${remote_debugging_port}/json/version`,
-        { json: true, maxAttempts: 60, retryDelay: 100, method: 'GET' },
-      );
+      const data = await withTiming({
+        name: 'waitWebsocket',
+        promise: makeRequest(
+          `http://127.0.0.1:${remote_debugging_port}/json/version`,
+          { json: true, maxAttempts: 120, retryDelay: 100, method: 'GET' },
+        ),
+      });
 
       debug('WS IS', get(data, 'webSocketDebuggerUrl', ''));
       this.is_active = true;
+      debug(`[timing] spawnBrowser total: ${Date.now() - spawnStart}ms`);
 
       return { wsUrl: get(data, 'webSocketDebuggerUrl', ''), resolution: this.resolution };
     }
+
+    debug(`[timing] spawnBrowser total: ${Date.now() - spawnStart}ms`);
 
     return '';
   }
@@ -1508,10 +1562,12 @@ export class GoLogin {
 
   async start() {
     // ensureSentryInitialized({ release: process.env.npm_package_version || '2.1.34' });
+    const startTotal = Date.now();
 
-    await this.createStartup();
-    const startResponse = await this.spawnBrowser();
+    await withTiming({ name: 'createStartup', promise: this.createStartup() });
+    const startResponse = await withTiming({ name: 'spawnBrowser', promise: this.spawnBrowser() });
     this.setActive(true);
+    debug(`[timing] start total: ${Date.now() - startTotal}ms`);
 
     return {
       status: 'success',
@@ -1521,11 +1577,14 @@ export class GoLogin {
   }
 
   async startLocal() {
-    await this.createStartup(true);
+    const startTotal = Date.now();
+
+    await withTiming({ name: 'createStartup', promise: this.createStartup(true) });
 
     // await this.createBrowserExtension();
-    const startResponse = await this.spawnBrowser();
+    const startResponse = await withTiming({ name: 'spawnBrowser', promise: this.spawnBrowser() });
     this.setActive(true);
+    debug(`[timing] startLocal total: ${Date.now() - startTotal}ms`);
 
     return { status: 'success', wsUrl: startResponse.wsUrl };
   }

@@ -2,6 +2,17 @@
 
 Combined changelog for GoLogin node.js SDK
 
+## [3.0.3] 2026-08-03
+
+### Fixes
+
+* Fixed Chrome extensions download race when the same extension IDs are listed in both `chromeExtensions` and `userChromeExtensions`
+* Made extension archive deletion ignore missing files (`ENOENT`) during parallel extract cleanup
+
+### Features
+
+* Added profile start step timings via `debug` (`DEBUG=gologin`)
+
 ## [3.0.2] 2026-07-29
 
 ### Features

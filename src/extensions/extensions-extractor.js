@@ -29,11 +29,13 @@ export const deleteExtensionArchive = (dest) => {
     throw new Error('Missing parameter');
   }
 
-  return access(dest)
-    .then(
-      () => unlink(dest),
-      () => Promise.resolve(),
-    );
+  return unlink(dest).catch((error) => {
+    if (error?.code === 'ENOENT') {
+      return;
+    }
+
+    throw error;
+  });
 };
 
 const withRetry = optionsOrUndefined => {

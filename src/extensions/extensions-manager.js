@@ -107,11 +107,13 @@ export class ExtensionsManager extends UserExtensionsManager {
 
       return originalId;
     });
+    const queuedOriginalIds = new Set();
 
     return profileExtensions.reduce((res, val) => {
       const [originalId] = val.split('@');
-      const extensionExists = existedOriginalIds.includes(originalId);
+      const extensionExists = existedOriginalIds.includes(originalId) || queuedOriginalIds.has(originalId);
       if (!extensionExists) {
+        queuedOriginalIds.add(originalId);
         res.push(val);
       }
 
