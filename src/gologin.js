@@ -85,8 +85,8 @@ export class GoLogin {
     this.processKillTimeout = 1 * 1000;
     this.browserMajorVersion = options.browserMajorVersion || 0;
     this.newProxyOrbitaMajorVersion = 135;
-    this.proxyCheckTimeout = options.proxyCheckTimeout || 13 * 1000;
-    this.proxyCheckAttempts = options.proxyCheckAttempts || 3;
+    this.proxyCheckTimeout = options.proxyCheckTimeout || 10 * 1000;
+    this.proxyCheckAttempts = options.proxyCheckAttempts || 2;
     this.customChromeFrame = options.customChromeFrame;
 
     if (options.tmpdir) {
@@ -570,6 +570,7 @@ export class GoLogin {
       name: 'readPreferences',
       promise: readFile(join(profilePath, 'Default', 'Preferences')),
     });
+
     const preferences = JSON.parse(preferences_raw.toString());
     const chromeExtensions = get(profile, 'chromeExtensions') || [];
     const userChromeExtensions = get(profile, 'userChromeExtensions') || [];
@@ -1042,6 +1043,7 @@ export class GoLogin {
         name: 'getBrowserChecker',
         promise: this.getBrowserChecker(),
       });
+
       ORBITA_BROWSER = browserChecker.getOrbitaPath;
     }
 

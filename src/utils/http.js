@@ -1,5 +1,5 @@
-import { get as _get, request as httpsRequest } from 'https';
 import { request as httpRequest } from 'http';
+import { get as _get, request as httpsRequest } from 'https';
 
 import packageJson from '../../package.json' with { type: 'json' };
 import { loadHttpsProxyAgent } from './lazy-deps.js';
@@ -115,9 +115,11 @@ const normalizeProxyUrl = (proxyUrl) => {
 };
 
 const executeProxyRequest = async (url, options, internalOptions) => {
-  const HttpsProxyAgent = await loadHttpsProxyAgent();
-  const agent = new HttpsProxyAgent(normalizeProxyUrl(options.proxy));
   const timeoutMs = options.timeout || DEFAULT_TIMEOUT_MS;
+  const HttpsProxyAgent = await loadHttpsProxyAgent();
+  const agent = new HttpsProxyAgent(normalizeProxyUrl(options.proxy), {
+    timeout: timeoutMs,
+  });
   const headers = buildRequestHeaders({ options, internalOptions });
   const body = buildRequestBody(options);
   const method = options.method || 'GET';
@@ -139,6 +141,19 @@ const executeProxyRequest = async (url, options, internalOptions) => {
   };
 
   return new Promise((resolve, reject) => {
+    let settled = false;
+    let timeoutId;
+
+    const settle = (handler) => (value) => {
+      if (settled) {
+        return;
+      }
+
+      settled = true;
+      clearTimeout(timeoutId);
+      handler(value);
+    };
+
     const req = requestFn(requestOptions, (response) => {
       let responseText = '';
 
@@ -151,18 +166,28 @@ const executeProxyRequest = async (url, options, internalOptions) => {
           const error = new Error(responseText);
           error.statusCode = response.statusCode;
 
-          reject(error);
+          settle(reject)(error);
 
           return;
         }
 
-        resolve(parseProxyResponseBody(responseText, options));
+        settle(resolve)(parseProxyResponseBody(responseText, options));
       });
+
+      response.on('error', settle(reject));
     });
 
-    req.on('error', reject);
+    timeoutId = setTimeout(() => {
+      const timeoutError = new Error(`Request timeout after ${timeoutMs}ms`);
+      settle(reject)(timeoutError);
+      req.destroy(timeoutError);
+    }, timeoutMs);
+
+    req.on('error', settle(reject));
     req.on('timeout', () => {
-      req.destroy(new Error(`Request timeout after ${timeoutMs}ms`));
+      const timeoutError = new Error(`Request timeout after ${timeoutMs}ms`);
+      settle(reject)(timeoutError);
+      req.destroy(timeoutError);
     });
 
     if (body) {
@@ -242,6 +267,7 @@ export const makeRequest = async (url, options = {}, internalOptions) => {
   try {
     return await executeFetch(url, options, internalOptions);
   } catch (error) {
+    console.log('makeRequest error', error);
     if (internalOptions?.fallbackUrl && !error.statusCode) {
       return executeFetch(internalOptions.fallbackUrl, options, internalOptions);
     }
