@@ -2,6 +2,13 @@
 
 Combined changelog for GoLogin node.js SDK
 
+## [3.0.4] 2026-09-04
+
+### Fixes
+
+* Fixed proxy request timeout not aborting hung TCP connects during timezone checks
+* Reduced default proxy check timeout to 10s and attempts to 2
+
 ## [3.0.3] 2026-08-03
 
 ### Fixes
