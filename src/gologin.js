@@ -80,6 +80,7 @@ export class GoLogin {
     this.timezone = options.timezone;
     this.extensionPathsToInstall = [];
     this.customArgs = options.args || [];
+    this.profileLaunchArguments = [];
     this.restoreLastSession = options.restoreLastSession || true;
     this.processSpawned = null;
     this.processKillTimeout = 1 * 1000;
@@ -488,6 +489,8 @@ export class GoLogin {
     if (!profile) {
       throw new Error('Error fetching profile data');
     }
+
+    this.profileLaunchArguments = (profile.launchArguments || '').split(' ').filter(Boolean);
 
     const { navigator = {}, fonts, os: profileOs } = profile;
     this.fontsMasking = fonts?.enableMasking;
@@ -1009,6 +1012,10 @@ export class GoLogin {
       params = params.concat(this.extra_params);
     }
 
+    if (this.profileLaunchArguments.length) {
+      params = params.concat(this.profileLaunchArguments);
+    }
+
     if (this.remote_debugging_port) {
       params.push(`--remote-debugging-port=${this.remote_debugging_port}`);
     }
@@ -1123,6 +1130,10 @@ export class GoLogin {
 
       if (Array.isArray(this.extra_params) && this.extra_params.length) {
         params = params.concat(this.extra_params);
+      }
+
+      if (this.profileLaunchArguments.length) {
+        params = params.concat(this.profileLaunchArguments);
       }
 
       if (!this.isFirstSession && this.restoreLastSession) {
