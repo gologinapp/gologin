@@ -539,6 +539,7 @@ export class GoLogin {
     }
 
     this.proxy = proxy;
+    this.applyProfileLocale(profile);
 
     await Promise.all([
       withTiming({ name: 'resolveProfileBrowserVersion', promise: this.resolveProfileBrowserVersion(profile) }),
@@ -603,6 +604,13 @@ export class GoLogin {
       preferences.gologin = {};
     }
 
+    if (this.userTimezone && !this.timezone) {
+      this._tz = {
+        ...(this._tz || {}),
+        timezone: this.userTimezone,
+      };
+    }
+
     const gologin = this.getGologinPreferences(profile);
 
     debug(`Writing profile for screenWidth ${profilePath}`, JSON.stringify(gologin));
@@ -610,11 +618,14 @@ export class GoLogin {
     gologin.screenHeight = this.resolution.height;
     debug('writeCookiesFromServer', this.writeCookiesFromServer);
 
-    const isMAC = OS_PLATFORM === 'darwin';
     const checkAutoLangResult = checkAutoLang(gologin, this._tz, profile.autoLang);
     const intlConfig = getIntlProfileConfig(profile, this._tz, profile.autoLang);
 
-    this.browserLang = isMAC ? 'en-US' : checkAutoLangResult;
+    if (this.userBrowserLang) {
+      this.browserLang = this.userBrowserLang;
+    } else {
+      this.browserLang = checkAutoLangResult;
+    }
     const prefsToWrite = Object.assign(preferences, { gologin });
     if (this.customChromeFrame === false) {
       prefsToWrite.browser = {
@@ -861,6 +872,38 @@ export class GoLogin {
     }
 
     return port;
+  }
+
+  applyProfileLocale(profile) {
+    const timezoneConfig = profile.timezone || {};
+    const language = profile.navigator?.language || '';
+    const hasUserTimezone = timezoneConfig.fillBasedOnIp === false && Boolean(timezoneConfig.timezone);
+    const hasUserLanguage = profile.autoLang === false && Boolean(language);
+    const geolocation = profile.geolocation || {};
+    const geolocationFromIp = geolocation.fillBasedOnIp !== false;
+
+    if (hasUserTimezone) {
+      this.userTimezone = timezoneConfig.timezone;
+    }
+
+    if (hasUserLanguage) {
+      const primaryLanguage = language.split(',')[0] || '';
+      const browserLang = primaryLanguage.split(';')[0].trim();
+      if (browserLang) {
+        this.userBrowserLang = browserLang;
+      }
+    }
+
+    const canSkipTimezoneCheck = hasUserTimezone && hasUserLanguage && !geolocationFromIp;
+    if (!canSkipTimezoneCheck || this.timezone) {
+      return;
+    }
+
+    this.timezone = {
+      timezone: timezoneConfig.timezone,
+      ll: [geolocation.latitude, geolocation.longitude],
+      accuracy: geolocation.accuracy,
+    };
   }
 
   async getTimeZone(proxy) {
@@ -1124,7 +1167,7 @@ export class GoLogin {
         params.push(`--host-resolver-rules=${hr_rules}`);
       }
 
-      if (proxy && Number(this.browserMajorVersion) < this.newProxyOrbitaMajorVersion) {
+      if (proxy) {
         params.push(`--proxy-server=${proxy}`);
       }
 

@@ -2,6 +2,13 @@
 
 Combined changelog for GoLogin node.js SDK
 
+## [3.0.6] 2026-10-06
+
+### Fixes
+
+* Pass user-defined timezone and language to browser start when they are not filled from IP
+* Removed the macOS override that forced the browser language to en-US
+
 ## [3.0.4] 2026-09-04
 
 ### Fixes
