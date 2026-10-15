@@ -1,3 +1,5 @@
+export const INDEXED_DB_DIRECTORY = 'IndexedDB';
+
 const DEFAULT_FOLDER_USELESS_FILE = [
   {
     name: 'Cache',
@@ -25,7 +27,7 @@ const DEFAULT_FOLDER_USELESS_FILE = [
     isDirectory: true,
   },
   {
-    name: 'IndexedDB',
+    name: INDEXED_DB_DIRECTORY,
     subs: [],
     isDirectory: true,
   },
@@ -51,8 +53,16 @@ const DEFAULT_FOLDER_USELESS_FILE = [
   },
 ];
 
-export const getDirectoriesToDeleteForNode = (routerSlash = '/') =>
-  DEFAULT_FOLDER_USELESS_FILE.reduce((res, el) => {
+const getFoldersToRemove = ({ keepIndexedDb = false } = {}) => {
+  if (!keepIndexedDb) {
+    return DEFAULT_FOLDER_USELESS_FILE;
+  }
+
+  return DEFAULT_FOLDER_USELESS_FILE.filter((folder) => folder.name !== INDEXED_DB_DIRECTORY);
+};
+
+export const getDirectoriesToDeleteForNode = (routerSlash = '/', { keepIndexedDb = false } = {}) =>
+  getFoldersToRemove({ keepIndexedDb }).reduce((res, el) => {
     const basePath = routerSlash + 'Default' + routerSlash + el.name;
     if (el.subs.length) {
       el.subs.forEach(sub => res.push(basePath + routerSlash + sub));
@@ -63,7 +73,7 @@ export const getDirectoriesToDeleteForNode = (routerSlash = '/') =>
     return res;
   }, []);
 
-export const getDirectoriesForArchiver = () => DEFAULT_FOLDER_USELESS_FILE.reduce((res, el) => {
+export const getDirectoriesForArchiver = ({ keepIndexedDb = false } = {}) => getFoldersToRemove({ keepIndexedDb }).reduce((res, el) => {
   const { name, subs, isDirectory } = el;
   const basePath = 'Default/' + name;
 

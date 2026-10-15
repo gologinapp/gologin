@@ -2,6 +2,12 @@
 
 Combined changelog for GoLogin node.js SDK
 
+## [3.0.7] 2026-10-15
+
+### Fixes
+
+* Keep IndexedDB in the profile when `storage.indexedDb` is enabled
+
 ## [3.0.6] 2026-10-06
 
 ### Fixes

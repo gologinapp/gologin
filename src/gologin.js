@@ -10,6 +10,7 @@ import {
   downloadCookies, setExtPathsAndRemoveDeleted, setOriginalExtPaths, uploadCookies,
 } from './browser/browser-user-data-manager.js';
 import { getProfileChromeExtensions } from './extensions/get-extensions.js';
+import { INDEXED_DB_DIRECTORY } from './profile/profile-directories-to-remove.js';
 import { checkAutoLang, getIntlProfileConfig, securedOrbitaOpts } from './utils/browser.js';
 import { API_URL, ensureDirectoryExists, FALLBACK_API_URL, getOsAdvanced } from './utils/common.js';
 import { STORAGE_GATEWAY_BASE_URL } from './utils/constants.js';
@@ -66,6 +67,7 @@ export class GoLogin {
     this.waitWebsocket = options.waitWebsocket ?? true;
     this.isEmptyFonts = false;
     this.isFirstSession = false;
+    this.keepIndexedDb = false;
     this.isCloudHeadless = options.isCloudHeadless ?? true;
     this.storageGatewayUrl = `${STORAGE_GATEWAY_BASE_URL}/upload`;
 
@@ -490,6 +492,7 @@ export class GoLogin {
       throw new Error('Error fetching profile data');
     }
 
+    this.keepIndexedDb = profile.storage?.indexedDb === true;
     this.profileLaunchArguments = (profile.launchArguments || '').split(' ').filter(Boolean);
 
     const { navigator = {}, fonts, os: profileOs } = profile;
@@ -1331,7 +1334,6 @@ export class GoLogin {
       `${SEPARATOR}Default${SEPARATOR}Code Cache`,
       `${SEPARATOR}Default${SEPARATOR}GPUCache`,
       `${SEPARATOR}Default${SEPARATOR}Extensions`,
-      `${SEPARATOR}Default${SEPARATOR}IndexedDB`,
       `${SEPARATOR}Default${SEPARATOR}GPUCache`,
       `${SEPARATOR}Default${SEPARATOR}DawnCache`,
       `${SEPARATOR}Default${SEPARATOR}fonts_config`,
@@ -1349,6 +1351,10 @@ export class GoLogin {
       `${SEPARATOR}BrowserMetrics`,
       `${SEPARATOR}BrowserMetrics-spare.pma`,
     ];
+
+    if (!this.keepIndexedDb) {
+      remove_dirs.push(`${SEPARATOR}Default${SEPARATOR}${INDEXED_DB_DIRECTORY}`);
+    }
 
     const that = this;
 
@@ -1371,7 +1377,7 @@ export class GoLogin {
 
     const profilePath = this.profilePath();
     const { archiveProfile } = await loadProfileArchiver();
-    const fileBuff = await archiveProfile(profilePath);
+    const fileBuff = await archiveProfile(profilePath, { keepIndexedDb: this.keepIndexedDb });
 
     debug('PROFILE ZIP CREATED', profilePath, zipPath);
 

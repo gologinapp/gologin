@@ -13,7 +13,7 @@ const loadAdmZip = () => {
   return admZipPromise;
 };
 
-export const archiveProfile = async (profileFolder = '') => {
+export const archiveProfile = async (profileFolder = '', { keepIndexedDb = false } = {}) => {
   const AdmZip = await loadAdmZip();
   const folderExists = await access(profileFolder).then(() => true, () => false);
   if (!folderExists) {
@@ -28,7 +28,7 @@ export const archiveProfile = async (profileFolder = '') => {
     archive.addFile('First Run', Buffer.from(''));
   }
 
-  const dirsToRemove = getDirectoriesForArchiver();
+  const dirsToRemove = getDirectoriesForArchiver({ keepIndexedDb });
   dirsToRemove.forEach(entry => archive.deleteFile(entry));
 
   const archiveIsValid = checkProfileArchiveIsValid(archive);
