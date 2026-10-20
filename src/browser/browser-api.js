@@ -1,13 +1,27 @@
 import { API_URL, FALLBACK_API_URL } from '../utils/common.js';
 import { makeRequest } from '../utils/http.js';
 
+// Minimum interval (ms) enforced between identical profile update calls to
+// prevent the SDK's built-in retries from amplifying request volume.
+const RATE_LIMIT_WINDOW_MS = 1000;
+const lastRequestAtByKey = new Map();
+
+const throttle = (key) => {
+  const now = Date.now();
+  const nextAllowedAt = (lastRequestAtByKey.get(key) || 0) + RATE_LIMIT_WINDOW_MS;
+  const waitMs = Math.max(0, nextAllowedAt - now);
+  lastRequestAtByKey.set(key, now + waitMs);
+
+  return new Promise((resolve) => setTimeout(resolve, waitMs));
+};
+
 /**
   * @param {string} profileId
   * @param {string} ACCESS_TOKEN
   * @param {string} resolution
 */
 export const updateProfileResolution = (profileId, ACCESS_TOKEN, resolution) =>
-  makeRequest(`${API_URL}/browser/${profileId}/resolution`, {
+  throttle(`resolution:${profileId}`).then(() => makeRequest(`${API_URL}/browser/${profileId}/resolution`, {
     method: 'PATCH',
     json: { resolution },
     maxAttempts: 3,
@@ -16,7 +30,7 @@ export const updateProfileResolution = (profileId, ACCESS_TOKEN, resolution) =>
   }, {
     token: ACCESS_TOKEN,
     fallbackUrl: `${FALLBACK_API_URL}/browser/${profileId}/resolution`,
-  }).catch((e) => {
+  })).catch((e) => {
     console.log(e);
 
     return { body: [] };
@@ -28,7 +42,7 @@ export const updateProfileResolution = (profileId, ACCESS_TOKEN, resolution) =>
   * @param {string} userAgent
 */
 export const updateProfileUserAgent = (profileId, ACCESS_TOKEN, userAgent) =>
-  makeRequest(`${API_URL}/browser/${profileId}/ua`, {
+  throttle(`ua:${profileId}`).then(() => makeRequest(`${API_URL}/browser/${profileId}/ua`, {
     method: 'PATCH',
     json: { userAgent },
     maxAttempts: 3,
@@ -37,7 +51,7 @@ export const updateProfileUserAgent = (profileId, ACCESS_TOKEN, userAgent) =>
   }, {
     token: ACCESS_TOKEN,
     fallbackUrl: `${FALLBACK_API_URL}/browser/${profileId}/ua`,
-  }).catch((e) => {
+  })).catch((e) => {
     console.log(e);
 
     return { body: [] };
@@ -54,7 +68,7 @@ export const updateProfileUserAgent = (profileId, ACCESS_TOKEN, userAgent) =>
   * @param {string} [browserProxyData.password]
 */
 export const updateProfileProxy = (profileId, ACCESS_TOKEN, browserProxyData) =>
-  makeRequest(`${API_URL}/browser/${profileId}/proxy`, {
+  throttle(`proxy:${profileId}`).then(() => makeRequest(`${API_URL}/browser/${profileId}/proxy`, {
     method: 'PATCH',
     json: browserProxyData,
     maxAttempts: 3,
@@ -63,7 +77,7 @@ export const updateProfileProxy = (profileId, ACCESS_TOKEN, browserProxyData) =>
   }, {
     token: ACCESS_TOKEN,
     fallbackUrl: `${FALLBACK_API_URL}/browser/${profileId}/proxy`,
-  }).catch((e) => {
+  })).catch((e) => {
     console.log(e);
 
     return { body: [] };
@@ -79,6 +93,8 @@ export const updateProfileBookmarks = async (profileIds, ACCESS_TOKEN, bookmarks
     profileIds,
     bookmarks,
   };
+
+  await throttle(`bookmarks:${[].concat(profileIds).join(',')}`);
 
   return makeRequest(`${API_URL}/browser/bookmarks/many`, {
     method: 'PATCH',
