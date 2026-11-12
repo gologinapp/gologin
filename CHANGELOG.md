@@ -2,6 +2,12 @@
 
 Combined changelog for GoLogin node.js SDK
 
+## [3.0.8] 2026-11-12
+
+### Features
+
+* Added `isCloudBrowser` option for GoLogin cloud browser. When enabled, profile `launchArguments` that run other programs (`*-cmd-prefix`, `*-launcher`, `--browser-subprocess-path`), open remote debugging, override the proxy or DNS, or point at paths (`--user-data-dir`, `--load-extension`, ...) are dropped and logged with proxy values redacted. Off by default; local launches are unchanged
+
 ## [3.0.7] 2026-10-15
 
 ### Fixes

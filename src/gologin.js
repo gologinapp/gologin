@@ -15,6 +15,7 @@ import { checkAutoLang, getIntlProfileConfig, securedOrbitaOpts } from './utils/
 import { API_URL, ensureDirectoryExists, FALLBACK_API_URL, getOsAdvanced } from './utils/common.js';
 import { STORAGE_GATEWAY_BASE_URL } from './utils/constants.js';
 import { checkSocksProxy, makeRequest } from './utils/http.js';
+import { describeBlockedArgument, filterCloudLaunchArguments } from './utils/launch-arguments.js';
 import {
   // ensureSentryInitialized,
   loadBrowserChecker,
@@ -69,6 +70,7 @@ export class GoLogin {
     this.isFirstSession = false;
     this.keepIndexedDb = false;
     this.isCloudHeadless = options.isCloudHeadless ?? true;
+    this.isCloudBrowser = options.isCloudBrowser ?? false;
     this.storageGatewayUrl = `${STORAGE_GATEWAY_BASE_URL}/upload`;
 
     this.tmpdir = tmpdir();
@@ -494,6 +496,17 @@ export class GoLogin {
 
     this.keepIndexedDb = profile.storage?.indexedDb === true;
     this.profileLaunchArguments = (profile.launchArguments || '').split(' ').filter(Boolean);
+    if (this.isCloudBrowser && this.profileLaunchArguments.length) {
+      const { allowed, blocked } = filterCloudLaunchArguments(this.profileLaunchArguments);
+      if (blocked.length) {
+        console.warn('[launch-arguments] cloud browser: dropped profile launch arguments', {
+          profileId: this.profile_id,
+          blocked: blocked.map(describeBlockedArgument),
+        });
+      }
+
+      this.profileLaunchArguments = allowed;
+    }
 
     const { navigator = {}, fonts, os: profileOs } = profile;
     this.fontsMasking = fonts?.enableMasking;
@@ -629,6 +642,7 @@ export class GoLogin {
     } else {
       this.browserLang = checkAutoLangResult;
     }
+
     const prefsToWrite = Object.assign(preferences, { gologin });
     if (this.customChromeFrame === false) {
       prefsToWrite.browser = {

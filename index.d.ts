@@ -8,6 +8,7 @@ export type GoLoginOptions = {
   tmpdir?: string;
   waitWebsocket?: boolean;
   isCloudHeadless?: boolean;
+  isCloudBrowser?: boolean;
   skipOrbitaHashChecking?: boolean;
   uploadCookiesToServer?: boolean;
   writeCookiesFromServer?: boolean;
