@@ -15,6 +15,7 @@ import { checkAutoLang, getIntlProfileConfig, securedOrbitaOpts } from './utils/
 import { API_URL, ensureDirectoryExists, FALLBACK_API_URL, getOsAdvanced } from './utils/common.js';
 import { STORAGE_GATEWAY_BASE_URL } from './utils/constants.js';
 import { checkSocksProxy, makeRequest } from './utils/http.js';
+import { browserNotStartedError, watchBrowserProcess } from './utils/browser-start-error.js';
 import { describeBlockedArgument, filterCloudLaunchArguments } from './utils/launch-arguments.js';
 import {
   // ensureSentryInitialized,
@@ -72,6 +73,7 @@ export class GoLogin {
     this.isCloudHeadless = options.isCloudHeadless ?? true;
     this.isCloudBrowser = options.isCloudBrowser ?? false;
     this.storageGatewayUrl = `${STORAGE_GATEWAY_BASE_URL}/upload`;
+    this.storageDownloadUrl = `${STORAGE_GATEWAY_BASE_URL}/download`;
 
     this.tmpdir = tmpdir();
     this.autoUpdateBrowser = !!options.autoUpdateBrowser;
@@ -196,7 +198,7 @@ export class GoLogin {
   async getProfileS3() {
     const token = this.access_token;
     debug('getProfileS3 token=', token, 'profile=', this.profile_id);
-    const downloadURL = `${STORAGE_GATEWAY_BASE_URL}/download`;
+    const downloadURL = this.storageDownloadUrl;
     debug('loading profile from public s3 bucket, url=', downloadURL);
 
     const profileResponse = await fetch(downloadURL, {
@@ -734,7 +736,20 @@ export class GoLogin {
     }
   }
 
+  setStorageGatewayUrls(storageInfo = {}) {
+    const { storageLink } = storageInfo;
+    if (!storageLink) {
+      return;
+    }
+
+    this.storageDownloadUrl = storageLink;
+    if (storageLink.endsWith('/download')) {
+      this.storageGatewayUrl = `${storageLink.slice(0, -'/download'.length)}/upload`;
+    }
+  }
+
   async initProfileStorage({ profile, local }) {
+    this.setStorageGatewayUrls(profile.storageInfo);
     if (profile.storageInfo.isNewProfile) {
       this.isFirstSession = true;
       await this.createZeroProfile(profile.createCookiesTableQuery);
@@ -1131,6 +1146,7 @@ export class GoLogin {
 
     env.TZ = tz;
 
+    let browserProcess = null;
     if (this.vnc_port) {
       const script_path = _resolve(__dirname, './run.sh');
       debug('RUNNING', script_path, ORBITA_BROWSER, remote_debugging_port, proxy, profile_path, this.vnc_port);
@@ -1204,8 +1220,7 @@ export class GoLogin {
       console.log('params', params);
       const child = execFile(ORBITA_BROWSER, params, { env });
       this.processSpawned = child;
-      // child.stdout.on('error', (data) => console.log(data.toString()));
-      // child.stderr.on('data', (data) => console.log(data.toString()));
+      browserProcess = watchBrowserProcess(child);
       debug('SPAWN CMD', ORBITA_BROWSER, params.join(' '));
     }
 
@@ -1216,7 +1231,18 @@ export class GoLogin {
         promise: makeRequest(
           `http://127.0.0.1:${remote_debugging_port}/json/version`,
           { json: true, maxAttempts: 120, retryDelay: 100, method: 'GET' },
-        ),
+        ).catch((error) => {
+          if (!browserProcess) {
+            throw error;
+          }
+
+          const stderrTail = browserProcess.stderr.text();
+          if (stderrTail) {
+            console.error('[browser] stderr before failed start:\n' + stderrTail);
+          }
+
+          throw browserNotStartedError({ exit: browserProcess.exit, port: remote_debugging_port, cause: error });
+        }),
       });
 
       debug('WS IS', get(data, 'webSocketDebuggerUrl', ''));
@@ -1247,7 +1273,10 @@ export class GoLogin {
 
     if (this.uploadCookiesToServer) {
       const updateResult = await this.uploadProfileDataToServer();
-      this.storageGatewayUrl = updateResult.storageGateway.url;
+      const storageGatewayUrl = updateResult?.storageGateway?.url;
+      if (storageGatewayUrl?.startsWith('http')) {
+        this.storageGatewayUrl = storageGatewayUrl;
+      }
     }
 
     this.is_stopping = true;

@@ -2,6 +2,17 @@
 
 Combined changelog for GoLogin node.js SDK
 
+## [3.0.9] 2026-11-23
+
+### Features
+
+* Storage gateway URLs for profile download and upload are now taken from the API (`storageInfo.storageLink` and `storageGateway.url`) instead of being hardcoded; the default fallback is now `https://files-gateway.gologin.com`
+
+### Fixes
+
+* `stop()` no longer crashes when `uploadCookiesToServer` is on and the `update_after_close` request fails
+* When the browser is launched but never opens its DevTools port, `start()` now fails with `Browser didn't start: ...` instead of `fetch failed`. The message says whether the process exited (with its exit code), was killed (with the signal), or kept running without opening the port. The error has `code: 'BROWSER_NOT_STARTED'`, `exitCode` and `signal`, and keeps the original error as `cause`. The browser's last 4 KB of stderr is logged to the console when this happens
+
 ## [3.0.8] 2026-11-12
 
 ### Features
