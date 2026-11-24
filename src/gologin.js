@@ -1243,7 +1243,12 @@ export class GoLogin {
             console.error('[browser] stderr before failed start:\n' + stderrTail);
           }
 
-          throw browserNotStartedError({ exit: browserProcess.exit, port: remote_debugging_port, cause: error });
+          throw browserNotStartedError({
+            exit: browserProcess.exit,
+            port: remote_debugging_port,
+            cause: error,
+            stderrTail,
+          });
         }),
       });
 

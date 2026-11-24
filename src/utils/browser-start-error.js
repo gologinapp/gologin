@@ -15,11 +15,14 @@ const describeExit = ({ exitCode, signal }, port) => {
   return `DevTools port ${port} did not open`;
 };
 
-export const browserNotStartedError = ({ exit, port, cause }) => {
+// stderrTail: the browser's last output, for logs only (not part of the message,
+// which callers may show to users).
+export const browserNotStartedError = ({ exit, port, cause, stderrTail = '' }) => {
   const error = new Error(`${BROWSER_NOT_STARTED_PREFIX}: ${describeExit(exit, port)}`, { cause });
   error.code = BROWSER_NOT_STARTED_CODE;
   error.exitCode = exit.exitCode ?? null;
   error.signal = exit.signal ?? null;
+  error.stderrTail = stderrTail;
 
   return error;
 };

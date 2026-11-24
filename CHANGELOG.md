@@ -2,6 +2,12 @@
 
 Combined changelog for GoLogin node.js SDK
 
+## [3.0.11] 2026-11-24
+
+### Features
+
+* The `Browser didn't start: ...` error now has a `stderrTail` property with the browser's last 4 KB of stderr, so callers can log why the browser exited. It is not part of the error message. Empty when the browser printed nothing
+
 ## [3.0.10] 2026-11-24
 
 ### Fixes

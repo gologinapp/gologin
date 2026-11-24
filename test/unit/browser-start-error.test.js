@@ -17,6 +17,19 @@ test('browser still running but port never opened', () => {
   assert.equal(error.cause, cause);
   assert.equal(error.exitCode, null);
   assert.equal(error.signal, null);
+  assert.equal(error.stderrTail, '');
+});
+
+test('stderr tail is attached but kept out of the message', () => {
+  const error = browserNotStartedError({
+    exit: { exitCode: 150, signal: null },
+    port: 3500,
+    cause: new Error('fetch failed'),
+    stderrTail: '[ERROR:profile] cannot read Preferences\n',
+  });
+
+  assert.equal(error.message, "Browser didn't start: process exited with code 150");
+  assert.equal(error.stderrTail, '[ERROR:profile] cannot read Preferences\n');
 });
 
 test('browser exited with a code', () => {
