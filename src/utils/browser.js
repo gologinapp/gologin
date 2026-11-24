@@ -61,15 +61,46 @@ const checkBrowserLang = (profileData, defaultLocale = 'en-US') => {
   return defaultLocale;
 };
 
+export const getLinuxLocaleEnv = (browserLang, platform = process.platform) => {
+  if (platform !== 'linux' || !browserLang) {
+    return {};
+  }
+
+  return { LANGUAGE: browserLang.replace(/-/g, '_') };
+};
+
+const DEFAULT_INTL_LANGUAGES = ['en-US', 'en'];
+
+const parseLanguageHeader = (header = '') => [...new Set(
+  header.split(',')
+    .map((part) => part.split(';')[0].trim())
+    .filter(Boolean),
+)];
+
+const buildIntlConfig = (languagesArr) => {
+  const mainLanguage = getMainLanguage(languagesArr);
+
+  return {
+    accept_languages: languagesArr.join(','),
+    selected_languages: languagesArr.join(','),
+    app_locale: mainLanguage,
+    forced_languages: [
+      mainLanguage,
+    ],
+  };
+};
+
 export const getIntlProfileConfig = (profileData, timezoneCheckResult, autoLang) => {
   if (!autoLang) {
-    return checkBrowserLang(profileData);
+    const userLanguages = parseLanguageHeader(profileData.navigator?.language);
+
+    return buildIntlConfig(userLanguages.length ? userLanguages : DEFAULT_INTL_LANGUAGES);
   }
 
   let timezoneLang = '';
-  const { country: timezoneCountry = '', languages } = timezoneCheckResult;
+  const { country: timezoneCountry = '', languages } = timezoneCheckResult || {};
   if (!languages) {
-    return checkBrowserLang(profileData);
+    return buildIntlConfig(DEFAULT_INTL_LANGUAGES);
   }
 
   const [firstDetectedLangLocale] = languages.split(',');
@@ -85,16 +116,7 @@ export const getIntlProfileConfig = (profileData, timezoneCheckResult, autoLang)
   resultLangsArr.push(lang, 'en-US', 'en');
   resultLangsArr = [...new Set(resultLangsArr)];
 
-  const mainLanguage = getMainLanguage(resultLangsArr);
-
-  return {
-    accept_languages: resultLangsArr.join(','),
-    selected_languages: resultLangsArr.join(','),
-    app_locale: mainLanguage,
-    forced_languages: [
-      mainLanguage,
-    ],
-  };
+  return buildIntlConfig(resultLangsArr);
 };
 
 const mainLocaleList = ['af', 'am', 'ar', 'as', 'az', 'be', 'bg', 'bn', 'bs', 'ca', 'cs', 'cy', 'da', 'de', 'el', 'en-GB',

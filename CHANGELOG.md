@@ -2,6 +2,14 @@
 
 Combined changelog for GoLogin node.js SDK
 
+## [3.0.10] 2026-11-24
+
+### Fixes
+
+* A language set by the user (language not filled from IP) is now written to the browser's language settings (`intl` in `orbita.config`). Before, `"en-US"` was written there as a plain string, so the browser ignored the user's language and used the language stored in the profile, usually English. The profile's `navigator.language` is no longer overwritten with `en-US` during start
+* When language is filled from IP but the IP check returns no languages, the browser now gets English language settings in the correct format instead of the plain string `"en-US"`
+* On Linux, the browser's interface and `Intl` locale now follow the profile language: the SDK sets `LANGUAGE` for the browser process, because Linux Chromium ignores `--lang` and reads the locale from the environment
+
 ## [3.0.9] 2026-11-23
 
 ### Features

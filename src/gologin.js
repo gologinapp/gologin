@@ -11,7 +11,7 @@ import {
 } from './browser/browser-user-data-manager.js';
 import { getProfileChromeExtensions } from './extensions/get-extensions.js';
 import { INDEXED_DB_DIRECTORY } from './profile/profile-directories-to-remove.js';
-import { checkAutoLang, getIntlProfileConfig, securedOrbitaOpts } from './utils/browser.js';
+import { checkAutoLang, getIntlProfileConfig, getLinuxLocaleEnv, securedOrbitaOpts } from './utils/browser.js';
 import { API_URL, ensureDirectoryExists, FALLBACK_API_URL, getOsAdvanced } from './utils/common.js';
 import { STORAGE_GATEWAY_BASE_URL } from './utils/constants.js';
 import { checkSocksProxy, makeRequest } from './utils/http.js';
@@ -1135,6 +1135,8 @@ export class GoLogin {
     Object.keys(process.env).forEach((key) => {
       env[key] = process.env[key];
     });
+    // Linux Chromium ignores --lang and takes UI/Intl locale from the environment.
+    Object.assign(env, getLinuxLocaleEnv(this.browserLang));
 
     const tz = await withTiming({
       name: 'getTimeZone',
